@@ -67,7 +67,8 @@ try {
     Context::set(Base::LOCK, (string)file_get_contents(BASE_PATH . "/kernel/Install/Lock"));
     Context::set(Base::IS_INSTALL, file_exists(BASE_PATH . '/kernel/Install/Lock'));
     Context::set(Base::OPCACHE, extension_loaded("Zend OPcache") || extension_loaded("opcache"));
-    Context::set(Base::STORE_STATUS, file_exists(BASE_PATH . "/kernel/Plugin.php"));
+    //离线插件运行时（kernel/Plugin/Local.php）恒可用，不再依赖 kernel/Plugin.php 是否存在
+    Context::set(Base::STORE_STATUS, true);
     Context::set(Base::LANGUAGE, \Kernel\Util\Lang::detect());
 
     $count = count($s);
@@ -106,7 +107,7 @@ try {
     $capsule->bootEloquent();
 
     if (Context::get(Base::STORE_STATUS) && Context::get(Base::IS_INSTALL)) {
-        require("Plugin.php");
+        require("Plugin/Local.php");
         Hook::inst()->load();
         hook(\App\Consts\Hook::KERNEL_INIT);
         AdminEntrance::guard();

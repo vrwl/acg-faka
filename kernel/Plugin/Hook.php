@@ -6,17 +6,13 @@ namespace Kernel\Plugin;
 use App\Util\Client;
 use Kernel\Component\Singleton;
 use Kernel\Consts\Base;
-use Kernel\Util\Binary;
 use Kernel\Util\Context;
-use Kernel\Util\File;
 use Kernel\Util\Plugin;
 
 class Hook
 {
 
     use Singleton;
-
-    public const CACHE_FILE = BASE_PATH . "/runtime/plugin/hook";
 
 
     /**
@@ -25,24 +21,27 @@ class Hook
      */
     public function load(): void
     {
-        if (!defined('_APP_STORE_LOAD_STATE') || \_APP_STORE_LOAD_STATE !== true) {
+        //离线插件运行时（kernel/Plugin/Local.php）加载完成后再工作
+        if (!defined('_PLUGIN_RUNTIME_LOADED') || \_PLUGIN_RUNTIME_LOADED !== true) {
             return;
         }
 
         $path = BASE_PATH . "/runtime/plugin/";
         if (!is_dir($path)) {
-            mkdir($path, 0777, true);
+            @mkdir($path, 0777, true);
         }
 
-        if (!is_writable(Hook::CACHE_FILE)) {
-            return;
+        //自愈：注册表缺失（首次运行/由商店加密注册表迁移）时，
+        //按各插件 Config 的 STATUS 重建，已启用插件无需手动重装
+        if (!is_file(_plugin_registry_file())) {
+            foreach (Plugin::getPlugins(false) as $plugin) {
+                if ((int)($plugin[\App\Consts\Plugin::PLUGIN_CONFIG]['STATUS'] ?? 0) === 1) {
+                    _plugin_hook_add((string)$plugin[\App\Consts\Plugin::PLUGIN_NAME]);
+                }
+            }
         }
 
-        $hooks = File::read(Hook::CACHE_FILE, function (string $contents) {
-            return Binary::inst()->unpack($contents, _plugin_get_hwid());
-        }) ?: [];
-
-        foreach ($hooks as $points) {
+        foreach (_plugin_registry_read() as $points) {
             foreach ($points as $a => $point) {
                 foreach ($point as $plugin) {
                     Plugin::$container['hook'][$a][] = ["namespace" => $plugin['namespace'], "method" => $plugin['method'], "pluginName" => $plugin['pluginName']];

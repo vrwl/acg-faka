@@ -315,9 +315,13 @@ class Install extends User
         } catch (\Throwable $e) {
         }
 
-        try {
-            $this->app->install();
-        } catch (\Exception|\Error $e) {
+        //向应用商店上报安装量。离线环境下商店不可达且 Guzzle 未设超时（默认 150s），
+        //会让安装页在「导入语言包」一步干等两分多钟才返回，故离线直接跳过
+        if (file_exists(BASE_PATH . "/kernel/Plugin.php")) {
+            try {
+                $this->app->install();
+            } catch (\Exception|\Error $e) {
+            }
         }
 
         return $this->json(200, '安装完成');
@@ -560,7 +564,12 @@ class Install extends User
                 ];
             }
             foreach (array_chunk($rows, 200) as $chunk) {
-                \Kernel\Util\Lang::storeBatch($chunk);
+                //整批放进一个事务提交。逐行自动提交在双 1 持久化的 MySQL 上每行
+                //要两次 fsync（实测 8000+ 条约 96 秒，会撞上 PHP-FPM 100 秒超时），
+                //事务批量只需约 1.5 秒。缓存不在每批重建，末尾统一 rebuild() 一次
+                \Illuminate\Database\Capsule\Manager::connection()->transaction(function () use ($chunk) {
+                    \Kernel\Util\Lang::storeBatch($chunk, false);
+                });
             }
         }
         \Kernel\Util\Lang::rebuild();

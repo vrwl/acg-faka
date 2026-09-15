@@ -217,9 +217,10 @@ class Mcp implements \App\Service\Mcp
     {
         $storeTools = ["list_plugins", "create_plugin", "upload_install_kit", "submit_update", "set_price"];
 
-        //商店中转与插件启停都依赖已授权的加密内核（_plugin_* 函数），离线时直接拒绝；
+        //商店中转工具依赖加密内核与商店登录态，离线时直接拒绝；
+        //插件启停（_plugin_* 函数）已由离线运行时 kernel/Plugin/Local.php 提供同签名实现，离线可用；
         //配置/日志类是纯本地文件操作，离线也能用
-        if (in_array($name, [...$storeTools, "plugin_start", "plugin_stop"], true)
+        if (in_array($name, $storeTools, true)
             && !file_exists(BASE_PATH . "/kernel/Plugin.php")) {
             throw new JSONException("应用商店已离线，无法使用该工具");
         }

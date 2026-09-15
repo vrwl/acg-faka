@@ -688,9 +688,12 @@ final class Lang
     /**
      * 批量写入并重建受影响语言的缓存文件
      * @param array $rows [[source,lang,text,status?,scene?], ...]
+     * @param bool $rebuild 是否在写入后立即重建语言缓存。大批量分批导入时（如安装向导）
+     *                      应传 false，全部批次写完后只 rebuild() 一次：逐批重建会反复
+     *                      全表扫描并重写不断变大的缓存文件
      * @return int 成功条数
      */
-    public static function storeBatch(array $rows): int
+    public static function storeBatch(array $rows, bool $rebuild = true): int
     {
         $count = 0;
         $langs = [];
@@ -710,8 +713,10 @@ final class Lang
             } catch (\Throwable $e) {
             }
         }
-        foreach (array_keys($langs) as $lang) {
-            self::rebuild($lang);
+        if ($rebuild) {
+            foreach (array_keys($langs) as $lang) {
+                self::rebuild($lang);
+            }
         }
         return $count;
     }

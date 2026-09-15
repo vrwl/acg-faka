@@ -33,6 +33,13 @@ class App extends Manage
      */
     public function latest(): array
     {
+        //离线版（kernel/Plugin.php 已移除）不接商店版本源：官方的在线升级会用商店
+        //增量包整目录覆盖程序文件，会把 kernel/Plugin.php 等离线化改动全部冲掉，
+        //因此恒报「已是最新」，让前端显示 [ Latest ] 而不再弹更新窗口。升级走 git 同步
+        if (!file_exists(BASE_PATH . "/kernel/Plugin.php")) {
+            $local = config("app")['version'];
+            return $this->json(200, 'ok', ["local" => $local, "latest" => true, "version" => $local]);
+        }
         $versions = $this->app->getVersions();
         $latestVersion = $versions[0]['version'];
         $local = config("app")['version'];
@@ -42,9 +49,14 @@ class App extends Manage
 
     /**
      * @return array
+     * @throws JSONException
      */
     public function update(): array
     {
+        //离线版禁止在线升级：会以商店包覆盖本地文件，恢复成商店版（同 latest() 注释）
+        if (!file_exists(BASE_PATH . "/kernel/Plugin.php")) {
+            throw new JSONException("离线版不支持在线升级，请通过 git 同步官方仓库升级（fetch upstream + merge + 重新部署）");
+        }
         $this->app->update();
         return $this->json(200, "升级完成");
     }

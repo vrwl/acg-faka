@@ -72,6 +72,9 @@ class Query implements \App\Service\Query
 
         if (count($get->leftJoinWhere) > 0) {
             $get->orderBy[0] = "{$tableName}.{$get->orderBy[0]}";
+            foreach ($get->thenOrderBy as $index => $then) {
+                $get->thenOrderBy[$index][0] = "{$tableName}.{$then[0]}";
+            }
             if ($get->columns === ["*"]) {
                 $get->columns = ["{$tableName}.*"];
             } else {
@@ -99,6 +102,11 @@ class Query implements \App\Service\Query
             $type = $args[0];
             $column = $len == 2 ? $args[1] : "{$args[1]}->{$args[2]}";
 
+            //列白名单（接口显式设置了才生效）：只放行白名单内的列，挡住匿名接口拿任意列
+            //（如 secret）借 total 的 0/1 做布尔预言机盲注。不在白名单的客户端过滤静默丢弃。
+            if ($get->filterColumns !== null && !in_array($args[1], $get->filterColumns, true)) {
+                continue;
+            }
 
             foreach ($get->leftJoinWhere as $jn) {
                 $relatedTableName = $this->getTable($jn['related']);
@@ -120,7 +128,11 @@ class Query implements \App\Service\Query
         }
 
 
-        $query = $query->orderBy($get->orderBy[0], $get->orderBy[1])->distinct();
+        $query = $query->orderBy($get->orderBy[0], $get->orderBy[1]);
+        foreach ($get->thenOrderBy as [$thenColumn, $thenRule]) {
+            $query = $query->orderBy($thenColumn, $thenRule);
+        }
+        $query = $query->distinct();
 
         if ($get->paginate) {
             $paginate = $query->paginate($get->paginate[1], $get->columns, '', $get->paginate[0]);

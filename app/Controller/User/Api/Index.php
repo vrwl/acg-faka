@@ -69,8 +69,13 @@ class Index extends User
         \App\Util\Schema::ensureCommodityTags();
 
         $keywords = (string)$_GET['keywords'];
+        //本方法走 $_GET 直连 paginate（未过 Get::setPaginate 的钳制）：limit 为负会让 paginate 生成
+        //take(-N) 非法 SQL→500（免登录可打）。limit=0 是「返回全部」的既有约定，负数归 0(与既有行为一致、不新增面)。
         $limit = (int)$_GET['limit'];
-        $page = (int)$_GET['page'];
+        if ($limit < 0) {
+            $limit = 0;
+        }
+        $page = max(1, (int)$_GET['page']);
         $categoryId = $_GET['categoryId'];
 
         $commodity = Commodity::query()
@@ -289,6 +294,9 @@ class Index extends User
         /**
          * @var Commodity $commodity
          */
+        //item_id 必须是标量：传数组会让 find([]) 返回集合，后面 ->status 抛异常→500（免登录可打）。
+        //归一化回 $map，供下方闭包 where("commodity_id",...) 与 shared 分支转发复用。
+        $map['item_id'] = is_scalar($map['item_id'] ?? null) ? (int)$map['item_id'] : 0;
         $commodity = Commodity::with(['shared'])->find($map['item_id']);
         $limit = $map['limit'] ?? 10;
 
@@ -303,6 +311,12 @@ class Index extends User
             throw new JSONException("该商品不支持预选");
         }
 
+        //限流：本接口免登录，纵深防御挡住对预选库存的高频枚举/盲注（主防线是下方 setFilterColumns 列白名单）。
+        //阈值给得比订单/卡密查询宽松，正常买家翻页+搜索预选内容够用，脚本化刷库会被拦。
+        if (Throttle::tooMany("draft:ip:" . Client::getAddress(), 60, 60)) {
+            throw new JSONException("请求过于频繁，请稍后再试");
+        }
+
         if ($commodity->shared) {
             $data = $this->shared->draftCard($commodity->shared, $commodity->shared_code, $map);
             //加价算法
@@ -315,6 +329,10 @@ class Index extends User
             $get = new Get(Card::class);
             $get->setPaginate((int)$this->request->post("page"), (int)$limit);
             $get->setWhere($map);
+            //本接口免登录、且强制 status=0（未售库存）。客户端唯一合法的过滤是「搜索可选内容」= search-draft，
+            //draft 是本就随列表返回的预览内容。若放任客户端过滤任意列，search-secret / betweenStart-secret
+            //会把 total 的 0/1 变成布尔预言机，匿名逐字符盲注拖走未售卡密的 secret。故只白名单 draft。
+            $get->setFilterColumns(['draft']);
             $get->setColumn('id', 'draft', 'draft_premium');
 
             $data = $this->query->get($get, function (Builder $builder) use ($map) {
@@ -386,6 +404,12 @@ class Index extends User
     function stock(): array
     {
         $commodity = Commodity::with(['shared'])->find((int)$this->request->post("item_id"));
+
+        //getItemStock 的入参不可空，商品不存在时传 null 会抛 TypeError 落到通用兜底=500。
+        //与同控制器 valuation() 一致，改为返回干净的业务错误（也避免免登录高频触发 500 与日志噪声）。
+        if (!$commodity) {
+            throw new JSONException("商品不存在");
+        }
 
         $_race = (string)$this->request->post("race");
         $_skus = (array)$this->request->post("sku") ?: [];

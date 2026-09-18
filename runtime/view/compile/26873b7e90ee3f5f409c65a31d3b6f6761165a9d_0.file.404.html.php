@@ -1,0 +1,350 @@
+<?php
+/* Smarty version 3.1.46, created on 2026-09-18 18:33:33
+  from '/workspace/app/View/404.html' */
+
+/* @var Smarty_Internal_Template $_smarty_tpl */
+if ($_smarty_tpl->_decodeProperties($_smarty_tpl, array (
+  'version' => '3.1.46',
+  'unifunc' => 'content_6aad137d37ed51_97940086',
+  'has_nocache_code' => false,
+  'file_dependency' => 
+  array (
+    '26873b7e90ee3f5f409c65a31d3b6f6761165a9d' => 
+    array (
+      0 => '/workspace/app/View/404.html',
+      1 => 1789726831,
+      2 => 'file',
+    ),
+  ),
+  'includes' => 
+  array (
+  ),
+),false)) {
+function content_6aad137d37ed51_97940086 (Smarty_Internal_Template $_smarty_tpl) {
+?><!doctype html>
+<html lang="zh-CN" data-state="<?php if ($_smarty_tpl->tpl_vars['msg']->value == '404 Not Found') {?>missing<?php } elseif ($_smarty_tpl->tpl_vars['msg']->value == '登录会话过期，请重新登录..') {?>expired<?php } else { ?>processing<?php }?>">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title><?php if ($_smarty_tpl->tpl_vars['msg']->value == '404 Not Found') {?>页面没有找到<?php } else {
+echo htmlspecialchars($_smarty_tpl->tpl_vars['msg']->value, ENT_QUOTES, 'UTF-8', false);
+}?></title>
+<?php echo '<script'; ?>
+>
+/* 主题必须在渲染前定下来，否则会先闪一下错误配色。
+   沿用后台面板的 admin-theme（auto/light/dark），保证跳转页与用户已选主题一致。 */
+(function(){
+  var e=document.documentElement;
+  try{
+    var p=localStorage.getItem('admin-theme')||'auto';
+    if(p!=='auto'&&p!=='light'&&p!=='dark')p='auto';
+    e.setAttribute('data-theme-pref',p);
+    if(p!=='auto')e.setAttribute('data-theme',p);
+  }catch(_){e.setAttribute('data-theme-pref','auto');}
+})();
+<?php echo '</script'; ?>
+>
+<style>
+/* ── tokens ─────────────────────────────────────────────── */
+:root{
+  --bg:#fcfcfd; --ink:#0a0b0e; --sub:#6b6c75; --faint:#a6a7ae;
+  --line:rgba(10,11,14,.07); --accent:#0a0b0e; --ring:rgba(10,11,14,.09);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --ease-soft:cubic-bezier(.4,0,.2,1);
+  --step:8px;
+}
+/* 深色：系统偏好（未显式选择时）与显式选择两条路径 */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#09090b; --ink:#f4f4f6; --sub:#85868f; --faint:#54555d;
+    --line:rgba(255,255,255,.08); --accent:#f4f4f6; --ring:rgba(255,255,255,.11);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#09090b; --ink:#f4f4f6; --sub:#85868f; --faint:#54555d;
+  --line:rgba(255,255,255,.08); --accent:#f4f4f6; --ring:rgba(255,255,255,.11);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  display:grid; justify-items:center; align-items:safe center;
+  /* 底部留白略多于顶部：视觉重心稍高于几何中心，读起来更稳 */
+  padding:max(32px,env(safe-area-inset-top)) 24px calc(max(32px,env(safe-area-inset-bottom)) + 5vh);
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+
+/* ── layout ─────────────────────────────────────────────── */
+.wrap{width:100%;max-width:436px;text-align:left}
+
+/* ── mark：唯一的图形元素 ────────────────────────────────── */
+.mark{position:relative;width:46px;height:46px;margin-bottom:calc(var(--step)*5)}
+.mark svg{width:100%;height:100%;display:block;overflow:visible}
+.mark circle{fill:none;stroke-width:1;stroke-linecap:round}
+.mark .track{stroke:var(--ring)}
+.mark .fill{
+  stroke:var(--accent);
+  transform:rotate(-90deg);transform-origin:50% 50%;
+  stroke-dasharray:var(--circ);stroke-dashoffset:var(--circ);
+}
+/* 进度与真实等待秒数同步（--dur 由内联样式注入） */
+[data-state="processing"] .mark .fill{animation:sweep var(--dur,2s) linear .2s forwards}
+@keyframes sweep{to{stroke-dashoffset:0}}
+
+/* 引导点：沿环行进，走到哪进度就到哪；比"中心呼吸点"更有信息量。
+   环闭合的瞬间它淡出——收束成一个完整安静的圆，而不是留一个悬着的点 */
+.mark .lead{fill:var(--accent);transform-origin:22px 22px}
+[data-state="processing"] .mark .lead{
+  animation:
+    orbit var(--dur,2s) linear .2s forwards,
+    leadOut .5s var(--ease) calc(var(--dur,2s) + .2s - .12s) forwards;
+}
+@keyframes orbit{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}
+@keyframes leadOut{to{opacity:0}}
+
+/* 静态态（404 / 会话过期）：完整而安静的圆，不留缺口、不做动效 */
+[data-state="missing"] .mark .fill,
+[data-state="expired"] .mark .fill{stroke-dashoffset:0;opacity:.28}
+[data-state="missing"] .mark .lead,
+[data-state="expired"] .mark .lead{transform:rotate(-90deg);opacity:.85}
+
+/* ── type ───────────────────────────────────────────────── */
+h1{
+  font-size:clamp(28px,5.4vw,36px); font-weight:600;
+  letter-spacing:-.032em; line-height:1.24;
+  margin-bottom:calc(var(--step)*1.5);   /* 与正文靠紧，成为一组 */
+}
+.desc{
+  font-size:15px;line-height:1.78;color:var(--sub);max-width:32ch;
+  margin-bottom:calc(var(--step)*6);      /* 与动作区拉开，形成呼吸 */
+  letter-spacing:.002em;
+}
+
+/* ── actions：文字链，不用重按钮 ─────────────────────────── */
+.acts{display:flex;align-items:center;gap:calc(var(--step)*3.5);flex-wrap:wrap}
+.act{
+  position:relative;display:inline-flex;align-items:center;gap:7px;
+  font-size:14.5px;color:var(--ink);text-decoration:none;
+  padding:6px 0;background:none;border:0;cursor:pointer;font-family:inherit;
+  letter-spacing:.004em;
+  transition:color .35s var(--ease);
+}
+.act--sub{color:var(--sub)}
+.act--sub:hover{color:var(--ink)}
+/* 下划线从左展开，而不是生硬显隐 */
+.act::after{
+  content:"";position:absolute;left:0;right:0;bottom:2px;height:1px;
+  background:currentColor;opacity:.25;
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .46s var(--ease),opacity .46s var(--ease);
+}
+.act:hover::after{transform:scaleX(1);opacity:.45}
+.act:focus-visible{outline:1.5px solid var(--accent);outline-offset:5px;border-radius:2px}
+/* 主操作的箭头：悬停时轻轻前移，暗示"去往" */
+.act__arrow{
+  width:14px;height:14px;flex:none;stroke:currentColor;fill:none;
+  stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .42s var(--ease);
+}
+.act:hover .act__arrow{transform:translateX(3px)}
+
+/* ── theme：右上角三态切换，极小存在感 ───────────────────── */
+.theme{
+  position:fixed;top:22px;right:22px;z-index:2;
+  display:flex;align-items:center;gap:2px;
+  padding:3px;border-radius:999px;border:1px solid var(--line);
+}
+.theme button{
+  width:26px;height:26px;padding:0;border:0;border-radius:999px;
+  background:none;color:var(--faint);cursor:pointer;
+  display:grid;place-items:center;
+  transition:color .3s var(--ease),background-color .3s var(--ease);
+}
+.theme button svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.theme button:hover{color:var(--sub)}
+.theme button[aria-pressed="true"]{color:var(--ink);background:var(--ring)}
+.theme button:focus-visible{outline:1.5px solid var(--accent);outline-offset:2px}
+@media (max-width:520px){.theme{top:14px;right:14px}}
+
+/* ── path：仅 404 显示，极低存在感 ───────────────────────── */
+.path{
+  margin-top:40px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:11.5px;letter-spacing:.04em;color:var(--faint);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  word-break:break-all;
+}
+
+/* ── entrance：分层错峰浮现 ─────────────────────────────── */
+@media (prefers-reduced-motion:no-preference){
+  /* 整体极轻收束：0.994→1，内容像"沉下来落定"，而不是飘上来 */
+  .wrap{animation:settle 1.05s var(--ease) both}
+  @keyframes settle{from{transform:scale(.994)}to{transform:none}}
+
+  /* 极轻的模糊淡入：内容像"化开"而不是"弹出"，是这版过渡质感的关键 */
+  .rise{
+    opacity:0;transform:translateY(10px);filter:blur(7px);
+    animation:rise .95s var(--ease) forwards;
+    will-change:opacity,transform,filter;
+  }
+  @keyframes rise{to{opacity:1;transform:none;filter:blur(0)}}
+  .mark{animation:markIn .75s var(--ease) both}
+  @keyframes markIn{from{opacity:0;transform:scale(.78);filter:blur(5px)}to{opacity:1;transform:none;filter:blur(0)}}
+  h1{animation-delay:.1s}
+  .desc{animation-delay:.19s}
+  .acts{animation-delay:.28s}
+  .path{animation-delay:.37s}
+}
+
+/* ── reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion:reduce){
+  .wrap{animation:none!important;transform:none}
+  .mark{animation:none!important}
+  .mark .fill{animation:none!important;stroke-dashoffset:0;opacity:.3}
+  .mark .lead{animation:none!important;transform:rotate(-90deg);opacity:.9}
+  .rise{opacity:1;transform:none;filter:none;animation:none}
+  .act::after,.act__arrow{transition:none}
+}
+
+@media (max-width:420px){
+  .wrap{max-width:100%}
+  .mark{width:34px;height:34px;margin-bottom:28px}
+  .desc{margin-bottom:30px}
+  .acts{gap:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="theme" role="group" aria-label="主题">
+  <button type="button" data-theme-set="light" aria-label="浅色" title="浅色">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+  </button>
+  <button type="button" data-theme-set="auto" aria-label="跟随系统" title="跟随系统">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 3.6a8.4 8.4 0 0 0 0 16.8z" fill="currentColor" stroke="none"/></svg>
+  </button>
+  <button type="button" data-theme-set="dark" aria-label="深色" title="深色">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 13.4A8.6 8.6 0 1 1 10.6 3.5a6.7 6.7 0 0 0 9.9 9.9z"/></svg>
+  </button>
+</div>
+
+<main class="wrap">
+
+  <div class="mark" aria-hidden="true"<?php if ($_smarty_tpl->tpl_vars['msg']->value != '404 Not Found') {?> style="--dur:<?php if ($_smarty_tpl->tpl_vars['time']->value) {
+echo $_smarty_tpl->tpl_vars['time']->value;
+} else { ?>2<?php }?>s"<?php }?>>
+    <!-- r=21.2 → 周长 2πr = 133.2，作为 dasharray/dashoffset 的基准；
+         引导点落在环上（cy = 22 - r），绕圆心旋转即沿环行进 -->
+    <svg viewBox="0 0 44 44">
+      <circle class="track" cx="22" cy="22" r="21.2"></circle>
+      <circle class="fill" cx="22" cy="22" r="21.2" style="--circ:133.2"></circle>
+      <circle class="lead" cx="22" cy="0.8" r="2.1"></circle>
+    </svg>
+  </div>
+
+  <h1 class="rise"><?php if ($_smarty_tpl->tpl_vars['msg']->value == '404 Not Found') {?>页面不存在<?php } else {
+echo htmlspecialchars($_smarty_tpl->tpl_vars['msg']->value, ENT_QUOTES, 'UTF-8', false);
+}?></h1>
+
+  <p class="desc rise">
+    <?php if ($_smarty_tpl->tpl_vars['msg']->value == '404 Not Found') {?>这个地址可能已失效，或从未存在。
+    <?php } elseif ($_smarty_tpl->tpl_vars['msg']->value == '登录会话过期，请重新登录..') {?>登录状态已失效，正在前往登录页。
+    <?php } else { ?>页面将自动继续，无需重复操作。
+    <?php }?>
+  </p>
+
+  <div class="acts rise">
+    <?php if ($_smarty_tpl->tpl_vars['msg']->value == '404 Not Found') {?>
+      <a class="act" href="/">返回首页<svg class="act__arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      <button class="act act--sub" type="button" data-back>返回上一页</button>
+    <?php } elseif ($_smarty_tpl->tpl_vars['msg']->value == '登录会话过期，请重新登录..') {?>
+      <a class="act" href="#" data-relogin>重新登录<svg class="act__arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      <a class="act act--sub" href="/">返回首页</a>
+    <?php } else { ?>
+      <a class="act" href="<?php if ($_smarty_tpl->tpl_vars['url']->value) {
+echo htmlspecialchars($_smarty_tpl->tpl_vars['url']->value, ENT_QUOTES, 'UTF-8', false);
+} else { ?>/<?php }?>">立即前往<svg class="act__arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      <a class="act act--sub" href="/">返回首页</a>
+    <?php }?>
+  </div>
+
+  <?php if ($_smarty_tpl->tpl_vars['msg']->value == '404 Not Found') {?>
+  <p class="path" data-path></p>
+  <?php }?>
+
+</main>
+
+<?php echo '<script'; ?>
+>
+(function () {
+  var path = document.querySelector('[data-path]');
+  if (path) path.textContent = (window.location.pathname || '/') + (window.location.search || '');
+
+  var relogin = document.querySelector('[data-relogin]');
+  if (relogin) {
+    var base = window.location.pathname.indexOf('/admin/') === 0
+      ? '/admin/authentication/login' : '/user/authentication/login';
+    relogin.href = base + '?goto=' + encodeURIComponent(window.location.pathname + window.location.search);
+  }
+
+  var back = document.querySelector('[data-back]');
+  if (back) {
+    back.addEventListener('click', function () {
+      if (window.history.length > 1) { window.history.back(); return; }
+      window.location.assign('/');
+    });
+  }
+
+  // 标题里的 ".." 收成省略号，标签页上更干净
+  var h1 = document.querySelector('h1');
+  if (h1) {
+    var t = h1.textContent.trim().replace(/\.{2,}$/, '…');
+    h1.textContent = t;
+    document.title = t;
+  }
+
+  /* ── 主题三态：与后台面板共用 admin-theme，选择会带回面板 ── */
+  var root = document.documentElement;
+  var mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  function pref() {
+    try {
+      var p = localStorage.getItem('admin-theme') || 'auto';
+      return (p === 'light' || p === 'dark') ? p : 'auto';
+    } catch (e) { return 'auto'; }
+  }
+
+  function apply(p) {
+    // auto 交回 CSS 的 prefers-color-scheme 处理，不写死 data-theme
+    if (p === 'auto') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', p);
+    root.setAttribute('data-theme-pref', p);
+    var btns = document.querySelectorAll('[data-theme-set]');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute('aria-pressed', String(btns[i].getAttribute('data-theme-set') === p));
+    }
+  }
+
+  apply(pref());
+
+  document.querySelectorAll('[data-theme-set]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var p = btn.getAttribute('data-theme-set');
+      try { localStorage.setItem('admin-theme', p); } catch (e) {}
+      apply(p);
+    });
+  });
+
+  // auto 模式下系统主题变化要实时跟随
+  if (mql && mql.addEventListener) {
+    mql.addEventListener('change', function () { if (pref() === 'auto') apply('auto'); });
+  }
+}());
+<?php echo '</script'; ?>
+>
+</body>
+</html>
+<?php }
+}

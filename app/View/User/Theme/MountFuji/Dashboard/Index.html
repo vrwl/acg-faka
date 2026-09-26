@@ -1,0 +1,140 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell mf-page-shell-dashboard">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-dashboard-welcome">
+            <div class="mf-dashboard-welcome__copy">
+                <span class="mf-eyebrow"><span class="material-icons-outlined">waving_hand</span>#{t("欢迎回来")}</span>
+                <h1>#{t("{name}，今天也要从容地向前。")|replace:"{name}":$user.username}</h1>
+                <p>#{t("资产、消费与经营动态都已整理在这里，一眼掌握账户状态。")}</p>
+                <div class="mf-dashboard-welcome__actions">
+                    <a class="mf-button mf-button--primary" href="/user/recharge/index"><span class="material-icons-outlined">add_card</span>#{t("充值余额")}</a>
+                    <a class="mf-button mf-button--tonal" href="/" target="_blank"><span class="material-icons-outlined">shopping_bag</span>#{t("前往商城")}</a>
+                </div>
+            </div>
+            <div class="mf-dashboard-identity">
+                <span class="mf-dashboard-identity__icon"><img src="#{$user.group.icon}" alt=""></span>
+                <div><small>#{t("当前会员等级")}</small><strong>#{$user.group.name}</strong><span>#{$user.recharge} #{t("元气")}</span></div>
+            </div>
+        </section>
+
+        <section class="mf-section">
+            <div class="mf-section-heading">
+                <div><span class="mf-section-kicker">ASSETS</span><h2>#{t("资产概览")}</h2></div>
+                <span class="mf-section-note">#{t("数据随交易实时更新")}</span>
+            </div>
+            <div class="mf-kpi-grid">
+                <article class="mf-kpi-card mf-kpi-card--blue">
+                    <span class="mf-kpi-card__icon material-icons-outlined">account_balance_wallet</span>
+                    <div><span>#{t("账户余额")}</span><strong><small>#{$config.currency_symbol}</small>#{$user.balance}</strong><em>#{t("可用于站内消费")}</em></div>
+                </article>
+                <article class="mf-kpi-card mf-kpi-card--sunrise">
+                    <span class="mf-kpi-card__icon material-icons-outlined">toll</span>
+                    <div><span>#{t("当前硬币")}</span><strong>#{$user.coin}</strong><em>#{t("可发起兑现")}</em></div>
+                </article>
+                <article class="mf-kpi-card mf-kpi-card--cyan">
+                    <span class="mf-kpi-card__icon material-icons-outlined">energy_savings_leaf</span>
+                    <div><span>#{t("累计元气")}</span><strong>#{$user.recharge}</strong><em>#{t("用于会员成长")}</em></div>
+                </article>
+                <article class="mf-kpi-card mf-kpi-card--green">
+                    <span class="mf-kpi-card__icon material-icons-outlined">trending_up</span>
+                    <div><span>#{t("累计硬币收入")}</span><strong><small>#{$config.currency_symbol}</small>#{$user.total_coin}</strong><em>#{t("经营收入总览")}</em></div>
+                </article>
+            </div>
+        </section>
+
+        #{if $user.businessLevel}
+        <section class="mf-section">
+            <div class="mf-section-heading">
+                <div><span class="mf-section-kicker">BUSINESS</span><h2>#{t("经营动态")}</h2></div>
+                <a class="mf-text-link" href="/user/order/index">#{t("查看全部订单")}<span class="material-icons-outlined">arrow_forward</span></a>
+            </div>
+            <div class="mf-business-stats">
+                <div><span>#{t("今日收入")}</span><strong>#{$config.currency_symbol}#{$today_income}</strong></div>
+                <div><span>#{t("昨日收入")}</span><strong>#{$config.currency_symbol}#{$yesterday_income}</strong></div>
+                <div><span>#{t("本月收入")}</span><strong>#{$config.currency_symbol}#{$month_income}</strong></div>
+                <div><span>#{t("总交易额")}</span><strong>#{$config.currency_symbol}#{$trade}</strong></div>
+            </div>
+            <div class="mf-operation-strip">
+                <a href="/user/order/index"><span class="material-icons-outlined">today</span><div><small>#{t("今日订单")}</small><strong>#{$today_orders}<em>#{t("单")}</em></strong></div></a>
+                <a href="/user/order/index" class="#{if $pending_delivery > 0}is-alert#{/if}"><span class="material-icons-outlined">local_shipping</span><div><small>#{t("待发货")}</small><strong>#{$pending_delivery}<em>#{t("单")}</em></strong></div></a>
+                <a href="/user/card/index"><span class="material-icons-outlined">vpn_key</span><div><small>#{t("未售卡密")}</small><strong>#{$card_unsold}<em>#{t("张")}</em></strong></div></a>
+                <a href="/user/commodity/index"><span class="material-icons-outlined">inventory_2</span><div><small>#{t("在售商品")}</small><strong>#{$commodity_online}<em>/ #{$commodity_count}</em></strong></div></a>
+            </div>
+
+            <div class="mf-dashboard-grid">
+                <section class="mf-panel mf-chart-card">
+                    <div class="mf-panel-heading">
+                        <div><span class="material-icons-outlined">bar_chart</span><div><strong>#{t("近 7 日收入")}</strong><small>#{t("峰值")} #{$config.currency_symbol}#{$week_series_max}</small></div></div>
+                    </div>
+                    <div class="mf-panel-body">
+                        <div class="mf-spark">
+                            #{foreach $week_series as $d}
+                            <div class="mf-spark__col" title="#{$d.label}：#{$config.currency_symbol}#{$d.amount}">
+                                <div class="mf-spark__value">#{$d.amount}</div>
+                                <div class="mf-spark__track"><span style="height:#{$d.pct}%;"></span></div>
+                                <div class="mf-spark__label">#{$d.label}</div>
+                            </div>
+                            #{/foreach}
+                        </div>
+                    </div>
+                </section>
+                <section class="mf-panel">
+                    <div class="mf-panel-heading">
+                        <div><span class="material-icons-outlined">storefront</span><div><strong>#{t("最近卖出")}</strong><small>#{t("最近 5 笔成交")}</small></div></div>
+                    </div>
+                    <div class="mf-panel-body">
+                        #{if count($recent_sales) > 0}
+                        <div class="mf-activity-list">
+                            #{foreach $recent_sales as $o}
+                            <div class="mf-activity-item">
+                                <img src="#{$o.commodity.cover}" alt="">
+                                <div><strong>#{$o.commodity.name}</strong><span>#{$o.create_time}</span></div>
+                                <div class="mf-activity-item__amount"><strong>#{$config.currency_symbol}#{$o.amount}</strong>#{if $o.rebate > 0}<span>#{t("收益")} #{$config.currency_symbol}#{$o.rebate}</span>#{/if}</div>
+                            </div>
+                            #{/foreach}
+                        </div>
+                        #{else}
+                        <div class="mf-empty"><span class="material-icons-outlined">storefront</span><strong>#{t("还没有卖出记录")}</strong><p>#{t("把商品分享出去，第一笔订单就会出现在这里。")}</p></div>
+                        #{/if}
+                    </div>
+                </section>
+            </div>
+        </section>
+        #{/if}
+
+        <section class="mf-section">
+            <div class="mf-section-heading">
+                <div><span class="mf-section-kicker">SHOPPING</span><h2>#{t("消费概览")}</h2></div>
+                <a class="mf-text-link" href="/user/personal/purchaseRecord">#{t("全部购买记录")}<span class="material-icons-outlined">arrow_forward</span></a>
+            </div>
+            <div class="mf-consume-grid">
+                <div><span class="material-icons-outlined">calendar_month</span><small>#{t("本月购物")}</small><strong>#{$config.currency_symbol}#{$buy_month}</strong></div>
+                <div><span class="material-icons-outlined">shopping_bag</span><small>#{t("累计购物")}</small><strong>#{$config.currency_symbol}#{$buy_total}</strong></div>
+                <div><span class="material-icons-outlined">receipt</span><small>#{t("累计订单")}</small><strong>#{$buy_count}<em>#{t("单")}</em></strong></div>
+            </div>
+        </section>
+
+        <div class="mf-dashboard-grid mf-dashboard-grid--bottom">
+            <section class="mf-panel mf-recent-table">
+                <div class="mf-panel-heading">
+                    <div><span class="material-icons-outlined">history</span><div><strong>#{t("最近购买")}</strong><small>#{t("最近 5 笔订单")}</small></div></div>
+                </div>
+                <div class="mf-panel-body mf-table-wrap"><table id="recent-buy-table"></table></div>
+            </section>
+            <section class="mf-panel mf-security-card">
+                <div class="mf-panel-heading">
+                    <div><span class="material-icons-outlined">verified_user</span><div><strong>#{t("账户安全")}</strong><small>#{t("最近登录信息")}</small></div></div>
+                    <a class="mf-icon-link" href="/user/security/personal"><span class="material-icons-outlined">arrow_forward</span></a>
+                </div>
+                <div class="mf-panel-body">
+                    <div class="mf-security-fact"><span>#{t("当前登录")}</span><strong>#{$user.login_time}</strong><small>#{$user.login_ip}</small></div>
+                    <div class="mf-security-fact"><span>#{t("上次登录")}</span><strong>#{if $user.last_login_time}#{$user.last_login_time}#{else}#{t("暂无记录")}#{/if}</strong><small>#{if $user.last_login_ip}#{$user.last_login_ip}#{else}-#{/if}</small></div>
+                    #{if $user.last_login_ip && $user.login_ip != $user.last_login_ip}<div class="mf-security-alert"><span class="material-icons-outlined">warning</span>#{t("检测到登录 IP 发生变化，请确认是本人操作。")}</div>#{/if}
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+#{ready("/assets/user/controller/dashboard/index.js")}
+#{include file="../Common/Footer.html"}

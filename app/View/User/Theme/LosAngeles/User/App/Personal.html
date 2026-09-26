@@ -1,0 +1,5 @@
+#{include file="../../Common/App/MemberTop.html" laPage="security-personal" laTitle=t("个人资料")}
+
+#{include file="../../Part/Form/Personal.html"}
+
+#{include file="../../Common/App/MemberBottom.html" laCtrl="/assets/user/controller/security/personal.js" laVars=["_user_wechat" => $user.wechat]}

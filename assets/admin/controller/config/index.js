@@ -75,7 +75,8 @@
         if (noticeEditor && typeof noticeEditor.destroy === 'function') noticeEditor.destroy();
         noticeEditor = null;
         $('#data-form, #data-form input[name="admin_entrance_secret"], #data-form input[name="admin_entrance_clear"], .save-data').off(namespace);
-        $(document).off('click' + namespace, '[data-theme-update-all]');
+        $('#theme-install-input').off('change');
+        $('.theme-install').off('click');
         //下拉项内按钮用的是捕获阶段监听，pjax 切页后不移除会残留
         if (themeActCapture) {
             document.removeEventListener('mousedown', themeActCapture, true);
@@ -217,10 +218,10 @@
         }
 
 
-        /* ── 下拉项内的「更新 / 设置 / 卸载」按钮 ──────────────────────
+        /* ── 下拉项内的「模板配置 / 卸载」按钮 ──────────────────────
            原来每个下拉右边配一个「模板设置」按钮，只能配置当前选中的那个；
-           有更新也只是显示一行提示，得自己跑去应用商店。现在三个动作都直接
-           放到每一项后面，不用切换当前选中的模板，右侧按钮因此移除。 */
+           现在两个动作都直接放到每一项后面，不用切换当前选中的模板，
+           右侧按钮因此移除。 */
         const THEME_SELECTS = ['user_theme', 'user_mobile_theme', 'user_center_theme', 'user_center_mobile_theme'];
 
         //该模板是否正被四个位置中的任何一个使用（读当前下拉的实时值，不是保存前的值）
@@ -229,7 +230,8 @@
             return v && String(v) === String(key);
         });
 
-        //图标只有商店缓存里有；缺图标的主题用首字母色块占位，避免裂图
+        //模板图标随包走（后端 Theme::getIcon 只回可用的地址）；
+        //没带图标、或者图挂了，就退回首字母色块，不留裂图
         const themeIcon = (theme, name) => {
             if (theme && theme.icon) {
                 return `<img class="md-theme-opt__icon" src="${escapeHtml(theme.icon)}" alt="" loading="lazy"`
@@ -278,10 +280,6 @@
                     acts += `<button type="button" class="md-theme-opt__btn md-theme-opt__btn--del" data-theme-act="uninstall" data-theme-key="${escapeHtml(state.id)}" title="${i18n('卸载模板')}">`
                         + `<i class="fa-duotone fa-regular fa-trash-can"></i><span>${i18n('卸载')}</span></button>`;
                 }
-                if (theme.have_update === true) {
-                    acts = `<button type="button" class="md-theme-opt__btn md-theme-opt__btn--up" data-theme-act="update" data-theme-key="${escapeHtml(state.id)}" title="${i18n('更新到')} v${escapeHtml(theme.update_version || '')}">`
-                        + `<i class="fa-duotone fa-regular fa-arrow-up-from-bracket"></i> v${escapeHtml(theme.update_version || '')}</button>` + acts;
-                }
                 return `<span class="md-theme-opt">${themeIcon(theme, theme.info && theme.info.NAME)}`
                     + themeText(label, themeDesc(theme), themeAuthor(theme))
                     + `<span class="md-theme-opt__acts">${acts}</span></span>`;
@@ -307,104 +305,40 @@
             window.mdReinitSettingsSelect2(THEME_SELECTS);
         }
 
-        /* ── 更新提示条 ─────────────────────────────────────────────
-           模板有新版本时，只在下拉里露一个小徽章太容易被忽略——站长根本不会
-           挨个展开下拉去看。这里在模板区顶部挂一条横幅，直接说清有几个待更新、
-           分别是谁，并提供一键全部更新。 */
-        function pendingThemes() {
-            return _themes.filter(t => t && t.have_update === true && t.plugin_id);
-        }
-
-        function renderUpdateBanner() {
-            $('.md-theme-alert').remove();
-            const list = pendingThemes();
-            if (!list.length) return;
-
-            const chips = list.map(t => `<span class="md-theme-alert__chip">`
-                + themeIcon(t, t.info && t.info.NAME)
-                + `<span>${escapeHtml(t.info.NAME)}</span>`
-                + `<i>v${escapeHtml(t.info.VERSION)} → v${escapeHtml(t.update_version || '')}</i></span>`).join('');
-
-            const html = `<div class="md-theme-alert" role="status">
-                <span class="md-theme-alert__glyph" aria-hidden="true"><i class="fa-duotone fa-regular fa-arrow-up-from-bracket"></i></span>
-                <div class="md-theme-alert__body">
-                    <p class="md-theme-alert__title">${i18n('有')} ${list.length} ${i18n('个模板可以更新')}</p>
-                    <div class="md-theme-alert__chips">${chips}</div>
-                </div>
-                <button type="button" class="md-theme-alert__btn" data-theme-update-all>
-                    <span class="md-theme-alert__btn-text">${i18n('全部更新')}</span>
-                </button>
-            </div>`;
-
-            //挂在模板区标题之后、第一个模板行之前
-            const $firstRow = $('select[name=user_theme]').closest('.row.mb-6');
-            if ($firstRow.length) $firstRow.before(html);
-        }
-
-        //串行更新：接口会读写模板目录，并发跑容易互相踩到
-        function updateAllThemes($btn) {
-            const list = pendingThemes();
-            if (!list.length) return;
-
-            const $text = $btn.find('.md-theme-alert__btn-text');
-            $btn.prop('disabled', true).addClass('is-busy');
-
-            let index = 0;
-            const failed = [];
-
-            const step = () => {
-                if (!controllerActive) return;
-                if (index >= list.length) {
-                    if (failed.length) {
-                        $btn.prop('disabled', false).removeClass('is-busy');
-                        $text.text(i18n('全部更新'));
-                        message.error(i18n('以下模板更新失败：') + failed.join('、'));
-                        return;
+        //模板改为纯本地上传安装：把模板打包成「模板标识/...」的单层目录 zip 即可。
+        $('#theme-install-input').off('change').on('change', function () {
+            if (!this.files || !this.files.length) return;
+            const input = this;
+            const formdata = new FormData();
+            formdata.append('file', input.files[0]);
+            formdata.append('type', '2');
+            Loading.show();
+            $.ajax({
+                type: 'POST',
+                url: '/admin/api/plugin/install',
+                data: formdata,
+                contentType: false,
+                processData: false,
+                dataType: 'json',
+                success: res => {
+                    Loading.hide();
+                    if (input.isConnected) $(input).val('');
+                    if (!controllerActive) return;
+                    if (res.code == 200) {
+                        message.success(res.msg || i18n('安装完成'));
+                        window.location.reload();
+                    } else {
+                        layer.msg(res.msg);
                     }
-                    $text.text(i18n('更新完成，正在刷新…'));
-                    window.location.reload();
-                    return;
+                },
+                error: () => {
+                    Loading.hide();
+                    if (input.isConnected) $(input).val('');
+                    layer.msg(i18n('网络错误'));
                 }
-
-                const theme = list[index];
-                $text.text(`${i18n('正在更新')} ${theme.info.NAME}（${index + 1}/${list.length}）`);
-
-                util.post('/admin/api/app/upgrade', {
-                    plugin_key: theme.info.KEY,
-                    type: theme.plugin_type,
-                    plugin_id: theme.plugin_id
-                }, res => {
-                    if (res.code != 200) failed.push(theme.info.NAME);
-                    index++;
-                    step();
-                }, () => {           //接口返回错误
-                    failed.push(theme.info.NAME);
-                    index++;
-                    step();
-                }, () => {           //网络失败
-                    failed.push(theme.info.NAME);
-                    index++;
-                    step();
-                });
-            };
-            step();
-        }
-
-        renderUpdateBanner();
-
-        $(document).off('click' + namespace, '[data-theme-update-all]')
-            .on('click' + namespace, '[data-theme-update-all]', function () {
-                const $btn = $(this);
-                if ($btn.prop('disabled')) return;
-                const list = pendingThemes();
-                message.ask(
-                    `${i18n('将依次更新以下模板：')}<b class="text-primary">${escapeHtml(list.map(t => t.info.NAME).join('、'))}</b><br>`
-                    + `<span class="text-muted">${i18n('更新过程中请不要关闭页面。')}</span>`,
-                    () => updateAllThemes($btn),
-                    `<b>${i18n('更新')} ${list.length} ${i18n('个模板')}</b>`,
-                    i18n('开始更新')
-                );
             });
+        });
+        $('.theme-install').off('click').on('click', () => $('#theme-install-input').click());
 
         function runThemeAct(btn) {
             const key = btn.getAttribute('data-theme-key');
@@ -429,7 +363,7 @@
                     `${i18n('你想要卸载')} <b class="text-danger">${escapeHtml(theme.info.NAME)}</b> ${i18n('吗，该操作会删除模板全部文件，且无法恢复，请慎重操作！')}`,
                     () => {
                         if (!controllerActive) return;
-                        util.post('/admin/api/app/uninstall', {
+                        util.post('/admin/api/plugin/uninstall', {
                             plugin_key: theme.info.KEY,
                             type: 2
                         }, res => {
@@ -442,23 +376,6 @@
                 return;
             }
 
-            if (!theme.plugin_id) {
-                layer.msg(i18n('缺少应用商店信息，请到应用商店手动更新'));
-                return;
-            }
-            const content = escapeHtml(theme.update_content || i18n('该更新没有提供说明')).replace(/\n/g, '<br>');
-            message.ask(content, () => {
-                if (!controllerActive) return;
-                util.post('/admin/api/app/upgrade', {
-                    plugin_key: theme.info.KEY,
-                    type: theme.plugin_type,
-                    plugin_id: theme.plugin_id
-                }, res => {
-                    if (!controllerActive) return;
-                    message.info(res.msg);
-                    if (res.code == 200) window.location.reload();
-                });
-            }, `<b class="text-primary">${escapeHtml(theme.info.NAME)}</b> <span style="font-size:14px;">v${escapeHtml(theme.info.VERSION)}</span> <i class="fa-duotone fa-regular fa-right-long text-danger"></i> <span class="text-success" style="font-size:14px;">v${escapeHtml(theme.update_version || '')}</span>`, i18n('立即更新'));
         }
 
         /* select2 是在下拉容器 .select2-results 上监听 mouseup 来选中选项的，

@@ -1,0 +1,98 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell mf-page-shell-security mf-page-shell-personal">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">ACCOUNT PROFILE</span><h1>#{t("账户与安全")}</h1><p>#{t("维护身份资料和收款信息，让账户更完整、更安全。")}</p></div>
+            <span class="mf-page-intro__icon material-icons-outlined">shield</span>
+        </section>
+        <section class="mf-panel mf-security-panel">
+            #{include file="../Common/SecurityNav.html"}
+            #{if $smarty.get.tab == 'key'}
+            <div class="mf-panel-body mf-credential-body">
+                <div class="mf-form-section__head"><span class="material-icons-outlined">vpn_key</span><div><strong>#{t("商户凭证")}</strong><small>#{t("API 接入时用于识别当前账户")}</small></div></div>
+                <div class="mf-credential-grid">
+                    <div class="mf-credential">
+                        <span>#{t("商户 ID")}</span>
+                        <code>#{$user.id}</code>
+                        <span class="mf-credential__actions">
+                            <button type="button" class="mf-mini-action" data-mf-copy><span class="material-icons-outlined">content_copy</span>#{t("复制")}</button>
+                        </span>
+                    </div>
+                    <div class="mf-credential">
+                        <span>#{t("商户密钥")}</span>
+                        <code class="app-key">#{$user.app_key}</code>
+                        <span class="mf-credential__actions">
+                            <button type="button" class="mf-mini-action" data-mf-copy><span class="material-icons-outlined">content_copy</span>#{t("复制")}</button>
+                            <button type="button" class="mf-mini-action mf-mini-action--danger reset-key"><span class="material-icons-outlined">refresh</span>#{t("重置")}</button>
+                        </span>
+                    </div>
+                </div>
+                <div class="mf-security-alert"><span class="material-icons-outlined">privacy_tip</span>#{t("请勿向他人透露商户密钥；重置后旧密钥会立即失效。")}</div>
+            </div>
+            #{else}
+            <form class="layui-form form-data">
+                <div class="mf-profile-grid">
+                    <aside class="mf-profile-avatar-card">
+                        <input type="file" class="avatar-input" hidden>
+                        <input type="text" name="avatar" hidden value="#{$user.avatar}">
+                        <button type="button" class="mf-avatar-button" data-acg-proxy=".avatar-input">
+                            <img class="avatar-img" src="#{$user.avatar}" data-acg-fallback="#{$favicon}" alt="#{t('修改头像')}">
+                            <span class="material-icons-outlined">photo_camera</span>
+                        </button>
+                        <strong>#{$user.username}</strong>
+                        <span>#{if $group.name}#{$group.name}#{else}#{t("会员用户")}#{/if}</span>
+                        <small>#{t("点击头像即可上传新图片")}</small>
+                    </aside>
+
+                    <div class="mf-profile-form">
+                        <div class="mf-form-section">
+                            <div class="mf-form-section__head"><span class="material-icons-outlined">person</span><div><strong>#{t("基础资料")}</strong><small>#{t("用于账户识别与联系")}</small></div></div>
+                            <div class="mf-form-grid mf-form-grid--2">
+                                <label class="mf-field"><span>#{t("QQ 号")}</span><input type="number" value="#{$user.qq}" name="qq" autocomplete="off" placeholder="#{t('请输入 QQ 号')}" class="layui-input"></label>
+                                <label class="mf-field"><span>#{t("真实姓名")}</span><input type="text" value="#{$user.nicename}" name="nicename" autocomplete="off" placeholder="#{t('用于外部账户兑现')}" class="layui-input"></label>
+                            </div>
+                        </div>
+
+                        <div class="mf-form-section">
+                            <div class="mf-form-section__head"><span class="material-icons-outlined">account_balance_wallet</span><div><strong>#{t("自动结算")}</strong><small>#{t("选择经营收益默认转入方式")}</small></div></div>
+                            <input type="hidden" name="settlement" value="#{$user.settlement}" data-mf-settlement-input>
+                            <div class="pay-list mf-settlement-list">
+                                <button type="button" class="button-click btn-pay mf-settlement-option #{if $user.settlement == 0}checked#{/if}" data-mf-settlement="0"><img src="/assets/user/images/cash/alipay.png" class="pay-icon" alt=""><span>#{t("支付宝")}</span><i class="material-icons-outlined">check</i></button>
+                                <button type="button" class="button-click btn-pay mf-settlement-option #{if $user.settlement == 1}checked#{/if}" data-mf-settlement="1"><img src="/assets/user/images/cash/wechat.png" class="pay-icon" alt=""><span>#{t("微信")}</span><i class="material-icons-outlined">check</i></button>
+                                <button type="button" class="button-click btn-pay mf-settlement-option #{if $user.settlement == 3}checked#{/if}" data-mf-settlement="3"><img src="/assets/user/images/cash/usdt.png" class="pay-icon" alt=""><span>USDT (TRC20)</span><i class="material-icons-outlined">check</i></button>
+                            </div>
+                        </div>
+
+                        <div class="mf-form-section">
+                            <div class="mf-form-section__head"><span class="material-icons-outlined">payments</span><div><strong>#{t("收款信息")}</strong><small>#{t("仅在兑现到外部账户时使用")}</small></div></div>
+                            <div class="mf-form-grid mf-form-grid--2">
+                                <label class="mf-field"><span>#{t("支付宝账号")}</span><input type="text" value="#{$user.alipay}" name="alipay" autocomplete="off" placeholder="#{t('兑现使用的支付宝账号')}" class="layui-input"></label>
+                                <label class="mf-field"><span>#{t("TRC20 钱包地址")}</span><input type="text" value="#{$user.wallet_address}" name="wallet_address" autocomplete="off" placeholder="#{t('兑现使用的钱包地址')}" class="layui-input"></label>
+                            </div>
+                            <div class="mf-qrcode-field">
+                                <div><strong>#{t("微信收款二维码")}</strong><small>#{t("点击二维码区域即可重新上传")}</small></div>
+                                <input type="file" class="wechat-input" hidden>
+                                <input type="text" name="wechat" hidden value="">
+                                #{if $user.wechat == ''}
+                                <button type="button" class="wx_qrcode_temp" data-acg-proxy=".wechat-input"><span class="material-icons-outlined">add_photo_alternate</span><small>#{t("上传二维码")}</small></button>
+                                #{else}
+                                <button type="button" class="wx_qrcode" data-acg-proxy=".wechat-input" aria-label="#{t('更换微信收款二维码')}"></button>
+                                #{/if}
+                            </div>
+                        </div>
+
+                        <!--start::HOOK-->
+                        #{hook(\App\Consts\Hook::USER_VIEW_PERSONAL_FORM)}
+                        <!--end::HOOK-->
+
+                        <div class="mf-form-actions"><button type="button" class="mf-button mf-button--primary save-data"><span class="material-icons-outlined">save</span>#{t("保存修改")}</button></div>
+                    </div>
+                </div>
+            </form>
+            #{/if}
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/security/personal.js" , ["_user_wechat" => $user.wechat])}
+#{include file="../Common/Footer.html"}

@@ -1,0 +1,18 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page" data-ny-page="cash-record">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <div class="ny-subtabs">
+            <a href="/user/cash/index"><span class="material-icons-outlined">currency_exchange</span>#{t("硬币兑现")}</a>
+            <a href="/user/cash/record" class="is-active"><span class="material-icons-outlined">history</span>#{t("兑现记录")}</a>
+        </div>
+        <section class="ny-page-intro">
+            <div><h1>#{t("兑现记录")}</h1><p>#{t("申请进度与到账状态")}</p></div>
+        </section>
+        <section class="ny-panel">
+            <div class="ny-panel-body ny-table-wrap"><table id="cash-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/cash.record.js")}
+#{include file="../Common/Footer.html"}

@@ -1,0 +1,35 @@
+#{include file="./Layout/Header.html"}
+
+<div class="blog-container">
+    <header class="blog-hero blog-hero--section">
+        <h1 class="blog-largetitle">#{t("归档")}</h1>
+        <div class="blog-hero__count">#{$total} #{t("篇文章")}</div>
+    </header>
+
+    <div class="blog-archive">
+        #{if $archive}
+            #{foreach $archive as $year}
+                <section class="blog-archive__year">
+                    <h2 class="blog-archive__yearhead">#{$year.year}<em>#{$year.count}</em></h2>
+                    #{foreach $year.months as $month}
+                        <div class="blog-archive__month">
+                            <div class="blog-archive__monthhead">#{$month.month} #{t("月")}</div>
+                            <ul>
+                                #{foreach $month.posts as $post}
+                                    <li>
+                                        <time>#{$post.day}</time>
+                                        <a href="#{$post.url}">#{$post.title|escape:'html'}</a>
+                                    </li>
+                                #{/foreach}
+                            </ul>
+                        </div>
+                    #{/foreach}
+                </section>
+            #{/foreach}
+        #{else}
+            <div class="blog-empty"><div class="blog-empty__icon">📂</div><p>#{t("还没有文章")}</p></div>
+        #{/if}
+    </div>
+</div>
+
+#{include file="./Layout/Footer.html"}

@@ -1,0 +1,15 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page" data-ny-page="purchase">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("购买记录")}</h1><p>#{t("付款状态与已交付的卡密")}</p></div>
+            <a class="ny-button ny-button--tonal" href="/"><span class="material-icons-outlined">storefront</span>#{t("去逛逛")}</a>
+        </section>
+        <section class="ny-panel">
+            <div class="ny-panel-body ny-table-wrap"><table id="bill-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/purchase.record.js")}
+#{include file="../Common/Footer.html"}

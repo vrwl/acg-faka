@@ -1,0 +1,130 @@
+#{include file="./Header.html"}
+#{item_var($item)}
+<main class="st-page st-item-page" data-st-item-page data-st-item-id="#{$item.id}" data-st-minimum="#{if $item.minimum > 0}#{$item.minimum}#{else}1#{/if}" data-st-maximum="#{$item.maximum}">
+    <nav class="st-breadcrumb" aria-label="#{t('当前位置')}">
+        <a href="/"><span class="material-icons-outlined" aria-hidden="true">arrow_back</span>#{t("返回商城")}</a>
+        <span aria-hidden="true">/</span>
+        <span>#{t("商品详情")}</span>
+    </nav>
+
+    <section class="st-item-summary st-item-overview">
+        <img src="#{$item.cover|escape:'html'}" class="st-item-cover" width="56" height="56" alt="">
+        <div class="st-item-title st-item-title-block">
+            <h1>#{$item.name|strip_tags|strip|escape:'html'}</h1>
+            <div class="st-item-badges">
+                #{if $item.seckill_status == 1}<span class="badge-soft snap-up" style="display:none;"></span>#{/if}
+                <span class="badge-soft badge-soft-success">#{if $item.delivery_way == 0}#{t("自动发货")}#{else}#{t("在线发货")}#{/if}</span>
+                #{if $setting.show_sold == 1}<span class="badge-soft badge-soft-primary">#{t("已售")} #{$item.order_sold|escape:'html'}</span>#{/if}
+                <span class="badge-soft badge-soft-success item-stock">#{t("库存")} #{$item.stock|escape:'html'}</span>
+            </div>
+            <p>#{t("请确认商品选项和联系方式后完成购买。")}</p>
+        </div>
+        <button type="button" class="shared-button st-icon-button st-share-button" aria-label="#{t('复制商品分享链接')}" title="#{t('复制分享链接')}"><span class="material-icons-outlined" aria-hidden="true">ios_share</span></button>
+    </section>
+
+    <div class="st-item-layout">
+        <div class="st-item-content">
+        <section class="st-panel st-item-purchase" aria-labelledby="st-purchase-title">
+            <div class="st-panel__body">
+            <div class="st-section-header"><div><span class="st-kicker">Purchase</span><h2 id="st-purchase-title">#{t("选择购买信息")}</h2></div></div>
+            <form method="post" class="vstack st-purchase-form" data-st-purchase-form novalidate>
+                #{if !empty($item.config.category)}
+                    <fieldset class="st-choice-group st-form-section">
+                        <legend>#{t("商品类型")}</legend>
+                        <div class="sku-list st-sku-list st-choice-list">
+                            #{foreach $item.config.category as $race => $price}
+                                <button type="button" class="switch-race sku has-sku-price #{if $price@first}is-primary#{/if}" data-sku="#{$race|escape:'html'}" data-price="#{$price|escape:'html'}"><span>#{$race|strip_tags|strip|escape:'html'}</span><em class="st-sku-price">#{$config.currency_symbol}#{$price|escape:'html'}</em></button>
+                            #{/foreach}
+                        </div>
+                    </fieldset>
+                #{/if}
+
+                #{if !empty($item.config.sku)}
+                    #{foreach $item.config.sku as $name => $sku}
+                        <fieldset class="st-choice-group st-form-section">
+                            <legend>#{$name|strip_tags|strip|escape:'html'}</legend>
+                            <div class="sku-list st-sku-list st-choice-list">
+                                #{foreach $sku as $key => $price}
+                                    <button type="button" class="switch-sku sku#{if $price > 0} has-sku-price#{/if} #{if $price@first}is-primary#{/if}" data-sku="#{$name|escape:'html'}" data-value="#{$key|escape:'html'}" data-price="#{$price|escape:'html'}"><span>#{$key|strip_tags|strip|escape:'html'}</span>#{if $price > 0}<em class="st-sku-price">+#{$config.currency_symbol}#{$price|escape:'html'}</em>#{/if}</button>
+                                #{/foreach}
+                            </div>
+                        </fieldset>
+                    #{/foreach}
+                #{/if}
+
+                #{if $item.draft_status == 1}
+                    <div class="st-form-section">
+                        <div class="st-field-heading"><strong>#{t("自选卡密")}</strong><small>#{t("不选择时由系统随机发货")}</small></div>
+                        <input type="hidden" name="card_id" class="form-control">
+                        <button type="button" class="optional-card st-select-card"><span class="material-icons-outlined" aria-hidden="true">touch_app</span><span>#{t("未自选，将随机发货")}</span></button>
+                    </div>
+                #{/if}
+
+                <div class="st-item-fields st-form st-form-section">
+                    #{if !$user}
+                        <label class="st-field"><span>#{contact_type_msg($item.contact_type)}</span><input type="text" name="contact" class="form-control" placeholder="#{t('请输入')}#{contact_type_msg($item.contact_type)}" autocomplete="off" required></label>
+                    #{/if}
+                    #{if $item.coupon == 1}
+                        <label class="st-field"><span>#{t("优惠券")}</span><input type="text" class="form-control" name="coupon" placeholder="#{t('没有则不填')}" autocomplete="off"></label>
+                    #{/if}
+                    #{widget_render($item.widget)}
+                    #{if $item.password_status == 1}
+                        <label class="st-field"><span>#{t("查询密码")}</span><input type="password" class="form-control" name="password" placeholder="#{t('用于查看加密卡密')}" autocomplete="new-password"></label>
+                    #{/if}
+                </div>
+
+                <div class="st-form-section">
+                    <div class="st-field-heading"><strong>#{t("购买数量")}</strong><small>#{if $item.minimum > 0}#{t("最少")} #{$item.minimum} #{t("件")}#{else}#{t("按需选择")}#{/if}#{if $item.maximum > 0}，#{t("最多")} #{$item.maximum} #{t("件")}#{/if}</small></div>
+                    <div class="qty-group st-quantity">
+                        <button type="button" class="change-num-sub" aria-label="#{t('减少数量')}"><span class="material-icons-outlined" aria-hidden="true">remove</span></button>
+                        <input type="number" class="form-control text-center" name="num" value="#{if $item.minimum > 0}#{$item.minimum}#{else}1#{/if}" #{if $item.minimum > 0}min="#{$item.minimum}"#{else}min="1"#{/if} #{if $item.maximum > 0}max="#{$item.maximum}"#{/if} step="1" inputmode="numeric" aria-label="#{t('购买数量')}">
+                        <button type="button" class="change-num-add" aria-label="#{t('增加数量')}"><span class="material-icons-outlined" aria-hidden="true">add</span></button>
+                    </div>
+                </div>
+
+                #{if $item.trade_captcha == 1}
+                    <div class="st-form-section">
+                        <label class="st-field st-captcha-field">
+                            <span>#{t("人机验证")}</span>
+                            <span class="st-captcha-input">
+                                <input type="text" class="form-control captcha-input" placeholder="#{t('输入图中字符')}" name="captcha" autocomplete="off" required>
+                                <img class="captcha-img" src="/user/captcha/image?action=trade" alt="#{t('图形验证码，点击更换')}" role="button" tabindex="0" title="#{t('点击或按回车更换验证码')}">
+                            </span>
+                        </label>
+                    </div>
+                #{/if}
+            </form>
+            </div>
+        </section>
+
+        <section class="st-panel st-item-description" aria-labelledby="st-description-title">
+            <div class="st-panel__body">
+            <div class="st-section-header"><div><span class="st-kicker">Details</span><h2 id="st-description-title">#{t("商品详情")}</h2><p>#{t("购买前请阅读完整说明。")}</p></div></div>
+            <div class="st-rich-content">#{$item.description}</div>
+            </div>
+        </section>
+        </div>
+
+        <aside class="cash-pay st-panel st-item-checkout st-buy-dock" style="display:none;" aria-label="#{t('购买操作')}">
+            <div class="abacus st-total"><small>#{t("应付金额")}</small><div class="price" aria-live="polite"><span class="st-spinner" aria-label="#{t('正在计算')}"></span></div></div>
+            <div class="st-item-runtime-status" data-st-item-status role="status" aria-live="polite" hidden>
+                <span class="material-icons-outlined" data-st-item-status-icon aria-hidden="true">info</span>
+                <span data-st-item-status-text></span>
+                <button type="button" class="st-text-button" data-st-item-retry hidden>#{t("重试")}</button>
+            </div>
+            #{if $item.only_user == 1 && !$user}
+                <div class="st-member-only"><span><strong>#{t("会员专享商品")}</strong><small>#{t("登录后可继续选择并购买")}</small></span><a class="st-button st-button-primary" href="/user/authentication/login?goto=/item/#{$item.id}">#{t("登录后购买")}</a></div>
+            #{else}
+                <button type="button" class="st-button st-button-primary st-payment-trigger" data-st-payment-open aria-expanded="false" aria-controls="st-payment-drawer" disabled><span>#{t("选择支付方式")}</span><span class="material-icons-outlined" aria-hidden="true">arrow_upward</span></button>
+                <button type="button" class="st-payment-backdrop" data-st-payment-close aria-label="#{t('关闭支付方式')}" tabindex="-1"></button>
+                <section class="st-payment-drawer" id="st-payment-drawer" aria-hidden="true" aria-label="#{t('选择支付方式')}">
+                    <header class="st-payment-drawer-header"><div><strong>#{t("选择支付方式")}</strong><small>#{t("确认金额后继续付款")}</small></div><button type="button" class="st-icon-button" data-st-payment-close aria-label="#{t('关闭')}"><span class="material-icons-outlined" aria-hidden="true">close</span></button></header>
+                    <div class="st-payment-state" data-st-payment-state role="status" aria-live="polite"><span class="st-spinner" aria-hidden="true"></span><span data-st-payment-state-text>#{t("正在加载支付方式")}</span><button type="button" class="st-text-button" data-st-payment-retry hidden>#{t("重新加载")}</button></div>
+                    <div class="pay-list st-pay-list" aria-live="polite"></div>
+                </section>
+            #{/if}
+        </aside>
+    </div>
+</main>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Item.js'))}
+#{include file="./Footer.html"}

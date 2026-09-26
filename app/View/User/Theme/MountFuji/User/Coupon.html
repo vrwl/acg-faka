@@ -1,0 +1,22 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell mf-page-shell-goods-admin" data-mf-controller="/assets/user/controller/business/coupon.js" data-mf-table="#coupon-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">PROMOTION CODES</span><h1>#{t("代券管理")}</h1><p>#{t("生成、筛选并追踪代券状态，让营销发放更有秩序。")}</p></div>
+            <button type="button" class="mf-button mf-button--primary button-add"><span class="material-icons-outlined">add</span>#{t("生成代券")}</button>
+        </section>
+        <section class="mf-panel">
+            <div class="mf-panel-heading"><div><span class="material-icons-outlined">local_offer</span><div><strong>#{t("代券列表")}</strong><small>#{t("批量管理当前选中的代券")}</small></div></div></div>
+            <div class="mf-toolbar" aria-label="#{t('批量操作')}">
+                <button type="button" class="mf-tool-button mf-tool-button--danger button-del"><span class="material-icons-outlined">delete</span>#{t("移除选中")}</button>
+                <button type="button" class="mf-tool-button button-lock"><span class="material-icons-outlined">lock</span>#{t("锁定选中")}</button>
+                <button type="button" class="mf-tool-button button-unlock"><span class="material-icons-outlined">lock_open</span>#{t("解锁选中")}</button>
+                <button type="button" class="mf-tool-button button-export"><span class="material-icons-outlined">download</span>#{t("导出筛选")}</button>
+            </div>
+            <div class="mf-panel-body mf-table-wrap"><table id="coupon-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/coupon.js")}
+#{include file="../Common/Footer.html"}

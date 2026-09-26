@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-management-page" data-st-page="commodity" data-st-controller="/assets/user/controller/business/commodity.js" data-st-table="#commodity-table">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main st-main--wide">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("商品工作台")}</span><h1>#{t("我的商品")}</h1><p>#{t("集中管理商品内容、售价、库存与销售状态。")}</p></div>
+            <div class="st-page-header__actions"><button type="button" class="st-button st-button--primary button-add" aria-label="#{t('添加商品')}"><span class="material-icons-outlined">add</span><span>#{t("添加商品")}</span></button></div>
+        </header>
+        <section class="st-panel st-panel--flush" aria-labelledby="st-commodity-title">
+            <div class="st-panel__header"><div><strong id="st-commodity-title">#{t("商品列表")}</strong><small>#{t("搜索、筛选并维护在售商品")}</small></div><span class="st-panel__icon material-icons-outlined">inventory_2</span></div>
+            <div class="st-panel__body st-table-wrap"><table id="commodity-table" aria-label="#{t('商品列表')}"></table></div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Management.js'))}
+#{include file="../Common/Footer.html"}

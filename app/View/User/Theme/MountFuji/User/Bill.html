@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell" data-mf-controller="/assets/user/controller/user/bill.js" data-mf-table="#bill-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">ACCOUNT JOURNAL</span><h1>#{t("我的账单")}</h1><p>#{t("每一笔余额与硬币变化都有迹可循，资金动态更透明。")}</p></div>
+            <span class="mf-page-intro__icon material-icons-outlined">account_balance</span>
+        </section>
+        <section class="mf-panel">
+            <div class="mf-panel-heading"><div><span class="material-icons-outlined">receipt_long</span><div><strong>#{t("账单明细")}</strong><small>#{t("支持按时间与账单类型筛选")}</small></div></div></div>
+            <div class="mf-panel-body mf-table-wrap"><table id="bill-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/bill.js")}
+#{include file="../Common/Footer.html"}

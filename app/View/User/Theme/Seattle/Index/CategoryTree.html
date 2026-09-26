@@ -1,0 +1,28 @@
+#{foreach $nodes as $cate}
+    #{if $cate.children}
+        <div class="st-category-node" data-category-node="#{$cate.id}" data-st-category-depth="#{$depth}">
+            <div class="st-category-parent-row">
+                <button type="button" class="st-category-link st-category-parent-link st-category-toggle" data-st-category-toggle="#{$cate.id}" data-st-category-depth="#{$depth}" aria-expanded="false" aria-controls="st-category-children-#{$cate.id}" aria-label="#{t('展开分类')}：#{$cate.name|strip_tags|strip|escape:'html'}" title="#{$cate.name|strip_tags|strip|escape:'html'}">
+                    <span class="st-category-icon">
+                        #{if $cate.icon}<img src="#{$cate.icon|escape:'html'}" alt="">#{else}<span class="material-icons-outlined" aria-hidden="true">folder</span>#{/if}
+                    </span>
+                    <span class="st-category-name" data-st-category-name title="#{$cate.name|strip_tags|strip|escape:'html'}">#{$cate.name|strip_tags|strip|escape:'html'}</span>
+                    <span class="st-category-count">#{$cate.commodity_count}</span>
+                    <span class="material-icons-outlined st-category-chevron" aria-hidden="true">expand_more</span>
+                </button>
+            </div>
+            <div class="st-category-children" id="st-category-children-#{$cate.id}" data-st-category-depth="#{$depth+1}" aria-hidden="true" hidden>
+                #{include file="./CategoryTree.html" nodes=$cate.children depth=$depth+1}
+            </div>
+        </div>
+    #{else}
+        <a class="switch-category st-category-link #{if $cate.id == $categoryId}is-primary#{/if}" data-id="#{$cate.id}" data-st-category-depth="#{$depth}" href="/cat/#{$cate.id}" title="#{$cate.name|strip_tags|strip|escape:'html'}" #{if $cate.id == $categoryId}aria-current="page"#{/if}>
+            <span class="st-category-icon">
+                #{if $cate.id == 'recommend'}<span class="material-icons-outlined" aria-hidden="true">recommend</span>#{elseif $cate.icon}<img src="#{$cate.icon|escape:'html'}" alt="">#{else}<span class="material-icons-outlined" aria-hidden="true">label</span>#{/if}
+            </span>
+            <span class="st-category-name" data-st-category-name title="#{$cate.name|strip_tags|strip|escape:'html'}">#{$cate.name|strip_tags|strip|escape:'html'}</span>
+            <span class="st-category-count">#{$cate.commodity_count}</span>
+            <span class="material-icons-outlined st-category-check" aria-hidden="true">check</span>
+        </a>
+    #{/if}
+#{/foreach}

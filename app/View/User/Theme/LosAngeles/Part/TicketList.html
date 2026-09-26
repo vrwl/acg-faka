@@ -1,0 +1,85 @@
+#{*
+  洛杉矶 · 工单列表（两端共用）
+
+  user/ticket.js 直接往这些容器里渲染，类名与 data 属性是控制器写死的契约：
+    .uc-ticket-page / .uc-ticket-board / .uc-ticket-list / .uc-ticket-loading
+    .uc-ticket-empty / .uc-ticket-error / .uc-ticket-pagination[ __meta ]
+    .uc-ticket-stat[data-status] + [data-stat="all|pending_admin|pending_user|resolved|closed"]
+    input[name="ticket-keyword"] / select[name="ticket-type"] / .uc-ticket-search__clear
+    [data-page-action="prev|next"]
+  只换皮，不改名。装饰性的 Material 连字全部换成主题 SVG。
+*}
+<div class="uc-ticket-page la-ticket">
+    <a class="la-ticket__new uc-ticket-primary" href="/user/ticket/create">
+        <span class="la-ticket__newico">#{\App\View\User\Theme\LosAngeles\Icons::svg('headset','la-i--lg')}</span>
+        <span class="la-ticket__newcopy">
+            <strong>#{t("创建工单")}</strong>
+            <small>#{t("描述清楚问题，通常很快会收到回复")}</small>
+        </span>
+        #{\App\View\User\Theme\LosAngeles\Icons::svg('right')}
+    </a>
+
+    <div class="la-ticket__stats" role="group" aria-label="#{t('工单状态概览')}">
+        <button type="button" class="la-tstat uc-ticket-stat is-active" data-status="">
+            <b data-stat="all">0</b><span>#{t("全部")}</span>
+        </button>
+        <button type="button" class="la-tstat uc-ticket-stat" data-status="0">
+            <b data-stat="pending_admin">0</b><span>#{t("待客服")}</span>
+        </button>
+        <button type="button" class="la-tstat uc-ticket-stat" data-status="1">
+            <b data-stat="pending_user">0</b><span>#{t("待我回复")}</span>
+        </button>
+        <button type="button" class="la-tstat uc-ticket-stat" data-status="2">
+            <b data-stat="resolved">0</b><span>#{t("已解决")}</span>
+        </button>
+        <button type="button" class="la-tstat uc-ticket-stat" data-status="3">
+            <b data-stat="closed">0</b><span>#{t("已关闭")}</span>
+        </button>
+    </div>
+
+    <section class="la-card uc-ticket-board la-ticket__board">
+        <div class="la-ticket__tools">
+            <label class="uc-ticket-search la-ticket__search">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('search')}
+                <input type="search" name="ticket-keyword" placeholder="#{t('搜索工单号或标题')}" autocomplete="off">
+                <button type="button" class="uc-ticket-search__clear" aria-label="#{t('清空搜索')}">#{\App\View\User\Theme\LosAngeles\Icons::svg('close')}</button>
+            </label>
+            <label class="uc-ticket-select la-ticket__filter">
+                <span class="uc-ticket-select__label la-sr">#{t("类型")}</span>
+                <select name="ticket-type" class="la-input" aria-label="#{t('按工单类型筛选')}">
+                    <option value="">#{t("全部类型")}</option>
+                    <option value="0">#{t("售前咨询")}</option>
+                    <option value="1">#{t("售后支持")}</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="uc-ticket-loading la-ticket__loading" aria-live="polite">
+            <div class="uc-ticket-skeleton la-skeleton"></div>
+            <div class="uc-ticket-skeleton la-skeleton"></div>
+            <div class="uc-ticket-skeleton la-skeleton"></div>
+        </div>
+
+        <div class="uc-ticket-list la-ticket__list" aria-live="polite"></div>
+
+        <div class="uc-ticket-empty la-empty" hidden>
+            <span class="uc-ticket-empty__art">#{\App\View\User\Theme\LosAngeles\Icons::svg('headset')}</span>
+            <strong class="la-empty__title">#{t("这里还没有工单")}</strong>
+            <p class="la-empty__desc">#{t("遇到疑问不必到处找客服，开一张工单就能持续跟进。")}</p>
+            <a class="la-btn la-btn--brand la-btn--sm" href="/user/ticket/create">#{t("创建第一张工单")}</a>
+        </div>
+
+        <div class="uc-ticket-error la-empty" hidden>
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}
+            <strong class="la-empty__title">#{t("暂时无法读取工单")}</strong>
+            <small class="la-empty__desc">#{t("请检查网络后再试一次")}</small>
+            <button type="button" class="la-btn la-btn--line la-btn--sm">#{t("重新加载")}</button>
+        </div>
+
+        <div class="uc-ticket-pagination la-pager" hidden>
+            <button type="button" class="la-btn la-btn--line la-btn--sm" data-page-action="prev">#{\App\View\User\Theme\LosAngeles\Icons::svg('left')}<span>#{t("上一页")}</span></button>
+            <span class="uc-ticket-pagination__meta la-pager__meta"></span>
+            <button type="button" class="la-btn la-btn--line la-btn--sm" data-page-action="next"><span>#{t("下一页")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</button>
+        </div>
+    </section>
+</div>

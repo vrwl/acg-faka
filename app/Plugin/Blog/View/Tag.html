@@ -1,0 +1,30 @@
+#{include file="./Layout/Header.html"}
+
+<div class="blog-container">
+    <header class="blog-hero blog-hero--section">
+        <div class="blog-hero__kicker">#{t("标签")}</div>
+        <h1 class="blog-largetitle">##{$tag.name|escape:'html'}</h1>
+        <div class="blog-hero__count">#{$pagination.total} #{t("篇文章")}</div>
+    </header>
+
+    <div class="blog-layout">
+        <section class="blog-flow" data-blog-list data-blog-infinite='{"tag":"#{$tag.slug}"}'>
+            #{if $posts}
+                #{foreach $posts as $post}
+                    #{include file="./Partial/PostCard.html" post=$post}
+                #{/foreach}
+            #{else}
+                <div class="blog-empty"><div class="blog-empty__icon">🏷</div><p>#{t("这个标签下还没有文章")}</p></div>
+            #{/if}
+            <div class="blog-flow__skeletons" data-blog-skeletons hidden>
+                <div class="blog-skeleton"></div><div class="blog-skeleton"></div>
+            </div>
+            <div class="blog-flow__end" data-blog-end hidden>—— #{t("已经到底啦")} ——</div>
+            <div data-blog-sentinel></div>
+        </section>
+    </div>
+
+    #{include file="./Partial/Pagination.html"}
+</div>
+
+#{include file="./Layout/Footer.html"}

@@ -19,7 +19,6 @@ abstract class Manage extends \App\Controller\Base\Manage
 
             $data['title'] = lang($title, "tpl");
             $data['app']['version'] = \config("app")['version'];
-            $data['app']['server'] = (int)\config("store")['server'];
 
             $cfg = Config::list();
 
@@ -42,11 +41,6 @@ abstract class Manage extends \App\Controller\Base\Manage
                     3 => "夜班"
                 };
             }
-
-            $data['_store_initialize'] = file_exists(BASE_PATH . "/kernel/Plugin.php");
-
-            $data['_app_store_load_state'] = defined('_APP_STORE_LOAD_STATE') && \_APP_STORE_LOAD_STATE === true;
-
             return View::render('Admin/' . $template, ViewSafe::escape($data));
         } catch (\SmartyException $e) {
             throw new ViewException($e->getMessage());

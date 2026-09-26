@@ -13,7 +13,7 @@ use Kernel\Context\Interface\Request;
 use Kernel\Exception\JSONException;
 
 /**
- * 开发者中心 MCP Server（Streamable HTTP，纯 JSON 响应）。
+ * 本机插件 MCP Server（Streamable HTTP，纯 JSON 响应）。
  *
  * 公开端点 POST /admin/mcp/server，用「访问秘钥」(config/mcp.php) 做 bearer 鉴权，
  * 不走后台会话。AdminEntrance::guard() 已放行 /admin/mcp/*（见 app/Util/AdminEntrance.php）。
@@ -121,7 +121,7 @@ class Mcp
                             "name" => "acg-faka-developer",
                             "version" => (string)((array)config("app"))['version'] ?: "1.0.0",
                         ],
-                        "instructions" => "本站开发者中心与本机插件运维的 MCP 接口。商店侧：list_plugins 查看你名下插件与审核状态，create_plugin/upload_install_kit/submit_update 管理插件包（服务端自动打包），set_price 改定价。本机侧：local_plugins 列出已装插件，plugin_start/plugin_stop 启停，plugin_config_get/plugin_config_set 查改配置（读取默认脱敏），plugin_log_read/plugin_log_clear 读清日志。",
+                        "instructions" => "本机插件运维的 MCP 接口。local_plugins 列出已装插件，plugin_start/plugin_stop 启停，plugin_config_get/plugin_config_set 查改配置（读取默认脱敏），plugin_log_read/plugin_log_clear 读清日志。",
                     ],
                 ];
 

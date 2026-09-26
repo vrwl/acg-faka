@@ -1,0 +1,272 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Toolbar-->
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <!--end::Toolbar-->
+    <!--begin::Post-->
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="container-fluid">
+            <!--begin::Tables Widget 9-->
+            <div class="card mb-5 mb-xl-8">
+                <!--begin::Header-->
+                <div class="card-header border-0">
+                    <div class="card-toolbar">
+                        <button class="btn btn-sm btn-light-primary btn-app-sync me-3"><i class="fa-duotone fa-regular fa-refresh"></i>
+                            立即同步(上次同步时间：#{$last_sync_time})
+                        </button>
+                        <button class="btn btn-sm btn-light-success btn-app-batch me-3"><i class="fa-duotone fa-regular fa-exchange"></i>
+                            批量生成商品
+                        </button>
+                        <button class="btn btn-sm btn-light-info btn-app-all me-3"><i class="fa-duotone fa-regular fa-exchange"></i>
+                            当前全部生成商品
+                        </button>
+                    </div>
+                </div>
+                <!--end::Header-->
+
+                <div class="card-body py-3">
+                    <table id="goods"></table>
+                </div>
+            </div>
+
+            <!--end::Tables Widget 9-->
+        </div>
+        <!--end::Container-->
+    </div>
+</div>
+<!--end::Content-->
+
+#{set_script_var(["_dock_good_sites" => $sites])}
+<script>
+    documentReady(() => {
+        !function () {
+            const sitesRaw = getVar('_dock_good_sites') || '[]';
+            let siteOptions = [];
+            try {
+                siteOptions = JSON.parse(sitesRaw) || [];
+            } catch (e) {
+                console.error('Parse _dock_good_sites failed', e);
+            }
+
+            const table = new Table('/plugin/ThirdDockManage/api/good/data', '#goods');
+            table.setPagination(15, [15, 25, 50, 100]);
+
+            table.setColumns([
+                {
+                    field: 'checked',
+                    checkbox: true,
+                    formatter: function (val, item) {
+                        if (item.hasData === 1) {
+                            return {disabled : true}
+                        }
+                    }
+                },
+                {field: 'id', title: 'ID'},
+                {field: 'site_name', title: '站点'},
+                {field: 'c_id', title: '商品ID'},
+                {
+                    field: 'name',
+                    title: '商品名称',
+                    formatter: function (val, item) {
+                        if (item.img !== '' && item.img !== null) {
+                            return '<img src="' + item.img + '"  style="width: 18px;border-radius: 100%;margin-top: -3px;"/> ' + item.name
+                        } else {
+                            return item.name
+                        }
+                    }
+                },
+                {field: 'category', title: '商品分类ID/名称'},
+                {field: 'price', title: '零售价'},
+                {field: 'stock', title: '库存'},
+                {
+                    field: 'status',
+                    title: '状态',
+                    formatter: function (val, item) {
+                        if (item.status === 1) {
+                            return '<span class="btn-badge badge-light-success owner">上架中</span>'
+                        }
+                        if (item.status === 2) {
+                            return '<span class="btn-badge badge-light-danger owner">已下架</span>'
+                        }
+                    }
+                },
+                {field: 'updated_at', title: '最后更新时间'},
+                {
+                    field: 'operate',
+                    title: '操作',
+                    type: 'button',
+                    buttons: [
+                        {
+                            icon: 'fa-duotone fa-regular fa-check',
+                            class: 'text-primary',
+                            click: (event, value, row) => {
+                                modal(util.icon('fa-duotone fa-regular fa-pen-to-square me-1') + ' 生成商品', row);
+                            }
+                        }
+                    ],
+                }
+            ]);
+
+            table.setSearch([
+                {title: "名称", name: "search-name", type: "input"},
+                {title: "分类", name: "search-category", type: "input"},
+                {title: "状态", name: "equal-status", type: "select", dict: [
+                    {id: 1, name: "上架"},
+                    {id: 2, name: "下架"},
+                ], default: 0},
+                {title: "站点", name: "equal-site_id", type: "select", dict: siteOptions, default: 0},
+            ]);
+
+            table.render();
+
+            const modal = (title, assign = {}) => {
+                component.popup({
+                    submit: '/plugin/ThirdDockManage/api/good/generate',
+                    tab: [
+                        {
+                            name: title,
+                            form: [
+                                {
+                                    title: "商品分类",
+                                    name: "category_id",
+                                    type: "select",
+                                    dict: "category->owner=0,id,name",
+                                    placeholder: "请选择分类",
+                                    required: true,
+                                    search: true
+                                },
+                                {title: "覆盖配置", name: "cover", type: "switch", text:"是", default: 0, tips: "开启后将覆盖之前生成过了的商品设置"},
+                                {
+                                    title: "加价模式", name: "mode", type: "radio", dict: [
+                                        {id: 0, name: "普通金额加价"},
+                                        {id: 1, name: "百分比加价"},
+                                        {id: 2, name: "阶梯复杂加价"}
+                                    ], default: 0, required: true,
+                                },
+                                {title: "加价数量", name: "mode_value", type: "input", placeholder: "金额/百分比(小数代替)/阶梯格式", required: true, tips:"阶梯格式：50@%@0.1|60@+@5  表示成本价小于等于50的，按百分比0.1加价；成本价小于等于60的按普通金额5加价；多个条件以第一个符合条件优先"},
+                                {title: "吉利小数", name: "lucky_decimal", type: "input", placeholder: "0.6(小数格式，想要几位这里就小数后几位)", tips:"加价后的价格会以增加的方式达到这个小数"},
+                                {title: "实时同步", name: "sync_now", type: "switch", text:"是", default: 0, tips: "点击商品的时候会实时获取最新数据，如果开启，货源站速度的快慢会影响这边商品展示的速度！"},
+                                {title: "同步价格", name: "sync_price", type: "switch", text:"是", default: 0, tips: "获取最新价格，注意：不会修改批发价格！"},
+                                {title: "同步详情及参数", name: "sync_content", type: "switch", text:"是", default: 0, tips: "获取最新详情、参数"},
+                                {title: "同步标题及封面图", name: "sync_title", type: "switch", text:"是", default: 0, tips: "获取最新标题、封面图"},
+                                {title: "强制登录", name: "only_user", type: "switch", text:"是", default: 0, tips: "用户必须登录才能购买商品"},
+                                {title: "使用图床", name: "use_upload", type: "radio", dict: [
+                                        {id: 2, name: "全局设置"},
+                                        {id: 0, name: "关闭"},
+                                        {id: 1, name: "开启"},
+                                        {id: 3, name: "保存本地"},
+                                    ], default: 2},
+                                {title: "详情文本替换", name: "content_replace", type: "textarea", placeholder: "格式为：查找的文字##替换的文字$$$查找的文字#替换的文字，每条以$$$隔开，搜索与替换间以##隔开", tips: "格式为：查找的文字##替换的文字$$$查找的文字#替换的文字，每条以$$$隔开，搜索与替换间以##隔开"},
+                                {title: "展示库存", name: "show_stock", type: "radio", dict: [
+                                        {id: 0, name: "全局设置"},
+                                        {id: 1, name: "关闭"},
+                                        {id: 2, name: "开启"}
+                                    ], default: 0},
+                                {title: "API对接", name: "api_status", type: "switch", text:"开启", default: 0, tips: "异次元同站点对接！"},
+                                {title: "id", name: "id", type: "input", hide: true},
+                                {title: "名称", name: "name", type: "input", hide: true},
+                                {title: "分类", name: "category", type: "input", hide: true},
+                                {title: "状态", name: "status", type: "input", hide: true},
+                                {title: "站点", name: "site_id", type: "input", hide: true},
+                            ],
+                        },
+                    ],
+                    assign,
+                    autoPosition: true,
+                    height: "auto",
+                    width: "660px",
+                    done: () => {
+                        // table.refresh();
+                    }
+                });
+            };
+
+            var step_num = 0;
+            let deal_step = (values = {}) => {
+                util.post("/plugin/ThirdDockManage/api/good/one", {key: values.key, page: values.next}, res => {
+                    if (res.code === 200) {
+                        if (res.data.next !== 'end') {
+                            deal_step({key: values.key, next: res.data.next, all_num: values.all_num, keys: values.keys});
+                        } else {
+                            step_num++;
+                            if (step_num >= values.all_num) {
+                                $('.btn-app-sync').html("<i class=\"fa-duotone fa-regular fa-refresh fa-spin\"></i>同步完成，正在克隆中...");
+                                $.post("/plugin/ThirdDockManage/api/good/clone", {keys: values.keys}, res3 => {
+                                    if (res3.code == 200) {
+                                        $('.btn-app-sync').addClass("refresh");
+                                        $('.btn-app-sync').html("<i class=\"fa-duotone fa-regular fa-refresh\"></i>克隆成功，点击刷新页面");
+                                    } else {
+                                        $('.btn-app-sync').html("<i class=\"fa-duotone fa-regular fa-refresh\"></i>克隆失败");
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+            };
+
+            $('.btn-app-batch').click(function () {
+                let data = table.getSelectionIds();
+                if (data.length === 0) {
+                    message.alert("请至少勾选1个商品进行操作", "error");
+                    return;
+                }
+                modal("批量生成商品", {id: data.join(',')});
+            });
+            $('.btn-app-all').click(function () {
+                let serialize = table.getSearchData();
+                console.log(serialize);
+                modal("全部生成商品", {id: "all", name: serialize["search-name"], category: serialize["search-category"],
+                    status: serialize["equal-status"], site_id: serialize["equal-site_id"]});
+            });
+
+            $('.btn-app-sync').click(function () {
+                if ($('.btn-app-sync').hasClass('refresh')) {
+                    location.reload();
+                } else {
+                    $('.btn-app-sync').html("<i class=\"fa-duotone fa-regular fa-refresh fa-spin\"></i>初始化任务...");
+                    util.post('/plugin/ThirdDockManage/api/good/init', {}, res => {
+                        if (res.code === 200) {
+                            let key_num = res.data.length;
+                            let keys = res.data;
+                            if (key_num > 0) {
+                                step_num = 0;
+                                res.data.forEach(item => {
+                                    $('.btn-app-sync').html("<i class=\"fa-duotone fa-regular fa-spin\"></i>正在同步中...");
+                                    util.post("/plugin/ThirdDockManage/api/good/one", {key: item}, res2 => {
+                                        if (res2.code === 200) {
+                                            if (res2.data.next !== 'end') {
+                                                deal_step({key: item, next: res2.data.next, all_num: key_num, keys: keys});
+                                            } else {
+                                                step_num++;
+                                                if (step_num >= key_num) {
+                                                    $('.btn-app-sync').html("<i class=\"fa-duotone fa-regular fa-spin\"></i>同步完成，正在克隆中...");
+                                                    util.post("/plugin/ThirdDockManage/api/good/clone", {keys: keys}, res3 => {
+                                                        if (res3.code === 200) {
+                                                            $('.btn-app-sync').addClass("refresh");
+                                                            $('.btn-app-sync').html("<i class=\"fa-duotone fa-regular fa-refresh\"></i>克隆成功，点击刷新页面");
+                                                        } else {
+                                                            $('.btn-app-sync').html("<i class=\"fa-duotone fa-regular fa-refresh\"></i>克隆失败");
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
+
+                            } else {
+                                $('.btn-app-sync').html("<i class=\"fa fa-refresh\"></i>暂无可同步站点，点击刷新页面");
+                            }
+                        } else {
+                            $('.btn-app-sync').html("<i class=\"fa-duotone fa-regular fa-refresh\"></i>同步失败，点击再次同步");
+                        }
+                    });
+                }
+            });
+        }();
+    });
+</script>
+#{include file=$manage_view_path|cat:"Footer.html"}

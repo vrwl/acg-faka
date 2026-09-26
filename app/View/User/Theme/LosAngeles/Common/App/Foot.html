@@ -1,0 +1,122 @@
+#{*
+  洛杉矶 · 手机端页尾（脚本与钩子）
+  参数：laArea / laJs / laNoTab(1=不渲染底部导航)
+*}
+#{assign var=laArea value=$laArea|default:'shop'}#{assign var=laJs value=$laJs|default:''}#{assign var=laCtrl value=$laCtrl|default:''}#{assign var=laNoTab value=$laNoTab|default:0}
+#{if !$laNoTab}#{include file="./TabBar.html"}#{/if}
+#{include file="./Sheet.html"}
+
+#{* 会员中心与商城用的是两个不同的资源包：
+   _user.js 里有 _Dict（会员中心的表格字典）与 glass.js；
+   _index.js 里有 trade / treasure（下单与发卡弹窗）。
+   给错包的症状很隐蔽：表格拿到了数据、分页也显示"共 N 条"，
+   但 formatter 抛 "_Dict is not defined"，整张表渲染成"暂无数据"。 *}
+#{if $laArea == 'member'}
+#{* _.js 已含 wangEditor（editor.js），但 ACE（editor/code/code.js）和会员区全局控制器
+   （user/global.js）两个包都没有 —— 我的店铺页的分站代码框要 ace，缺了整页脚本中断，
+   主站分类树和商品表都不会渲染。生产、调试两份清单都必须带。 *}
+#{js([
+"/assets/common/js/_.js",
+"/assets/user/js/_user.js",
+"/assets/common/js/editor/code/code.js",
+"/assets/user/controller/user/global.js",
+"/assets/static/codemirror/lib/codemirror.js",
+"/assets/static/codemirror/mode/markdown/markdown.js",
+"/assets/common/js/editor/markdown/marked.min.js",
+"/assets/common/js/editor/markdown/turndown.min.js",
+"/assets/common/js/editor/markdown/editorv2.js"
+],
+[
+"/assets/common/js/util/dict.js",
+"/assets/common/js/jquery.min.js",
+"/assets/common/js/toastr.min.js",
+"/assets/common/js/component/loading.js",
+"/assets/common/js/util.js",
+"/assets/common/js/layer/layer.js",
+"/assets/common/js/jquery.pjax.min.js",
+"/assets/common/js/jquery.qrcode.min.js",
+"/assets/common/js/format.js",
+"/assets/common/js/message.js",
+"/assets/common/js/component.js",
+"/assets/common/js/layui/layui.js",
+"/assets/common/js/jquery.treegrid.min.js",
+"/assets/common/js/bootstrap/bootstrap.bundle.min.js",
+"/assets/common/js/table/bootstrap-table.min.js",
+"/assets/common/js/table/bootstrap-table-treegrid.min.js",
+"/assets/common/js/component/form.js",
+"/assets/common/js/component/search.js",
+"/assets/common/js/component/xm-select.js",
+"/assets/common/js/component/tree.select.js",
+"/assets/common/js/component/authtree.js",
+"/assets/common/js/component/table.js",
+"/assets/common/js/component/select2.min.js",
+"/assets/common/js/cache.js",
+"/assets/common/js/editor/editor.js",
+"/assets/common/js/editor/code/code.js",
+"/assets/static/codemirror/lib/codemirror.js",
+"/assets/static/codemirror/mode/markdown/markdown.js",
+"/assets/common/js/editor/markdown/marked.min.js",
+"/assets/common/js/editor/markdown/turndown.min.js",
+"/assets/common/js/editor/markdown/editorv2.js",
+"/assets/common/js/component/decimal.js",
+"/assets/user/js/dict.js",
+"/assets/user/js/glass.js",
+"/assets/user/controller/user/global.js"
+])}
+#{else}
+#{* 商城侧也要 ACE：form.js 的构造函数无条件 ace.config.set(...)，商品页「自选卡密」用的 component.popup 会走到它，
+   缺了就 ace is not defined。其它主题的商城页脚都带，两份清单都要。 *}
+#{js([
+"/assets/common/js/_.js",
+"/assets/user/js/_index.js",
+"/assets/common/js/editor/code/code.js"
+],
+[
+"/assets/common/js/util/dict.js",
+"/assets/common/js/jquery.min.js",
+"/assets/common/js/toastr.min.js",
+"/assets/common/js/component/loading.js",
+"/assets/common/js/util.js",
+"/assets/common/js/layer/layer.js",
+"/assets/common/js/jquery.pjax.min.js",
+"/assets/common/js/jquery.qrcode.min.js",
+"/assets/common/js/format.js",
+"/assets/common/js/message.js",
+"/assets/common/js/component.js",
+"/assets/common/js/layui/layui.js",
+"/assets/common/js/jquery.treegrid.min.js",
+"/assets/common/js/bootstrap/bootstrap.bundle.min.js",
+"/assets/common/js/table/bootstrap-table.min.js",
+"/assets/common/js/table/bootstrap-table-treegrid.min.js",
+"/assets/common/js/component/form.js",
+"/assets/common/js/component/search.js",
+"/assets/common/js/component/xm-select.js",
+"/assets/common/js/component/tree.select.js",
+"/assets/common/js/component/authtree.js",
+"/assets/common/js/component/table.js",
+"/assets/common/js/component/select2.min.js",
+"/assets/common/js/cache.js",
+"/assets/common/js/editor/code/code.js",
+"/assets/common/js/component/decimal.js",
+"/assets/user/js/trade.js",
+"/assets/user/js/treasure.js"
+])}
+#{/if}
+
+#{ready("`$static`/Assets/Js/Kit.js?v=`$lav`")}
+#{ready("`$static`/Assets/Js/App.Shell.js?v=`$lav`")}
+#{if $laJs}#{ready("`$static`/Assets/Js/`$laJs`?v=`$lav`")}#{/if}
+#{* 平台共享控制器（会员中心各列表页）—— 必须排在主题脚本之后，这样 Center.js 已经挂好 Table 的渲染钩子 *}
+#{* laVars：给平台控制器喂 getVar() 变量（如个人资料页的 _user_wechat），和 Seattle 的写法一致 *}
+#{if $laCtrl}#{ready($laCtrl, $laVars|default:[])}#{/if}
+
+<!--start::HOOK-->
+#{hook(\App\Consts\Hook::USER_GLOBAL_VIEW_BODY)}
+#{if $laArea == 'member'}#{hook(\App\Consts\Hook::USER_VIEW_BODY)}#{else}#{hook(\App\Consts\Hook::USER_VIEW_INDEX_BODY)}#{/if}
+<!--end::HOOK-->
+</body>
+<!--start::HOOK-->
+#{hook(\App\Consts\Hook::USER_GLOBAL_VIEW_FOOTER)}
+#{if $laArea == 'member'}#{hook(\App\Consts\Hook::USER_VIEW_FOOTER)}#{else}#{hook(\App\Consts\Hook::USER_VIEW_INDEX_FOOTER)}#{/if}
+<!--end::HOOK-->
+</html>

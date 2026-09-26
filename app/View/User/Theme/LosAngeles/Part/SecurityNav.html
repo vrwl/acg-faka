@@ -1,0 +1,25 @@
+#{*
+  洛杉矶 · 账号安全子导航（两端共用）
+  个人资料页的两个面板由 security/personal.js 用 .uc-subtab a[data-ptab] +
+  .uc-tabpanel[data-panel] 驱动，类名是控制器写死的，不能改。
+*}
+<nav class="la-subnav uc-subtab" aria-label="#{t('账号安全')}">
+    <a class="la-subnav__item #{active('/user/security/personal','is-on')}" data-ptab="info" href="/user/security/personal">
+        #{\App\View\User\Theme\LosAngeles\Icons::svg('user')}<span>#{t("账户与安全")}</span>
+    </a>
+    <a class="la-subnav__item" data-ptab="edit" href="/user/security/personal?tab=edit">
+        #{\App\View\User\Theme\LosAngeles\Icons::svg('edit')}<span>#{t("修改资料")}</span>
+    </a>
+    <a class="la-subnav__item #{active('/user/security/email','is-on')}" href="/user/security/email">
+        #{\App\View\User\Theme\LosAngeles\Icons::svg('mail')}<span>#{t("邮箱")}</span>
+    </a>
+    <a class="la-subnav__item #{active('/user/security/phone','is-on')}" href="/user/security/phone">
+        #{\App\View\User\Theme\LosAngeles\Icons::svg('phone')}<span>#{t("手机")}</span>
+    </a>
+    <a class="la-subnav__item #{active('/user/security/password','is-on')}" href="/user/security/password">
+        #{\App\View\User\Theme\LosAngeles\Icons::svg('lock')}<span>#{t("密码")}</span>
+    </a>
+    <!--start::HOOK-->
+    #{hook(\App\Consts\Hook::USER_VIEW_SECURITY_NAV)}
+    <!--end::HOOK-->
+</nav>

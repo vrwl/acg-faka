@@ -1,0 +1,48 @@
+<script>
+    window.__ACG_MP__ = {
+        api: "#{$mp.api}",
+        server: "#{$mp.server}",
+        playlist: "#{$mp.playlist}",
+        autoplay: #{if $mp.autoplay}true#{else}false#{/if},
+        order: "#{$mp.order}",
+        volume: #{$mp.volume},
+        lyric: #{if $mp.lyric}true#{else}false#{/if},
+        stage: #{if $mp.stage}true#{else}false#{/if},
+        position: "#{$mp.position}",
+        tint: "#{$mp.tint}",
+        startState: "#{$mp.startState}",
+        i18n: {
+            lyrics: "#{t('歌词')}",
+            playlist: "#{t('播放列表')}",
+            noLyrics: "#{t('纯音乐，请欣赏')}",
+            lyricsLoading: "#{t('歌词加载中')}",
+            tapResume: "#{t('轻触任意处继续播放')}",
+            searchTracks: "#{t('搜索歌曲、歌手…')}",
+            empty: "#{t('暂无匹配的歌曲')}",
+            netSearch: "#{t('全网搜索')}",
+            netSearching: "#{t('正在搜索全网…')}",
+            netResults: "#{t('网络搜索结果')}",
+            netEmpty: "#{t('全网没有找到相关歌曲')}",
+            addedToList: "#{t('已加入播放列表')}",
+            loadFailed: "#{t('这首歌暂时无法播放，已自动跳过')}",
+            play: "#{t('播放')}",
+            pause: "#{t('暂停')}",
+            prev: "#{t('上一首')}",
+            next: "#{t('下一首')}",
+            modeList: "#{t('列表循环')}",
+            modeSingle: "#{t('单曲循环')}",
+            modeRandom: "#{t('随机播放')}",
+            volume: "#{t('音量')}",
+            expand: "#{t('展开播放器')}",
+            collapse: "#{t('收起')}",
+            immersive: "#{t('沉浸模式')}",
+            exitImmersive: "#{t('退出沉浸模式')}",
+            fx: "#{t('歌词特效')}",
+            fxOn: "#{t('歌词特效已开启')}",
+            fxOff: "#{t('歌词特效已关闭')}",
+            minimize: "#{t('最小化')}",
+            unknownArtist: "#{t('未知艺术家')}"
+        }
+    };
+</script>
+<script src="#{$mpJs}" defer></script>

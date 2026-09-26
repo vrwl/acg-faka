@@ -312,7 +312,6 @@ th {
     text-align: -webkit-match-parent;
 }
 
-
 label {
     display: inline-block;
 }
@@ -2260,7 +2259,6 @@ progress {
         --bs-gutter-y: 2.5rem;
     }
 }
-
 
 .form-label {
     margin-bottom: 0.5rem;
@@ -5510,7 +5508,6 @@ textarea.form-control-lg {
 .alert-info .alert-link {
     color: #361b70;
 }
-
 
 .alert-warning {
     color: #665000;
@@ -15606,7 +15603,6 @@ textarea.form-control-lg {
         display: grid !important;
     }
 
-
     .d-md-flex {
         display: flex !important;
     }
@@ -19378,7 +19374,6 @@ textarea.form-control-lg {
     .d-lg-grid {
         display: grid !important;
     }
-
 
     .d-lg-flex {
         display: flex !important;
@@ -23152,7 +23147,6 @@ textarea.form-control-lg {
         display: grid !important;
     }
 
-
     .d-xl-flex {
         display: flex !important;
     }
@@ -26924,7 +26918,6 @@ textarea.form-control-lg {
     .d-xxl-grid {
         display: grid !important;
     }
-
 
     .d-xxl-flex {
         display: flex !important;
@@ -30991,7 +30984,6 @@ textarea.form-control-lg {
     .d-print-grid {
         display: grid !important;
     }
-
 
     .d-print-flex {
         display: flex !important;
@@ -42253,7 +42245,6 @@ code:not([class*=language-]) {
     border-radius: 0.475rem;
 }
 
-
 .popover .popover-header {
     font-size: 1rem;
     font-weight: 500;
@@ -49182,7 +49173,6 @@ body {
     -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
-
 @media (min-width: 992px) {
     .aside {
         width: 265px;
@@ -51006,7 +50996,6 @@ span.flatpickr-weekday {
     border-radius: 0.475rem !important;
 }
 
-
 div.dataTables_wrapper div.dataTables_length {
     padding: 0.5rem 0;
 }
@@ -51033,7 +51022,6 @@ div.dataTables_wrapper div.dataTables_paginate {
 div.dataTables_wrapper div.dataTables_paginate .pagination {
     margin: 0;
 }
-
 
 div.dataTables_wrapper div.dataTables_processing {
     border-radius: 0.475rem;
@@ -52744,7 +52732,6 @@ body {
     cursor: pointer;
 }
 
-
 .loader {
     color: #EEE;
     -webkit-animation: rotate 3.33334s infinite linear;
@@ -53159,38 +53146,6 @@ body {
 .break-spaces {
     white-space: break-spaces !important;
 }
-
-.app-store-main{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.app-server-select {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    font-size: 1rem;
-    line-height: 1;
-    text-align: center;
-    vertical-align: baseline;
-    padding: 0.346em 0.85em;
-    white-space: nowrap;
-
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    position: relative;
-    isolation: isolate;
-    box-shadow: 0 0 24px rgba(0, 0, 0, 0.1);
-    border: none;
-    background: none;
-    margin: 0 3px;
-    text-decoration: none;
-    cursor: pointer;
-    color: #7b77fb;
-}
-
 
 .menu-update{
     cursor: pointer;

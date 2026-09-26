@@ -7,6 +7,7 @@ use App\Consts\Hook;
 use App\Controller\Base\API\Manage;
 use App\Interceptor\ManageSession;
 use App\Model\ManageLog;
+use App\Util\Extension;
 use App\Util\Theme;
 use Kernel\Annotation\Interceptor;
 use Kernel\Annotation\Post;
@@ -23,7 +24,6 @@ class Plugin extends Manage
     public function getPlugins(): array
     {
         $plugins = \Kernel\Util\Plugin::getPlugins(false);
-        $appStore = (array)json_decode((string)file_get_contents(BASE_PATH . "/runtime/plugin/store.cache"), true);
         $path = BASE_PATH . "/app/Plugin/";
 
         //搜索不分大小写：插件名里 AI / USDT / Telegram 这类词大小写各异，
@@ -34,15 +34,6 @@ class Plugin extends Manage
         foreach ($plugins as $key => $plugin) {
 
             $plugins[$key]["id"] = $plugin[\App\Consts\Plugin::PLUGIN_NAME];
-            if (!array_key_exists($plugins[$key]["id"], $appStore)) {
-                $plugins[$key]['icon'] = "/favicon.ico";
-            } else {
-                $plugins[$key]['icon'] = \App\Service\App::APP_URL . $appStore[$plugins[$key]["id"]]['icon'];
-
-                if ($plugin['VERSION'] !== $appStore[$plugin['PLUGIN_NAME']]["version"]) {
-                    $plugins[$key]['HAVE_UPDATE'] = true;
-                }
-            }
 
             //判断文档是否存在
             if (is_dir($path . $plugins[$key]["id"] . "/Wiki")) {
@@ -85,10 +76,6 @@ class Plugin extends Manage
             return $bTop <=> $aTop;
         });
 
-        usort($plugins, function ($a, $b) {
-            return ($b['HAVE_UPDATE'] ?? false) <=> ($a['HAVE_UPDATE'] ?? false);
-        });
-
         //插件名/简介来自各插件的 Info.php，属动态文案：翻译放在关键字筛选之后，
         //保证搜索仍按中文原文匹配
         $plugins = \Kernel\Util\Lang::transList($plugins, [
@@ -97,6 +84,52 @@ class Plugin extends Manage
         ], 'meta');
 
         return $this->json(200, 'success', ["list" => $plugins]);
+    }
+
+    /**
+     * 本地安装/更新扩展：上传 zip 后按 type 落到通用插件 / 支付插件 / 网站模板目录。
+     *
+     * @return array
+     * @throws JSONException
+     * @throws \Throwable
+     */
+    public function install(): array
+    {
+        $type = (int)($_POST['type'] ?? Extension::TYPE_PLUGIN);
+        if (!Extension::isValidType($type)) {
+            throw new JSONException("不支持的扩展类型");
+        }
+
+        $result = Extension::installFromUpload(
+            (array)($_FILES['file'] ?? []),
+            $type,
+            (string)($_POST['plugin_key'] ?? '')
+        );
+
+        ManageLog::log(
+            $this->getManage(),
+            ($result['action'] === 'update' ? "更新了" : "安装了") . "扩展({$result['key']})"
+        );
+
+        return $this->json(200, $result['action'] === 'update' ? "更新完成" : "安装完成", $result);
+    }
+
+    /**
+     * 本地卸载扩展
+     *
+     * @return array
+     * @throws JSONException
+     * @throws \Throwable
+     */
+    public function uninstall(): array
+    {
+        $type = (int)($_POST['type'] ?? Extension::TYPE_PLUGIN);
+        $key = trim((string)($_POST['plugin_key'] ?? ''));
+
+        Extension::uninstall($key, $type);
+
+        ManageLog::log($this->getManage(), "卸载了扩展({$key})");
+        return $this->json(200, "卸载成功");
     }
 
     /**

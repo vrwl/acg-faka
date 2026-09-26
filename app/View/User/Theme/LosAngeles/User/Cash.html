@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 硬币兑现 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/Cash.html"}#{else}#{include file="./Pc/Cash.html"}#{/if}

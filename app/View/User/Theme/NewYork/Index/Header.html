@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="#{lang_code()}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta name="keywords" content="#{$config.keywords}">
+    <meta name="description" content="#{$config.description}">
+    <meta name="color-scheme" content="light dark">
+    <link href="#{$favicon}?v=#{$app.version}" rel="icon">
+    <title>#{$title} - #{$config.shop_name}</title>
+    #{include file="../Common/ThemeBoot.html"}
+    #{css(
+    [
+    "/assets/common/css/bootstrap.min.css",
+    "/assets/common/css/_.css",
+    "/assets/user/css/index.css",
+    "/assets/common/css/_material.css",
+    "/assets/common/fonts/material-icons.css",
+    "/app/View/User/Theme/NewYork/Assets/Css/Theme.css"
+    ],
+    [
+    "/assets/common/css/font.min.css",
+    "/assets/common/js/layui/css/layui.css",
+    "/assets/common/css/select2.min.css",
+    "/assets/common/css/component.css",
+    "/assets/common/js/table/bootstrap-table.css",
+    "/assets/common/js/layer/theme/default/layer.css",
+    "/assets/common/css/bootstrap.min.css",
+    "/assets/common/css/toastr.min.css",
+    "/assets/user/css/index.css",
+    "/assets/common/css/md-tokens.css",
+    "/assets/common/css/md-components.css",
+    "/assets/common/fonts/material-icons.css",
+    "/app/View/User/Theme/NewYork/Assets/Css/Theme.css"
+    ])}
+    #{js("/assets/common/js/ready.js")}
+    #{index_var()}
+    <!--start::HOOK-->
+    #{hook(\App\Consts\Hook::USER_GLOBAL_VIEW_HEADER)}
+    #{hook(\App\Consts\Hook::USER_VIEW_INDEX_HEADER)}
+    <!--end::HOOK-->
+    <style>:root{--currency-symbol:"#{$config.currency_symbol}"}</style>
+</head>
+<body class="ny-body ny-store-body" data-ny-role="#{if !$user}guest#{elseif $user.businessLevel}merchant#{else}member#{/if}" data-ny-show-sold="#{if ($setting.show_sold|default:'1') != '0'}1#{else}0#{/if}">
+<div class="ny-device-shell">
+    <header class="ny-appbar ny-store-appbar">
+        <a class="ny-appbar__brand" href="/"><span class="ny-brand-mark"><img src="#{$favicon}" alt=""></span><span><strong>#{$config.shop_name}</strong><small>#{if !empty($setting.store_subtitle)}#{$setting.store_subtitle}#{else}#{t("欢迎光临我们")}#{/if}</small></span></a>
+        <div class="ny-appbar__actions">
+            #{foreach user_header_nav() as $nav}
+                #{if $nav.key == 'shop'}#{continue}#{/if}
+                <a class="ny-icon-button" href="#{$nav.url}" target="#{$nav.target}" aria-label="#{$nav.name}"
+                   title="#{$nav.name}"><span class="material-icons-outlined">#{if $nav.micon}#{$nav.micon}#{else}open_in_new#{/if}</span></a>
+            #{/foreach}
+            <button type="button" class="ny-icon-button" data-ny-sheet-open="language" aria-label="#{t('切换语言')}"><span class="material-icons-outlined">language</span></button>
+            <button type="button" class="ny-icon-button" data-ny-sheet-open="appearance" aria-label="#{t('外观模式')}"><span class="material-icons-outlined">contrast</span></button>
+            #{include file="../Common/MessageButton.html"}
+            #{if $config.notice && !active('/user/index/query')}
+                <button type="button" class="ny-appbar-notice" data-ny-sheet-open="notice" aria-label="#{t('查看店铺公告')}"><span class="material-icons-outlined">campaign</span><span>#{t("公告")}</span></button>
+            #{/if}
+        </div>
+    </header>
+    <div id="pjax-container" class="ny-pjax">

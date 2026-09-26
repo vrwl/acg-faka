@@ -1,0 +1,99 @@
+#{*
+  洛杉矶 · 电脑端分类列表（/cat/{id} 与站内搜索共用这一形态）
+
+  核心路由 /cat/{id} 落在 INDEX 模板上，只是把 cid 塞进 $categoryId。
+  若不做这个分支，点任何分类都会回到营销首页 —— 所以这里是必需的。
+
+  两条大站约束写死在这个页面上：
+
+  1) 侧栏分类树**不全量渲染**。服务端只出一级 + 当前这条路径上的分支，
+     其余分支点开才由 JS 从缓存的整棵树里现建。几百个分类的站，
+     整棵树进 HTML 就是几 MB。
+  2) 列表走**真分页**。接口没有排序参数（服务端恒定 sort asc），
+     所以排序按钮明写「本页排序」—— 它只重排当前这一页，不假装是全站排序。
+*}
+#{assign var=laCrumb value=\App\View\User\Theme\LosAngeles\Support::crumb($category, $laCatId)}
+#{assign var=laTitle value=\App\View\User\Theme\LosAngeles\Support::catalogTitle($category, $laCatId)}
+#{assign var=laBranch value=\App\View\User\Theme\LosAngeles\Support::branch($category, $laCatId)}
+#{assign var=laTopAll value=\App\View\User\Theme\LosAngeles\Support::topCount($category)}
+
+<main class="la-catalog la-wrap" data-la-catalog data-cat="#{$laCatId|escape:'html'}">
+    <nav class="la-crumb" aria-label="#{t('位置')}">
+        <a href="/">#{\App\View\User\Theme\LosAngeles\Icons::svg('home')}<span>#{t("首页")}</span></a>
+        #{foreach $laCrumb as $node}
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('right','la-crumb__sep')}
+            <a href="/cat/#{$node.id}"#{if $node@last} aria-current="page" class="is-on"#{/if}>#{$node.name}</a>
+        #{/foreach}
+    </nav>
+
+    <div class="la-catalog__layout">
+        <aside class="la-catalog__side" aria-label="#{t('商品分类')}">
+            <div class="la-catalog__side-head">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('grid')}<span>#{t("全部分类")}</span>
+                <em class="la-catalog__side-num">#{$laTopAll}</em>
+            </div>
+
+            #{* 分类多的时候靠肉眼找不现实 *}
+            <label class="la-treefilter">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('search')}
+                <input type="search" data-la-tree-filter placeholder="#{t('筛选分类')}" aria-label="#{t('筛选分类')}" autocomplete="off">
+            </label>
+
+            #{*
+              只出前 60 个一级分类；展开的那一支由 Support::branch 预渲染，
+              其余点开现建。标记紧凑地写在一行 —— 每个节点多出来的缩进空白
+              在 300 个分类时就是 100KB+。
+            *}
+            #{assign var=laSideTops value=\App\View\User\Theme\LosAngeles\Support::topCategories($category, 60)}
+            <div class="la-tree" data-la-tree data-active="#{$laCatId|escape:'html'}">
+                #{strip}
+                #{foreach $laSideTops as $c}
+                    <div class="la-tree__node#{if $c.id == $laBranch.root} is-open#{/if}" data-node="#{$c.id}" data-kids="#{$c.kids}" data-name="#{$c.name|strip_tags|escape:'html'}"><div class="la-tree__row#{if $c.id == $laCatId} is-on#{/if}" style="--d:0">#{if $c.kids > 0}<button type="button" class="la-tree__toggle" data-la-tree-toggle aria-label="#{t('展开')}" aria-expanded="#{if $c.id == $laBranch.root}true#{else}false#{/if}"><span class="la-tree__arr" aria-hidden="true"></span></button>#{else}<span class="la-tree__toggle is-leaf" aria-hidden="true"></span>#{/if}<a class="la-tree__link" href="/cat/#{$c.id}"><span class="la-ellipsis">#{$c.name}</span>#{if $c.kids > 0}<em class="la-tree__num">#{$c.kids}</em>#{/if}</a></div><div class="la-tree__kids"#{if $c.id != $laBranch.root} hidden#{/if} data-la-tree-kids#{if $c.id == $laBranch.root} data-built="1"#{/if}>#{if $c.id == $laBranch.root}#{include file="../../Part/CategoryTree.html" nodes=$laBranch.nodes depth=1 activeId=$laCatId}#{/if}</div></div>
+                #{/foreach}
+                #{/strip}
+                <div class="la-tree__empty" data-la-tree-empty hidden>#{t("没有匹配的分类")}</div>
+            </div>
+            #{if $laTopAll > $laSideTops|@count}
+                #{assign var=laSideRest value=$laTopAll-$laSideTops|@count}
+                <div class="la-tree__rest">#{t("还有 N 个分类，用上面的搜索框找")|replace:"N":$laSideRest}</div>
+            #{/if}
+        </aside>
+
+        <section class="la-catalog__main" data-la-catalog-top>
+            <header class="la-catalog__bar">
+                <div class="la-catalog__title">
+                    <h1>#{if $laTitle}#{$laTitle}#{else}#{t("全部商品")}#{/if}</h1>
+                    <span class="la-catalog__count" data-la-count></span>
+                </div>
+
+                <form class="la-catalog__find" data-la-inner-search>
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('search')}
+                    <input type="search" name="keywords" placeholder="#{t('在本分类中搜索')}" aria-label="#{t('在本分类中搜索')}" autocomplete="off">
+                    <button type="submit">#{t("搜索")}</button>
+                </form>
+            </header>
+
+            <div class="la-catalog__chipbar">
+                <span class="la-catalog__kw" data-la-inner-chip hidden>
+                    <span data-la-inner-kw></span>
+                    <button type="button" data-la-inner-clear aria-label="#{t('清除')}">#{\App\View\User\Theme\LosAngeles\Icons::svg('close')}</button>
+                </span>
+                <div class="la-sortbar" role="group" aria-label="#{t('本页排序')}">
+                    <span class="la-sortbar__lab">#{t("本页排序")}</span>
+                    <button type="button" class="la-chip is-on" data-la-sort="default">#{t("综合")}</button>
+                    <button type="button" class="la-chip" data-la-sort="sold">#{t("销量")}</button>
+                    <button type="button" class="la-chip" data-la-sort="price-asc">#{t("价格")}<span class="la-sortbar__ar" data-la-sort-ar>#{\App\View\User\Theme\LosAngeles\Icons::svg('up')}</span></button>
+                </div>
+                <label class="la-switch">
+                    <input type="checkbox" data-la-instock>
+                    <span class="la-switch__track"><span class="la-switch__knob"></span></span>
+                    <span class="la-switch__txt">#{t("仅看有货")}</span>
+                </label>
+            </div>
+
+            <div class="la-grid la-grid--side" data-la-slot="catalog" aria-live="polite"></div>
+
+            <div class="la-pagebar" data-la-pager hidden></div>
+        </section>
+    </div>
+</main>

@@ -1,0 +1,16 @@
+#{include file="./Layout/Header.html"}
+
+<div class="blog-container">
+    <div class="blog-404">
+        <div class="blog-404__code" aria-hidden="true">4<span>0</span>4</div>
+        <p class="blog-404__text">#{t("这一页飘进了异次元，找不到了")}</p>
+        <form class="blog-searchbar blog-searchbar--compact" action="#{$blog.urls.search}" method="get" role="search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input type="search" name="q" maxlength="60" placeholder="#{t('搜搜看别的？')}">
+            <button type="submit">#{t("搜索")}</button>
+        </form>
+        <a class="blog-404__home" href="#{$blog.urls.index}">← #{t("返回博客首页")}</a>
+    </div>
+</div>
+
+#{include file="./Layout/Footer.html"}

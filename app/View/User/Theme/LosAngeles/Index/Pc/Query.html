@@ -1,0 +1,35 @@
+#{include file="../../Common/Pc/Head.html" laArea="shop" laPage="query"}
+#{include file="../../Common/Pc/Header.html" laSearch=0}
+
+<main class="la-query la-wrap la-wrap--narrow" data-la-query>
+    <header class="la-query__hero">
+        <div class="la-query__glow" aria-hidden="true"></div>
+        <div class="la-query__copy">
+            <span class="la-query__eyebrow">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}#{t("订单查询")}</span>
+            <h1>#{t("查一查你的订单")}</h1>
+            <p>#{t("输入 18 位订单号，或下单时填写的联系方式")}</p>
+        </div>
+
+        <form class="la-query__form order-query-form" data-la-query-form>
+            <div class="la-query__box">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('search')}
+                <input class="la-query__input" type="text" name="keywords" autocomplete="off"
+                       value="#{$tradeNo|escape:'html'}"
+                       placeholder="#{t('订单号 / 手机号 / 邮箱 / QQ')}" data-la-query-input>
+                <button type="submit" class="la-btn la-btn--brand btn-search-query">#{t("查询")}</button>
+            </div>
+            <!--start::HOOK-->
+            #{hook(\App\Consts\Hook::USER_VIEW_QUERY_TRADE_NO)}
+            <!--end::HOOK-->
+        </form>
+    </header>
+
+    <section class="la-query__result order-list" data-la-query-list aria-live="polite"></section>
+    <div class="la-fall__foot">
+        <div class="la-fall__sentinel" data-la-fall-more></div>
+        <div class="la-fall__end" hidden>#{t("已经到底啦")}</div>
+    </div>
+</main>
+
+#{include file="../../Common/Pc/Footer.html"}
+#{include file="../../Common/Pc/Foot.html" laArea="shop" laJs="Query.js"}

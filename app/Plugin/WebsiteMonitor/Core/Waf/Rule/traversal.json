@@ -1,0 +1,48 @@
+{
+  "group": "traversal",
+  "name": "路径穿越与文件包含",
+  "rules": [
+    {
+      "id": "lfi.dotdot",
+      "name": "路径穿越 · 相对路径",
+      "surface": ["path", "query", "body", "cookie"],
+      "re": "(?:\\.\\./|\\.\\.\\\\|%2e%2e[/\\\\%]|%252e%252e|\\.%2e[/\\\\])",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "lfi.passwd",
+      "name": "路径穿越 · 读系统文件",
+      "surface": ["path", "query", "body"],
+      "re": "(?:/etc/(?:passwd|shadow|hosts|my\\.cnf)|/proc/self/(?:environ|cmdline)|c:[\\\\/]+windows[\\\\/]+win\\.ini|boot\\.ini)",
+      "action": "ban", "level": "critical", "score": 12, "fp": "low"
+    },
+    {
+      "id": "lfi.wrapper",
+      "name": "PHP 伪协议",
+      "surface": ["query", "body"],
+      "re": "(?:php://(?:input|filter|memory)|data:[\\w/+.-]*;base64,|expect://|zip://|phar://)",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "lfi.remote",
+      "name": "远程文件包含",
+      "surface": ["query"],
+      "re": "=\\s*(?:https?|ftp)://[^&\\s]+\\.(?:php|txt|jpg|png)\\b",
+      "action": "score", "level": "warn", "score": 6, "fp": "medium"
+    },
+    {
+      "id": "proto.nullbyte",
+      "name": "空字节截断",
+      "surface": ["path", "query", "body"],
+      "re": "(?:%00|\\x00)",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "proto.crlf",
+      "name": "CRLF 注入",
+      "surface": ["query", "cookie"],
+      "re": "(?:%0d%0a|%0a%0d|\\r\\n)(?:set-cookie|location|content-type)\\s*:",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    }
+  ]
+}

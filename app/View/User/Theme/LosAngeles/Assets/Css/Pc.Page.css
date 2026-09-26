@@ -1,0 +1,952 @@
+/* ============================================================================
+   洛杉矶 · 电脑端页面
+   商城首页（首屏三栏 / 金刚区 / 楼层）与分类列表。
+   ========================================================================= */
+
+.la-home, .la-catalog { padding-bottom: var(--la-s9); }
+
+/* ---------------------------------------------------------------- 首屏
+
+   不做三栏。轮播 + 一张 232 宽的用户卡，320 高，一屏之内就能看到金刚区。
+   京东那种「左全品类 + 中轮播 + 右用户卡」在货源站上是浪费首屏。   */
+
+.la-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 232px;
+    gap: var(--la-s4);
+    align-items: stretch;
+    margin-top: var(--la-s4);
+}
+
+.la-hero__stage { min-width: 0; border-radius: var(--la-r-lg); overflow: hidden; }
+
+/* ---- 轮播 */
+
+.la-slider {
+    position: relative;
+    height: 320px;
+    border-radius: var(--la-r-lg);
+    overflow: hidden;
+    background: var(--la-surface-3);
+}
+
+.la-slider__track { display: flex; height: 100%; transition: transform var(--la-d5) var(--la-e-out); }
+.la-slider__slide { position: relative; flex: none; width: 100%; height: 100%; }
+.la-slider__link { display: block; width: 100%; height: 100%; }
+.la-slider__slide img { width: 100%; height: 100%; object-fit: cover; }
+
+.la-slider__cap {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    padding: var(--la-s8) var(--la-s6) var(--la-s5);
+    color: #fff;
+    background: linear-gradient(180deg, transparent, rgba(0, 0, 0, .68));
+}
+
+.la-slider__cap strong { display: block; font-size: var(--la-t-2xl); font-weight: 800; }
+.la-slider__cap span { display: block; margin-top: 3px; font-size: var(--la-t-base); opacity: .88; }
+
+.la-slider__nav {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 46px;
+    border: 0;
+    color: #fff;
+    background: rgba(0, 0, 0, .3);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-slider__nav--prev { inset-inline-start: 0; border-start-end-radius: var(--la-r-sm); border-end-end-radius: var(--la-r-sm); }
+.la-slider__nav--next { inset-inline-end: 0; border-start-start-radius: var(--la-r-sm); border-end-start-radius: var(--la-r-sm); }
+.la-slider:hover .la-slider__nav { opacity: 1; }
+.la-slider__nav:hover { background: rgba(0, 0, 0, .5); }
+.la-slider__nav .la-i { width: 17px; height: 17px; }
+
+.la-slider__dots { position: absolute; inset-inline: 0; bottom: 10px; display: flex; justify-content: center; gap: 5px; }
+
+.la-slider__dot {
+    width: 6px;
+    height: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--la-r-pill);
+    background: rgba(255, 255, 255, .5);
+    cursor: pointer;
+    transition: width var(--la-d2) var(--la-e-out), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-slider__dot.is-on { width: 18px; background: #fff; }
+
+/* ---- 没配轮播时的出厂位：纯 CSS，不引图片依赖 */
+
+.la-poster {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--la-s4);
+    height: 320px;
+    padding: 0 var(--la-s9);
+    border-radius: var(--la-r-lg);
+    color: #fff;
+    background: var(--la-dusk);
+    overflow: hidden;
+}
+
+.la-poster__glow {
+    position: absolute;
+    inset-inline-end: -80px;
+    top: -80px;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, .28), transparent 62%);
+    pointer-events: none;
+}
+
+.la-poster__copy { position: relative; display: flex; flex-direction: column; gap: 8px; }
+.la-poster__copy b { font-size: var(--la-t-3xl); font-weight: 800; letter-spacing: -.02em; }
+.la-poster__copy em { font-style: normal; font-size: var(--la-t-md); opacity: .9; }
+
+.la-poster__go {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+    height: 36px;
+    padding: 0 var(--la-s6);
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-md);
+    font-weight: 700;
+    color: var(--la-c1);
+    background: #fff;
+    transition: transform var(--la-d2) var(--la-e-spring);
+}
+
+.la-poster:hover .la-poster__go { transform: translateX(3px); }
+.la-poster__go .la-i { width: 15px; height: 15px; }
+
+/* ---- 窄用户卡 */
+
+.la-mecard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--la-s3);
+    padding: var(--la-s4);
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+    height: 320px;
+}
+
+.la-mecard__top { display: flex; align-items: center; gap: 9px; min-width: 0; color: inherit; }
+.la-mecard__avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex: none; }
+.la-mecard__id { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.la-mecard__id strong { font-size: var(--la-t-md); font-weight: 700; }
+
+.la-mecard__lv {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    align-self: flex-start;
+    padding: 1px 6px;
+    border-radius: var(--la-r-xs);
+    font-size: var(--la-t-2xs);
+    font-weight: 600;
+    color: #8A5A00;
+    background: linear-gradient(90deg, #FFE9B0, #FFD36B);
+}
+
+:root[data-theme="dark"] .la-mecard__lv { color: #3A2600; }
+
+.la-mecard__wallet { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+.la-mecard__wallet a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 9px 4px;
+    border-radius: var(--la-r-md);
+    background: var(--la-surface-2);
+    color: inherit;
+    transition: background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-mecard__wallet a:hover { background: var(--la-tint); }
+.la-mecard__wallet b { font-family: var(--la-font-num); font-size: var(--la-t-lg); font-weight: 800; color: var(--la-c1); font-variant-numeric: tabular-nums; }
+.la-mecard__wallet span { font-size: var(--la-t-2xs); color: var(--la-ink-3); }
+
+.la-mecard__cta {
+    display: grid;
+    place-items: center;
+    height: 32px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-base);
+    font-weight: 700;
+    color: #fff;
+    background: var(--la-sunset);
+    transition: filter var(--la-d2) var(--la-e-smooth);
+}
+
+.la-mecard__cta:hover { color: #fff; filter: brightness(1.06); }
+
+.la-mecard__links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: auto; padding-top: var(--la-s3); border-top: 1px solid var(--la-line); }
+
+.la-mecard__links a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 0;
+    border-radius: var(--la-r-sm);
+    font-size: var(--la-t-2xs);
+    color: var(--la-ink-2);
+    transition: color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-mecard__links a:hover { color: var(--la-c1); background: var(--la-tint); }
+.la-mecard__links .la-i { width: 17px; height: 17px; }
+
+/* 未登录态 */
+.la-mecard--guest { align-items: center; text-align: center; justify-content: center; gap: var(--la-s3); }
+
+.la-mecard__ring {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--la-sunset);
+}
+
+.la-mecard__ring .la-i { width: 24px; height: 24px; }
+.la-mecard--guest strong { font-size: var(--la-t-md); font-weight: 700; }
+.la-mecard--guest p { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-mecard__auth { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
+.la-mecard__auth .la-btn { height: 32px; font-size: var(--la-t-base); }
+
+.la-mecard__sell { display: flex; flex-direction: column; gap: 7px; width: 100%; margin-top: auto; padding-top: var(--la-s3); border-top: 1px solid var(--la-line); }
+.la-mecard__sell li { display: flex; align-items: center; gap: 6px; font-size: var(--la-t-xs); color: var(--la-ink-2); }
+.la-mecard__sell .la-i { width: 14px; height: 14px; color: var(--la-c1); flex: none; }
+
+/* ---------------------------------------------------------------- 金刚区
+
+   一行十个。图标是圆角方块 + 淡红底，不是描边圆圈 ——
+   电商的金刚区要"实"，实心色块比线性图标更容易被点。   */
+
+.la-quick {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 2px;
+    margin-top: var(--la-s4);
+    padding: var(--la-s4) var(--la-s2);
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+}
+
+.la-quick__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 2px;
+    min-width: 0;
+    border-radius: var(--la-r-md);
+    color: var(--la-ink-2);
+    transition: background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-quick__item:hover { background: var(--la-surface-2); }
+
+.la-quick__ico {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--la-r-lg);
+    color: var(--la-c1);
+    background: var(--la-tint);
+    transition: transform var(--la-d2) var(--la-e-spring), color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-quick__ico .la-i { width: 22px; height: 22px; }
+.la-quick__item:hover .la-quick__ico { transform: translateY(-2px); color: #fff; background: var(--la-sunset); }
+.la-quick__name { max-width: 100%; font-size: var(--la-t-xs); }
+
+/* ---------------------------------------------------------------- 公告条 */
+
+.la-noticebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: var(--la-s4);
+    padding: 0 var(--la-s4);
+    height: 38px;
+    border: 0;
+    border-radius: var(--la-r-md);
+    background: var(--la-surface);
+    color: var(--la-ink-2);
+    font-size: var(--la-t-base);
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-noticebar:hover { background: var(--la-surface-2); }
+.la-noticebar > .la-i { width: 16px; height: 16px; color: var(--la-c1); flex: none; }
+.la-noticebar__txt { flex: 1; min-width: 0; }
+.la-noticebar em { display: inline-flex; align-items: center; gap: 2px; font-style: normal; font-size: var(--la-t-xs); color: var(--la-ink-3); flex: none; }
+.la-noticebar em .la-i { width: 12px; height: 12px; }
+
+/* ---------------------------------------------------------------- 楼层 */
+
+.la-floor__chips { display: flex; gap: 5px; overflow: hidden; flex: 1; min-width: 0; }
+
+/* ---------------------------------------------------------------- 猜你喜欢
+
+   页面的重心。标签条吸顶 —— 往下刷一千个商品，随时能换品类。   */
+
+.la-feed { margin-top: var(--la-s5); }
+
+.la-feed__bar {
+    position: sticky;
+    top: var(--la-header-h);
+    z-index: var(--la-z-sticky);
+    display: flex;
+    align-items: center;
+    gap: var(--la-s5);
+    padding: var(--la-s3) var(--la-s4);
+    margin-bottom: var(--la-s4);
+    border-radius: var(--la-r-md);
+    background: var(--la-surface);
+    box-shadow: var(--la-sh-2);
+}
+
+.la-feed__title { font-size: var(--la-t-lg); font-weight: 800; white-space: nowrap; flex: none; }
+
+.la-feed__tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    min-width: 0;
+}
+
+.la-feed__tabs::-webkit-scrollbar { display: none; }
+
+.la-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex: none;
+    height: 28px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--la-r-pill);
+    background: none;
+    color: var(--la-ink-2);
+    font-size: var(--la-t-base);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-tab:hover { color: var(--la-c1); background: var(--la-tint); }
+.la-tab.is-on { color: #fff; background: var(--la-sunset); font-weight: 700; }
+.la-tab--more { color: var(--la-ink-3); }
+.la-tab .la-i { width: 12px; height: 12px; }
+
+.la-fall__foot { padding: var(--la-s6) 0; text-align: center; }
+.la-fall__sentinel { height: 1px; }
+.la-fall__end { font-size: var(--la-t-xs); color: var(--la-ink-4); }
+
+/* ---------------------------------------------------------------- 分类列表
+
+   侧栏收到 180，把地方全让给商品；主区是白卡包着的一整块，
+   工具条贴在卡片顶部，和商品同处一张白底上。   */
+
+.la-catalog { padding-top: var(--la-s4); }
+
+.la-crumb { display: flex; align-items: center; gap: 3px; margin-bottom: var(--la-s3); font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-crumb a { display: inline-flex; align-items: center; gap: 3px; transition: color var(--la-d1) var(--la-e-smooth); }
+.la-crumb a:hover { color: var(--la-c1); }
+.la-crumb a.is-on { color: var(--la-ink); font-weight: 600; }
+.la-crumb .la-i { width: 12px; height: 12px; }
+.la-crumb__sep { width: 11px; height: 11px; opacity: .5; }
+
+.la-catalog__layout { display: grid; grid-template-columns: var(--la-side) minmax(0, 1fr); gap: var(--la-s4); align-items: start; }
+
+.la-catalog__side {
+    position: sticky;
+    top: var(--la-sticky-top);
+    max-height: calc(100vh - var(--la-sticky-top) - var(--la-s4));
+    overflow-y: auto;
+    padding: var(--la-s3) var(--la-s2);
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+    scrollbar-width: thin;
+}
+
+.la-catalog__side-head { display: flex; align-items: center; gap: 6px; padding: 4px 8px 10px; font-size: var(--la-t-base); font-weight: 800; }
+.la-catalog__side-head .la-i { width: 15px; height: 15px; color: var(--la-c1); }
+
+.la-catalog__main {
+    min-width: 0;
+    padding: var(--la-s4);
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+}
+
+.la-catalog__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--la-s5);
+    flex-wrap: wrap;
+    padding-bottom: var(--la-s3);
+}
+
+.la-catalog__title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.la-catalog__title h1 { font-size: var(--la-t-xl); font-weight: 800; }
+.la-catalog__count { font-size: var(--la-t-xs); color: var(--la-ink-3); white-space: nowrap; }
+
+.la-catalog__chipbar {
+    display: flex;
+    align-items: center;
+    gap: var(--la-s4);
+    flex-wrap: wrap;
+    padding: 7px var(--la-s3);
+    margin-bottom: var(--la-s4);
+    border-radius: var(--la-r-md);
+    background: var(--la-surface-2);
+}
+
+.la-sortbar { display: flex; align-items: center; gap: 4px; }
+
+/* ---------------------------------------------------------------- 窄屏收敛 */
+
+@media (max-width: 1280px) {
+    .la-hero { grid-template-columns: 208px minmax(0, 1fr) 268px; }
+    .la-grid--floor { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .la-hero__flyout { width: 460px; }
+}
+
+@media (max-width: 1080px) {
+    .la-hero { grid-template-columns: minmax(0, 1fr); }
+    .la-hero__rail, .la-hero__side { display: none; }
+    .la-slider, .la-poster { height: 320px; }
+    .la-poster { padding: 0 var(--la-s6); }
+    .la-poster__copy { max-width: 100%; }
+    .la-poster__title { font-size: var(--la-t-3xl); }
+    .la-floor--cat__body { grid-template-columns: minmax(0, 1fr); }
+    .la-floor__poster { flex-direction: row; align-items: center; justify-content: space-between; }
+    .la-catalog__layout { grid-template-columns: minmax(0, 1fr); }
+    .la-catalog__side { display: none; }
+    .la-grid--floor { grid-template-columns: repeat(auto-fill, minmax(var(--la-grid-min), 1fr)); }
+}
+
+/* ============================================================================
+   商品详情（电脑端）
+   ========================================================================= */
+
+.la-item { padding-top: var(--la-s5); }
+
+.la-item__top {
+    display: grid;
+    grid-template-columns: 460px minmax(0, 1fr);
+    gap: var(--la-s8);
+    align-items: start;
+}
+
+/* 主图 + 放大镜 */
+
+.la-item__gallery { position: relative; }
+
+.la-zoom {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--la-r-xl);
+    overflow: hidden;
+    background: var(--la-surface-2);
+    border: 1px solid var(--la-line);
+    box-shadow: var(--la-sh-2);
+    cursor: crosshair;
+}
+
+.la-zoom__img { width: 100%; height: 100%; object-fit: cover; }
+
+.la-zoom__out {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: var(--la-t-xl);
+    font-weight: 800;
+    letter-spacing: .12em;
+    color: #fff;
+    background: rgba(16, 10, 8, .5);
+}
+
+.la-zoom__lens {
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+    width: 190px;
+    height: 190px;
+    border-radius: var(--la-r-sm);
+    background: rgba(255, 255, 255, .28);
+    border: 1px solid rgba(255, 255, 255, .7);
+    box-shadow: 0 0 0 9999px rgba(16, 10, 8, .12);
+    pointer-events: none;
+    will-change: transform;
+}
+
+.la-zoom__pane {
+    position: absolute;
+    inset-inline-start: calc(100% + 16px);
+    top: 0;
+    z-index: var(--la-z-pop);
+    width: 460px;
+    height: 460px;
+    border-radius: var(--la-r-lg);
+    overflow: hidden;
+    background: var(--la-surface);
+    border: 1px solid var(--la-line);
+    box-shadow: var(--la-sh-4);
+}
+
+.la-zoom__pane img { max-width: none; will-change: transform; }
+
+.la-promise { display: flex; justify-content: space-around; margin-top: var(--la-s5); padding: var(--la-s4); border-radius: var(--la-r-lg); background: var(--la-surface-2); }
+.la-promise li { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: var(--la-t-xs); color: var(--la-ink-2); }
+.la-promise .la-i { width: 20px; height: 20px; color: var(--la-c1); }
+
+/* 购买面板 */
+
+.la-item__buy { display: flex; flex-direction: column; gap: var(--la-s5); min-width: 0; }
+.la-item__tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.la-item__name { font-size: var(--la-t-3xl); font-weight: 800; letter-spacing: -.03em; line-height: 1.22; }
+
+/* 商详价格块：淡红实底，不描边。描边会让它像个"控件"，
+   实底才像价签 —— 价格是这一屏的主角，不该被框起来。 */
+.la-pricebox {
+    border-radius: var(--la-r-lg);
+    overflow: hidden;
+    background: var(--la-tint);
+}
+
+.la-pricebox__seckill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--la-s4);
+    padding: 10px 18px;
+    color: #fff;
+    background: var(--la-sunset);
+    background-size: 200% 100%;
+    animation: la-sunset-drift 14s var(--la-e-in-out) infinite;
+}
+
+.la-pricebox__flag { display: inline-flex; align-items: center; gap: 5px; font-size: var(--la-t-sm); font-weight: 800; letter-spacing: .04em; }
+.la-pricebox__flag .la-i { width: 15px; height: 15px; }
+.la-pricebox__seckill .la-count__cell { color: var(--la-c1); background: #fff; }
+.la-pricebox__seckill .la-count__sep { color: #fff; }
+
+.la-pricebox__main { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--la-s5); padding: var(--la-s5) var(--la-s5) 10px; flex-wrap: wrap; }
+.la-pricebox__now { display: flex; align-items: baseline; gap: 10px; }
+.la-pricebox__lab { font-size: var(--la-t-sm); color: var(--la-ink-2); }
+
+.la-pricebox__member {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-sm);
+    font-weight: 700;
+    color: var(--la-c2);
+    background: rgba(var(--la-c2-rgb), .16);
+}
+
+.la-pricebox__member .la-i { width: 15px; height: 15px; }
+.la-pricebox__meta { display: flex; align-items: center; gap: var(--la-s5); padding: 0 var(--la-s5) var(--la-s4); font-size: var(--la-t-sm); color: var(--la-ink-2); }
+.la-pricebox__meta b { font-weight: 800; color: var(--la-ink); }
+
+.la-item__gate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: var(--la-r-md);
+    font-size: var(--la-t-sm);
+    color: var(--la-warn);
+    background: var(--la-warn-bg);
+}
+
+.la-item__gate .la-i { width: 17px; height: 17px; }
+.la-item__gate span { flex: 1; }
+
+.la-item__foot {
+    display: flex;
+    align-items: center;
+    gap: var(--la-s5);
+    padding-top: var(--la-s5);
+    border-top: 1px solid var(--la-line);
+}
+
+.la-item__total { display: flex; align-items: baseline; gap: 8px; font-size: var(--la-t-sm); color: var(--la-ink-2); }
+.la-item__submit { flex: 1; }
+
+.la-item__links { display: flex; gap: var(--la-s6); }
+.la-item__links a, .la-item__links button { display: inline-flex; align-items: center; gap: 5px; font-size: var(--la-t-sm); color: var(--la-ink-3); transition: color var(--la-d2) var(--la-e-smooth); }
+.la-item__links a:hover, .la-item__links button:hover { color: var(--la-c1); }
+.la-item__links .la-i { width: 15px; height: 15px; }
+
+.la-item__detail { margin-top: var(--la-s9); }
+
+@media (max-width: 1080px) {
+    .la-item__top { grid-template-columns: minmax(0, 1fr); gap: var(--la-s6); }
+    .la-item__gallery { max-width: 460px; }
+    .la-zoom__pane { display: none !important; }
+    .la-item__name { font-size: var(--la-t-2xl); }
+}
+
+/* ============================================================================
+   订单查询（电脑端）
+   ----------------------------------------------------------------------------
+   原来是一块大圆角大留白的 hero，现在是白卡里的一行：标题 + 搜索框。
+   查订单的人只想赶紧输单号，不需要被一张海报欢迎。
+   ========================================================================= */
+
+.la-query { padding-top: var(--la-s4); padding-bottom: var(--la-s8); }
+
+.la-query__hero {
+    display: flex;
+    align-items: center;
+    gap: var(--la-s6);
+    padding: var(--la-s5) var(--la-s6);
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+    flex-wrap: wrap;
+}
+
+.la-query__glow { display: none; }
+.la-query__copy { flex: none; }
+
+.la-query__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--la-t-xs);
+    font-weight: 600;
+    color: var(--la-c1);
+}
+
+.la-query__eyebrow .la-i { width: 13px; height: 13px; }
+.la-query__copy h1 { margin: 2px 0 2px; font-size: var(--la-t-lg); font-weight: 800; }
+.la-query__copy p { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+
+.la-query__form { flex: 1; min-width: 320px; }
+
+.la-query__box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 3px 0 12px;
+    height: 40px;
+    border-radius: var(--la-r-pill);
+    background: var(--la-surface);
+    border: 2px solid var(--la-c1);
+    transition: box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+.la-query__box:focus-within { box-shadow: 0 0 0 3px rgba(var(--la-c1-rgb), .16); }
+.la-query__box > .la-i { width: 16px; height: 16px; color: var(--la-ink-4); flex: none; }
+.la-query__input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font-size: var(--la-t-base); color: var(--la-ink); }
+.la-query__input::placeholder { color: var(--la-ink-4); }
+.la-query__box .la-btn { --btn-h: 30px; --btn-px: 18px; }
+.la-query__result { margin-top: var(--la-s4); }
+
+/* ============================================================================
+   会员中心 / 认证（电脑端）
+   ----------------------------------------------------------------------------
+   会员中心和列表页是同一种页：左侧栏 + 右主区，侧栏宽同一个令牌 --la-side，
+   主区宽度才和列表页一样。侧栏和主区都是灰底上的白卡，不描边。
+   ========================================================================= */
+
+.la-member {
+    display: grid;
+    grid-template-columns: var(--la-side) minmax(0, 1fr);
+    gap: var(--la-s4);
+    padding-top: var(--la-s4);
+    padding-bottom: var(--la-s8);
+    align-items: start;
+}
+
+/* 侧栏 */
+
+.la-mnav {
+    position: sticky;
+    top: var(--la-sticky-top);
+    max-height: calc(100vh - var(--la-sticky-top) - var(--la-s4));
+    overflow-y: auto;
+    padding: var(--la-s3) var(--la-s2);
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+    scrollbar-width: none;
+}
+
+.la-mnav::-webkit-scrollbar { display: none; }
+.la-mnav__me { display: flex; align-items: center; gap: 8px; padding: 4px 6px 10px; border-bottom: 1px solid var(--la-line); color: inherit; }
+.la-mnav__avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--la-surface-2); flex: none; }
+.la-mnav__id { min-width: 0; }
+.la-mnav__id strong { display: block; font-size: var(--la-t-base); font-weight: 700; }
+
+.la-mnav__lv {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 2px;
+    padding: 1px 6px;
+    border-radius: var(--la-r-xs);
+    font-size: var(--la-t-2xs);
+    font-style: normal;
+    font-weight: 600;
+    color: #8A5A00;
+    background: linear-gradient(90deg, #FFE9B0, #FFD36B);
+}
+
+:root[data-theme="dark"] .la-mnav__lv { color: #3A2600; }
+
+.la-mnav__wallet { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 8px 0; }
+.la-mnav__cell { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 4px; border-radius: var(--la-r-md); background: var(--la-surface-2); color: inherit; transition: background-color var(--la-d2) var(--la-e-smooth); }
+.la-mnav__cell:hover { background: var(--la-tint); }
+.la-mnav__cell b { font-family: var(--la-font-num); font-size: var(--la-t-md); font-weight: 800; color: var(--la-c1); font-variant-numeric: tabular-nums; }
+.la-mnav__cell span { font-size: var(--la-t-2xs); color: var(--la-ink-3); }
+.la-mnav__list { display: flex; flex-direction: column; gap: 1px; }
+.la-mnav__group { display: flex; flex-direction: column; gap: 1px; padding-top: 8px; }
+.la-mnav__gt { padding: 0 8px 3px; font-size: var(--la-t-2xs); font-weight: 600; color: var(--la-ink-4); }
+
+.la-mnav__item,
+.la-mnav__hook a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: var(--la-r-sm);
+    font-size: var(--la-t-base);
+    color: var(--la-ink-2);
+    transition: color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-mnav__item .la-i, .la-mnav__hook a > svg { width: 15px; height: 15px; color: var(--la-ink-3); flex: none; }
+.la-mnav__item:hover, .la-mnav__hook a:hover { color: var(--la-ink); background: var(--la-hover); }
+.la-mnav__item.is-on, .la-mnav__hook a.is-on { color: var(--la-c1); background: var(--la-tint); font-weight: 700; }
+.la-mnav__item.is-on .la-i, .la-mnav__hook a.is-on > :is(svg, .material-icons-outlined, .material-icons, i) { color: var(--la-c1); }
+/* 插件经 USER_VIEW_MENU 注入的入口（博客等）：去掉列表样式；插件给的是字体图标，按侧栏 SVG 图标的视觉尺寸排 */
+.la-mnav__hooklist { display: flex; flex-direction: column; gap: 1px; margin: 0; padding: 0; list-style: none; }
+.la-mnav__hooklist > li { display: block; margin: 0; padding: 0; }
+.la-mnav__hook a > :is(.material-icons-outlined, .material-icons, i) { width: 15px; flex: none; color: var(--la-ink-3); font-size: 15px; line-height: 1; text-align: center; }
+.la-mnav__hook:not(:has(a)) { display: none; }
+.la-mnav__item--quiet { margin-top: 8px; color: var(--la-ink-3); }
+.la-mnav__item--quiet:hover { color: var(--la-bad); background: var(--la-bad-bg); }
+.la-mnav__item--quiet:hover .la-i { color: var(--la-bad); }
+
+/* 主区：一张白卡包住页头和正文，和列表页主区同一个形态 */
+
+.la-member__main {
+    min-width: 0;
+    padding: var(--la-s4) var(--la-s5) var(--la-s6);
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+}
+
+.la-mhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--la-s4);
+    margin-bottom: var(--la-s4);
+    padding-bottom: var(--la-s3);
+    border-bottom: 1px solid var(--la-line);
+    flex-wrap: wrap;
+}
+
+.la-mhead__title { display: flex; align-items: center; gap: 9px; }
+.la-mhead__ico { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--la-r-md); color: var(--la-c1); background: var(--la-tint); flex: none; }
+.la-mhead__ico .la-i { width: 16px; height: 16px; }
+.la-mhead h1 { font-size: var(--la-t-lg); font-weight: 800; }
+.la-mhead p { margin-top: 1px; font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-mhead__acts { display: flex; gap: 6px; }
+.la-member__body { display: flex; flex-direction: column; gap: var(--la-s4); }
+.la-dash { display: flex; flex-direction: column; gap: var(--la-s4); }
+
+/* 主区里的白卡是"卡中卡"：这时候它需要一条极淡的底色把自己和主区分开。
+   品牌色那张（.la-stat--brand）例外 —— 它就该是整块红，别被这条淡底盖掉。 */
+.la-member__body .la-card,
+.la-member__body .la-stat { background: var(--la-surface-2); }
+.la-member__body .la-stat--brand { background: var(--la-sunset); }
+
+/* ---------------------------------------------------------------- 认证
+
+   不再做左右分屏。拼多多/淘宝的登录页就是：正常页头 + 灰底 + 中间一张白卡。
+   页头保留意味着用户随时能回到商城，也意味着登录页和其它页在同一条版心上。   */
+
+.la-auth {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: var(--la-s9) var(--la-gutter) var(--la-s10);
+    min-height: calc(100vh - var(--la-header-h) - 30px);
+}
+
+.la-auth__card {
+    width: 100%;
+    max-width: 400px;
+    padding: var(--la-s7) var(--la-s7) var(--la-s6);
+    border-radius: var(--la-r-xl);
+    background: var(--la-surface);
+}
+
+.la-auth__head { margin-bottom: var(--la-s5); text-align: center; }
+.la-auth__head h1 { font-size: var(--la-t-xl); font-weight: 800; }
+.la-auth__head p { margin-top: 4px; font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-auth__alt { display: flex; justify-content: space-between; gap: 12px; margin-top: var(--la-s4); font-size: var(--la-t-sm); flex-wrap: wrap; }
+.la-auth__alt a { color: var(--la-ink-2); transition: color var(--la-d2) var(--la-e-smooth); }
+.la-auth__alt a:hover { color: var(--la-c1); }
+.la-auth__divider { position: relative; margin: var(--la-s5) 0 var(--la-s4); text-align: center; }
+.la-auth__divider::before { content: ""; position: absolute; inset-inline: 0; top: 50%; height: 1px; background: var(--la-line); }
+.la-auth__divider span { position: relative; padding: 0 10px; font-size: var(--la-t-xs); color: var(--la-ink-4); background: var(--la-surface); }
+.la-auth__hooks { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+.la-auth__sell { display: flex; justify-content: center; gap: var(--la-s5); margin-top: var(--la-s5); padding-top: var(--la-s4); border-top: 1px solid var(--la-line); }
+.la-auth__sell li { display: flex; align-items: center; gap: 5px; font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-auth__sell .la-i { width: 13px; height: 13px; color: var(--la-c1); }
+
+.la-auth .la-form { display: flex; flex-direction: column; gap: var(--la-s4); }
+.la-auth .la-btn--lg { --btn-h: 42px; }
+
+@media (max-width: 1080px) {
+    .la-member { grid-template-columns: minmax(0, 1fr); }
+    .la-mnav { position: static; max-height: none; }
+    .la-mnav__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: start; }
+    .la-topup, .la-cash { grid-template-columns: minmax(0, 1fr); }
+    .la-topup__summary, .la-tcreate__summary { position: static; }
+    .la-tcreate__layout { grid-template-columns: minmax(0, 1fr); }
+    .la-stats--4, .la-stats--3 { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+}
+
+
+/* ---------------------------------------------------------------- 大站补丁
+   首屏导轨只出前 14 个一级分类，悬浮面板按需建；
+   列表页工具条拆成「标题 + 站内搜索」和「关键词 + 本页排序 + 有货」两行。 */
+
+.la-hero__rail-all {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 4px 6px 0;
+    padding: 0 10px;
+    height: 34px;
+    border-radius: var(--la-r-sm);
+    font-size: var(--la-t-sm);
+    font-weight: 700;
+    color: var(--la-c1);
+    background: rgba(var(--la-c1-rgb), .07);
+    transition: background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-hero__rail-all:hover { background: rgba(var(--la-c1-rgb), .14); }
+.la-hero__rail-all .la-i { width: 15px; height: 15px; flex: none; }
+.la-hero__rail-all span { flex: 1; min-width: 0; }
+.la-hero__rail-all em { font-style: normal; font-variant-numeric: tabular-nums; opacity: .7; font-size: var(--la-t-xs); }
+
+.la-hero__flyout-load { display: grid; place-items: center; min-height: 180px; }
+.la-hero__flyout-leaves a.is-more { color: var(--la-c1); font-weight: 600; }
+
+.la-catalog__side-num {
+    margin-inline-start: auto;
+    padding: 0 7px;
+    height: 18px;
+    line-height: 18px;
+    border-radius: var(--la-r-pill);
+    background: var(--la-surface-3);
+    color: var(--la-ink-4);
+    font-size: var(--la-t-2xs);
+    font-style: normal;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.la-catalog__find {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-inline-start: 12px;
+    height: 38px;
+    min-width: 280px;
+    border-radius: var(--la-r-pill);
+    border: 1px solid var(--la-line-2);
+    background: var(--la-surface);
+    transition: border-color var(--la-d2) var(--la-e-smooth), box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+.la-catalog__find:focus-within { border-color: var(--la-c1); box-shadow: 0 0 0 3px rgba(var(--la-c1-rgb), .13); }
+.la-catalog__find .la-i { width: 16px; height: 16px; flex: none; color: var(--la-ink-4); }
+.la-catalog__find input { flex: 1; min-width: 0; border: 0; background: none; color: var(--la-ink); font: inherit; font-size: var(--la-t-sm); }
+.la-catalog__find input:focus { outline: none; }
+.la-catalog__find input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.la-catalog__find button {
+    height: 100%;
+    padding: 0 18px;
+    border: 0;
+    border-radius: var(--la-r-pill);
+    background: var(--la-sunset);
+    color: #fff;
+    font-weight: 700;
+    font-size: var(--la-t-sm);
+    cursor: pointer;
+    transition: filter var(--la-d2) var(--la-e-smooth);
+}
+
+.la-catalog__find button:hover { filter: brightness(1.06); }
+
+.la-catalog__chipbar {
+    display: flex;
+    align-items: center;
+    gap: var(--la-s5);
+    flex-wrap: wrap;
+    margin-bottom: var(--la-s5);
+}
+
+.la-catalog__kw {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 6px 0 12px;
+    height: 30px;
+    border-radius: var(--la-r-pill);
+    background: var(--la-tint);
+    color: var(--la-c1);
+    font-size: var(--la-t-sm);
+    font-weight: 600;
+}
+
+.la-catalog__kw button { display: grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 50%; background: rgba(var(--la-c1-rgb), .16); color: inherit; cursor: pointer; }
+.la-catalog__kw .la-i { width: 12px; height: 12px; }
+
+.la-sortbar { display: flex; align-items: center; gap: 6px; }
+.la-sortbar__lab { font-size: var(--la-t-xs); color: var(--la-ink-4); margin-inline-end: 2px; }
+.la-catalog__tools { margin-inline-start: auto; }

@@ -1,0 +1,260 @@
+#{include file=$manage_view_path|cat:"/Header.html"}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Toolbar-->
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <!--end::Toolbar-->
+    <!--begin::Post-->
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="container-fluid">
+            <!--begin::Tables Widget 9-->
+            <div class="card mb-5 mb-xl-8">
+                <!--begin::Header-->
+                <div class="card-header border-0">
+                    <div class="card-toolbar">
+                        <button class="btn btn-sm btn-light-primary btn-app-create me-3"><i class="fa-duotone fa-regular fa-plus"></i>
+                            新增规则
+                        </button>
+                        <button class="btn btn-sm btn-light-warning btn-app-exchange me-3"><i class="fa-duotone fa-regular fa-exchange"></i>
+                            切换状态
+                        </button>
+                        <button class="btn btn-sm btn-light-danger btn-app-del me-3"><i class="fa-duotone fa-regular fa-trash"></i>
+                            移除选中的规则
+                        </button>
+                    </div>
+                </div>
+                <!--end::Header-->
+
+                <div class="card-body py-3">
+                    <table id="rules"></table>
+                </div>
+            </div>
+
+            <!--end::Tables Widget 9-->
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Post-->
+</div>
+<!--end::Content-->
+
+#{set_script_var(["_dock_rule_sites" => $sites, "_dock_rule_categories" => $categories])}
+<script>
+    documentReady(() => {
+        !function () {
+            const sitesRaw = getVar('_dock_rule_sites') || '[]';
+            let siteOptions = [];
+            try {
+                siteOptions = JSON.parse(sitesRaw) || [];
+            } catch (e) {
+                console.error('Parse _dock_rule_sites failed', e);
+            }
+            const categoriesRaw = getVar('_dock_rule_categories') || '[]';
+            let categoryOptions = [];
+            try {
+                categoryOptions = JSON.parse(categoriesRaw) || [];
+            } catch (e) {
+                console.error('Parse _dock_rule_categories failed', e);
+            }
+
+            const table = new Table('/plugin/ThirdDockManage/api/rule/data', '#rules');
+            table.setPagination(15, [15, 25, 50, 100]);
+            table.setColumns([
+                {checkbox: true},
+                {field: 'id', title: 'ID'},
+                {field: 'site_ids', title: '站点', formatter: function (val, item) {
+                        return item.site_ids_string
+                    }
+                },
+                {field: 'categories', title: '总分类', formatter: function (val, item) {
+                        return item.categories_string
+                    }
+                },
+                {field: 'good_names', title: '商品名', formatter: function (val, item) {
+                        return item.good_names_string
+                    }
+                },
+                {
+                    field: 'status',
+                    title: '规则状态',
+                    formatter: function (val, item) {
+                        if (item.status == 1) {
+                            return '<span class="badge badge-light-success">开启</span>';
+                        } else {
+                            return '<span class="badge badge-light-danger">关闭</span>';
+                        }
+                    }
+                },
+                {
+                    field: 'auto_class',
+                    title: '自动对应分类',
+                    formatter: function (val, item) {
+                        if (item.auto_class == 1) {
+                            return '<span class="badge badge-light-success">开启</span>';
+                        } else {
+                            return '<span class="badge badge-light-danger">关闭</span>';
+                        }
+                    }
+                },
+                {field: 'sort', title: '序号', formatter: function (val, item) {
+                        return '<span class="layui-badge">'+ item.sort + '</span>';
+                    }
+                },
+                {
+                    field: 'operate',
+                    title: '操作',
+                    type: 'button',
+                    buttons: [
+                        {
+                            icon: 'fa-duotone fa-regular fa-edit',
+                            class: 'text-primary',
+                            click: (event, value, row) => {
+                                modal("编辑", row);
+                            }
+                        }
+                    ]
+                }
+            ]);
+
+            table.setDeleteSelector('.btn-app-del', ids => {
+                message.ask('您确定要删除已经选中的规则吗？这是不可恢复的操作！', () => {
+                    util.post('/plugin/ThirdDockManage/api/rule/del', {ids: ids}, res => {
+                        message.success(res.msg || '删除成功');
+                        table.refresh();
+                    });
+                });
+            });
+
+            table.render();
+
+            const modal = (title, assign = {}) => {
+                component.popup({
+                    submit: '/plugin/ThirdDockManage/api/rule/save',
+                    tab: [
+                        {
+                            name: title,
+                            form: [
+                                {title: "站点", name: "site_ids", type: "custom", complete: (obj, dom) => {
+                                    dom.html('<div class="site_ids"></div>');
+                                }},
+                                {title: "分类", name: "categories", type: "custom", complete: (obj, dom) => {
+                                    dom.html('<div class="categories"></div>');
+                                }},
+                                {title: "额外分类", name: "categories_ext", type: "textarea", placeholder: "请输入分类名称，一行一个，分类名跟其中一个完全相同时，算满足条件"},
+                                {title: "商品名", name: "good_names", type: "textarea", placeholder: "请输入商品名要包含的文字，一行一个，商品名包含其中一个就算满足条件"},
+                                {
+                                    name: "custom1",
+                                    type: "custom",
+                                    complete: (obj, dom) => {
+                                        dom.html('<div class="text-center">⬆️以上4个条件需至少填一个</div>')
+                                    }
+                                },
+                                {title: "规则状态", name: "status", type: "switch", text:"开启", default: 0, tips: "开启规则才会生效"},
+                                {title: "自动对应分类", name: "auto_class", type: "switch", text:"开启", default: 0, tips: "开启后生效，遇到系统没有的分类名，会自动创建并对应"},
+                                {title: "序号", name: "sort", type: "input", default: 0, placeholder: "请输入整数", tips:"数字越小，规则越排前，相同序号的以创建时间远的排在前，商品符合多个规则时，以第一个匹配到的规则为准"},
+                                {title: "排除商品名", name: "settings_exclude_good_names", type: "textarea", placeholder: "请输入商品名要包含的文字，一行一个，商品名包含其中一个就算满足条件"},
+                                {
+                                    name: "custom2",
+                                    type: "custom",
+                                    complete: (obj, dom) => {
+                                        dom.html('<div class="text-center">⬇️以下为生成商品相应设置</div>')
+                                    }
+                                },
+                                {title: "覆盖配置", name: "settings_cover", type: "switch", text:"是", default: 0, tips: "开启后将覆盖之前生成过了的商品设置"},
+                                {
+                                    title: "指定分类",
+                                    name: "settings_category_id",
+                                    type: "select",
+                                    dict: "category->owner=0,id,name",
+                                    placeholder: "请选择分类",
+                                    search: true,
+                                    tips: "如开启自动对应分类，此空不会生效"
+                                },
+                                {
+                                    title: "加价模式", name: "settings_mode", type: "radio", dict: [
+                                        {id: 0, name: "普通金额加价"},
+                                        {id: 1, name: "百分比加价"},
+                                        {id: 2, name: "阶梯复杂加价"}
+                                    ], default: 0, required: true,
+                                },
+                                {title: "加价数量", name: "settings_mode_value", type: "input", placeholder: "金额/百分比(小数代替)/阶梯格式", required: true, tips:"阶梯格式：50@%@0.1|60@+@5  表示成本价小于等于50的，按百分比0.1加价；成本价小于等于60的按普通金额5加价；多个条件以第一个符合条件优先"},
+                                {title: "吉利小数", name: "settings_lucky_decimal", type: "input", placeholder: "0.6(小数格式，想要几位这里就小数后几位)", tips:"加价后的价格会以增加的方式达到这个小数"},
+                                {title: "实时同步", name: "settings_sync_now", type: "switch", text:"是", default: 0, tips: "点击商品的时候会实时获取最新数据，如果开启，货源站速度的快慢会影响这边商品展示的速度！"},
+                                {title: "同步价格", name: "settings_sync_price", type: "switch", text:"是", default: 0, tips: "获取最新价格，注意：不会修改批发价格！"},
+                                {title: "同步详情及参数", name: "settings_sync_content", type: "switch", text:"是", default: 0, tips: "获取最新详情、参数"},
+                                {title: "同步标题及封面图", name: "settings_sync_title", type: "switch", text:"是", default: 0, tips: "获取最新标题、封面图"},
+                                {title: "强制登录", name: "settings_only_user", type: "switch", text:"是", default: 0, tips: "用户必须登录才能购买商品"},
+                                {title: "使用图床", name: "settings_use_upload", type: "radio", dict: [
+                                        {id: 2, name: "全局设置"},
+                                        {id: 0, name: "关闭"},
+                                        {id: 1, name: "开启"},
+                                        {id: 3, name: "保存本地"},
+                                    ], default: 2 },
+                                {title: "详情文本替换", name: "settings_content_replace", type: "textarea", placeholder: "格式为：查找的文字##替换的文字$$$查找的文字#替换的文字，每条以$$$隔开，搜索与替换间以##隔开", tips: "格式为：查找的文字##替换的文字$$$查找的文字#替换的文字，每条以$$$隔开，搜索与替换间以##隔开"},
+                                {title: "展示库存", name: "settings_show_stock", type: "radio", dict: [
+                                        {id: 0, name: "全局设置"},
+                                        {id: 1, name: "关闭"},
+                                        {id: 2, name: "开启"}
+                                    ], default: 0},
+                                {title: "API对接", name: "settings_api_status", type: "switch", text:"开启", default: 0, tips: "异次元同站点对接！"},
+                                {title: "id", name: "id", type: "input", hide: true},
+                            ],
+                        }
+                    ],
+                    assign,
+                    autoPosition: true,
+                    height: "auto",
+                    width: "660px",
+                    done: () => {
+                        table.refresh(true);
+                    },
+                    renderComplete: (uniqueId, index) => {
+                        console.log(uniqueId, index);
+                        const siteInit = Array.isArray(assign?.c_site_ids) ? assign.c_site_ids.map(String) : [];
+                        const cateInit = Array.isArray(assign?.c_categories) ? assign.c_categories : [];
+                        const formSelector = `.${uniqueId}`;
+
+                        xmSelect.render({
+                            el: `${formSelector} .site_ids`,
+                            name: 'site_ids',
+                            initValue: siteInit,
+                            data: siteOptions,
+                            filterable: true,
+                            prop: { value: 'value', name: 'name' }
+                        });
+
+                        xmSelect.render({
+                            el: `${formSelector} .categories`,
+                            name: 'categories',
+                            initValue: cateInit,
+                            data: categoryOptions,
+                            filterable: true,
+                            prop: { value: 'value', name: 'name' }
+                        });
+                    }
+                });
+            };
+
+            $('.btn-app-create').click(() => {
+                modal("新增");
+            });
+
+            $('.btn-app-exchange').click(function () {
+                let data = table.getSelectionIds();
+                if (data.length === 0) {
+                    message.alert("请至少勾选1条规则进行操作", "error");
+                    return;
+                }
+
+                let loaderIndex = layer.load(0, {shade: ['0.3', '#fff']});
+                util.post('/plugin/ThirdDockManage/api/rule/exchange', {ids: data}, res => {
+                    layer.close(loaderIndex);
+                    message.success(res.msg || "操作成功");
+                    table.refresh(true);
+                });
+            });
+        }();
+    });
+</script>
+#{include file=$manage_view_path|cat:"Footer.html"}

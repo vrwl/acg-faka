@@ -1,0 +1,15 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page" data-ny-page="commodity">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("我的商品")}</h1><p>#{t("价格、库存与销售状态")}</p></div>
+            <button type="button" class="ny-button ny-button--primary button-add"><span class="material-icons-outlined">add</span>#{t("添加")}</button>
+        </section>
+        <section class="ny-panel">
+            <div class="ny-panel-body ny-table-wrap"><table id="commodity-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/commodity.js")}
+#{include file="../Common/Footer.html"}

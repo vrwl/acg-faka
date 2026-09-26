@@ -1,0 +1,24 @@
+#{include file="./Header.html"}
+<main class="st-auth-layout st-auth-layout-compact">
+    <aside class="st-auth-intro" aria-label="#{t('密码重置说明')}">
+        <span class="st-auth-mark"><span class="material-icons-outlined" aria-hidden="true">phone_iphone</span></span>
+        <span class="st-kicker">Account recovery</span>
+        <h1>#{t("通过手机找回")}</h1>
+        <p>#{t("验证码将发送到账号绑定的手机号，请在有效期内完成重置。")}</p>
+    </aside>
+
+    <section class="st-auth-panel" aria-labelledby="st-forget-phone-title">
+        <header><span class="st-kicker">Reset password</span><h2 id="st-forget-phone-title">#{t("重置登录密码")}</h2><p>#{t("使用绑定手机号验证身份")}</p></header>
+        <form method="post" class="needs-validation st-auth-form" data-st-auth="forget-phone" novalidate>
+            <p class="st-auth-error" data-st-auth-error role="alert" hidden></p>
+            <label class="st-field"><span>#{t("绑定手机号")}</span><input type="tel" class="form-control" name="username" placeholder="#{t('请输入绑定手机号')}" autocomplete="tel" inputmode="numeric" maxlength="11" required></label>
+            <div class="st-code-field"><label class="st-field"><span>#{t("短信验证码")}</span><input type="text" class="form-control" id="captcha" name="captcha" placeholder="#{t('请输入验证码')}" autocomplete="one-time-code" inputmode="numeric" maxlength="16" required></label><button type="button" class="st-button st-button-quiet send-phone-captcha">#{t("获取验证码")}</button></div>
+            <div class="st-field"><label for="st-phone-new-password">#{t("新密码")}</label><div class="st-input-with-action"><input id="st-phone-new-password" type="password" class="form-control" name="password" placeholder="#{t('至少 6 位')}" autocomplete="new-password" minlength="6" required><button type="button" class="st-password-toggle" aria-label="#{t('显示密码')}" aria-pressed="false" title="#{t('显示密码')}"><span class="material-icons-outlined" aria-hidden="true">visibility</span></button></div></div>
+            <button type="submit" class="st-button st-button-primary st-auth-submit" aria-busy="false"><span class="st-auth-button-spinner" data-st-auth-button-spinner aria-hidden="true" hidden></span><span data-st-auth-button-label>#{t("确认重置")}</span></button>
+        </form>
+        <p class="st-auth-switch">#{t("想起密码？")}<a href="/user/authentication/login">#{t("返回登录")}</a></p>
+    </section>
+</main>
+<script src="#{\App\Util\Helper::themeUrl('Assets/Js/Page/Auth.js')}"></script>
+#{ready("/assets/user/controller/auth/forget.phone.js")}
+#{include file="./Footer.html"}

@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 订单查询 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/Query.html"}#{else}#{include file="./Pc/Query.html"}#{/if}

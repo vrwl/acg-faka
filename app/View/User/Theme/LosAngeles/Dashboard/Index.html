@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 会员中心 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/Index.html"}#{else}#{include file="./Pc/Index.html"}#{/if}

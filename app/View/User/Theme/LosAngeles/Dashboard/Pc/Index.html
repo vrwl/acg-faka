@@ -1,0 +1,82 @@
+#{include file="../../Common/Pc/MemberTop.html" laPage="dashboard" laTitle=t("会员中心") laIcon="chart" laSub=t("你的消费与经营，一屏看完")}
+
+<div class="la-dash">
+    #{if $user.business_level}
+        <section class="la-dash__biz">
+            <div class="la-stats la-stats--4">
+                <div class="la-stat la-stat--brand">
+                    <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('coin')}</span>
+                    <span class="la-stat__label">#{t("今日收入")}</span>
+                    <b class="la-stat__value la-num">#{$config.currency_symbol}#{$today_income|escape:'html'}</b>
+                    <span class="la-stat__foot">#{t("昨日")} #{$config.currency_symbol}#{$yesterday_income|escape:'html'}</span>
+                </div>
+                <div class="la-stat">
+                    <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('chart')}</span>
+                    <span class="la-stat__label">#{t("本周收入")}</span>
+                    <b class="la-stat__value la-num">#{$config.currency_symbol}#{$week_income|escape:'html'}</b>
+                    <span class="la-stat__foot">#{t("本月")} #{$config.currency_symbol}#{$month_income|escape:'html'}</span>
+                </div>
+                <div class="la-stat">
+                    <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}</span>
+                    <span class="la-stat__label">#{t("今日订单")}</span>
+                    <b class="la-stat__value la-num">#{$today_orders|escape:'html'}<em>#{t("单")}</em></b>
+                    <span class="la-stat__foot">#{t("待发货")} #{$pending_delivery|escape:'html'}</span>
+                </div>
+                <div class="la-stat">
+                    <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('box')}</span>
+                    <span class="la-stat__label">#{t("在售商品")}</span>
+                    <b class="la-stat__value la-num">#{$commodity_online|escape:'html'}<em>/ #{$commodity_count|escape:'html'}</em></b>
+                    <span class="la-stat__foot">#{t("待售卡密")} #{$card_unsold|escape:'html'}</span>
+                </div>
+            </div>
+
+            #{if $week_series}
+                <div class="la-card la-chart">
+                    <div class="la-chart__head">
+                        <strong>#{t("近 7 天收入")}</strong>
+                        <span class="la-faint">#{t("峰值")} #{$config.currency_symbol}#{$week_series_max|escape:'html'}</span>
+                    </div>
+                    <div class="la-chart__bars">
+                        #{foreach $week_series as $d}
+                            <div class="la-chart__col" title="#{$d.label|escape:'html'} #{$config.currency_symbol}#{$d.amount|escape:'html'}">
+                                <span class="la-chart__bar" style="height:#{if $d.pct > 0}#{$d.pct}#{else}2#{/if}%"></span>
+                                <span class="la-chart__x">#{$d.label|escape:'html'}</span>
+                            </div>
+                        #{/foreach}
+                    </div>
+                </div>
+            #{/if}
+        </section>
+    #{/if}
+
+    <section class="la-dash__buy">
+        <div class="la-stats la-stats--3">
+            <div class="la-stat">
+                <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('wallet')}</span>
+                <span class="la-stat__label">#{t("本月消费")}</span>
+                <b class="la-stat__value la-num">#{$config.currency_symbol}#{$buy_month|escape:'html'}</b>
+            </div>
+            <div class="la-stat">
+                <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('coin')}</span>
+                <span class="la-stat__label">#{t("累计消费")}</span>
+                <b class="la-stat__value la-num">#{$config.currency_symbol}#{$buy_total|escape:'html'}</b>
+            </div>
+            <div class="la-stat">
+                <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}</span>
+                <span class="la-stat__label">#{t("累计订单")}</span>
+                <b class="la-stat__value la-num">#{$buy_count|escape:'html'}<em>#{t("单")}</em></b>
+            </div>
+        </div>
+    </section>
+
+    <section class="la-card la-tablecard">
+        <div class="la-tablecard__head">
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}
+            <div><strong>#{t("最近购买")}</strong><small>#{t("卡密可随时查看与下载")}</small></div>
+            <a class="la-btn la-btn--line la-btn--sm" href="/user/personal/purchaseRecord">#{t("全部记录")}</a>
+        </div>
+        <table id="recent-buy-table"></table>
+    </section>
+</div>
+
+#{include file="../../Common/Pc/MemberBottom.html" laCtrl="/assets/user/controller/dashboard/index.js"}

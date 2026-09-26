@@ -1,0 +1,103 @@
+#{*
+  洛杉矶 · 电脑端 <head>
+
+  参数：
+    laArea   shop | auth | member   决定钩子族与平台样式集
+    laPage   页面标识，写到 body[data-la-page] 上供 CSS / JS 取用
+
+  资源版本用模板内自管的 $lav，不用 Helper::themeUrl()：
+  后者只解析 user_theme / user_mobile_theme，会员中心若选了别的主题，
+  它算出来的路径会指到另一套主题的目录并 404。$static 是核心按当前页
+  真正解析出来的主题根，永远正确。
+*}
+#{include file="../Vars.html"}#{assign var=lav value=\App\View\User\Theme\LosAngeles\Support::assetVersion() scope="global"}#{assign var=laArea value=$laArea|default:'shop'}#{assign var=laPage value=$laPage|default:''}<!doctype html>
+<html lang="#{lang_code()}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#FFFCFA" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0C1020" media="(prefers-color-scheme: dark)">
+    <meta name="keywords" content="#{$config.keywords|escape:'html'}">
+    <meta name="description" content="#{$config.description|escape:'html'}">
+    <meta property="og:site_name" content="#{$config.shop_name|escape:'html'}">
+    <meta property="og:title" content="#{$title|escape:'html'}">
+    <meta property="og:type" content="website">
+    <link href="#{$favicon|escape:'html'}?v=#{$app.version|escape:'html'}" rel="icon">
+    <title>#{$title|escape:'html'} - #{$config.shop_name|escape:'html'}</title>
+
+    #{include file="../Boot.html"}
+
+    #{* 平台组件样式。_.css 一份里已经含 layer / toastr / bootstrap-table /
+       component.css / FontAwesome，商城页只要这一个请求。
+       会员中心额外要 bootstrap，因为共享控制器弹出的表单用它的栅格与工具类。 *}
+    #{* 平台组件样式。_.css 一份里已经含 layer / toastr / bootstrap-table /
+       component.css / FontAwesome；会员中心额外要 bootstrap（共享控制器弹出的表单用它的栅格）。
+       md-tokens.css 走普通链接（它只定义 --md-* 令牌，Token.css 在后面覆盖）。 *}
+    #{if $laArea == 'member'}
+        #{css(
+        [
+        "/assets/common/css/bootstrap.min.css",
+        "/assets/common/css/_.css",
+        "/assets/common/css/md-tokens.css",
+        "/assets/common/fonts/material-icons.css"
+        ],
+        [
+        "/assets/common/css/bootstrap.min.css",
+        "/assets/common/css/font.min.css",
+        "/assets/common/js/layui/css/layui.css",
+        "/assets/common/css/select2.min.css",
+        "/assets/common/css/toastr.min.css",
+        "/assets/common/js/table/bootstrap-table.css",
+        "/assets/common/js/layer/theme/default/layer.css",
+        "/assets/common/css/component.css",
+        "/assets/common/css/md-tokens.css",
+        "/assets/common/fonts/material-icons.css"
+        ])}
+    #{else}
+        #{css(
+        [
+        "/assets/common/css/_.css",
+        "/assets/common/css/md-tokens.css"
+        ],
+        [
+        "/assets/common/css/font.min.css",
+        "/assets/common/js/layui/css/layui.css",
+        "/assets/common/css/toastr.min.css",
+        "/assets/common/js/table/bootstrap-table.css",
+        "/assets/common/js/layer/theme/default/layer.css",
+        "/assets/common/css/component.css",
+        "/assets/common/css/md-tokens.css"
+        ])}
+    #{/if}
+
+    #{* md-components.css（平台的 Material 换皮：表格 / 徽章 / md-pair / 用户胶囊 / 弹窗）
+       **单独装进一个级联层**。它里面有 `:root[data-theme] a { color: var(--md-primary) }` 这种 (0,2,1) 的
+       全局元素规则，不进层的话主题 23 条链接配色全被压成品牌色（导航、侧栏、页脚全变红）；
+       进了层，层内普通声明输给层外任何普通声明，Base.css 的 `a { color: inherit }` 就赢了。
+       只装它一个文件：级联层对 !important 是反着算的（层内 important 压层外 important），
+       _.css 里那些带 !important 的平台规则必须留在层外，我对它们的 !important 对冲才有效。
+       CSP 的 style-src 含 'unsafe-inline'，内联 <style> 放行。 *}
+    #{* 先声明层序：la-first 在 la-platform 之前。级联层对 !important 是反着算的 —— 更早的层里的 important 赢，
+   所以主题里必须压过 md-components 的 !important 规则的那几条，写在 Widget.css 的 @layer la-first {} 里。 *}
+<style>@layer la-first, la-platform; @import url("/assets/common/css/md-components.css?v=#{$app.version|escape:'html'}") layer(la-platform);</style>
+
+    #{* 主题样式。Token 必须排在平台 CSS 之后才盖得住 --md-*，
+       Pc.* 只在电脑端下发，手机端一个字节都不加载。 *}
+    <link rel="stylesheet" href="#{$static}/Assets/Css/Token.css?v=#{$lav}">
+    <link rel="stylesheet" href="#{$static}/Assets/Css/Base.css?v=#{$lav}">
+    <link rel="stylesheet" href="#{$static}/Assets/Css/Widget.css?v=#{$lav}">
+    <link rel="stylesheet" href="#{$static}/Assets/Css/Pc.css?v=#{$lav}">
+    <link rel="stylesheet" href="#{$static}/Assets/Css/Pc.Page.css?v=#{$lav}">
+
+    #{js("/assets/common/js/ready.js")}
+    #{index_var()}
+
+    <script id="la-boot" type="application/json">#{\App\View\User\Theme\LosAngeles\Support::boot($setting, $user, $config)}</script>
+
+    <!--start::HOOK-->
+    #{hook(\App\Consts\Hook::USER_GLOBAL_VIEW_HEADER)}
+    #{if $laArea == 'member'}#{hook(\App\Consts\Hook::USER_VIEW_HEADER)}#{else}#{hook(\App\Consts\Hook::USER_VIEW_INDEX_HEADER)}#{/if}
+    <!--end::HOOK-->
+</head>
+<body class="la la--pc la-area-#{$laArea}" data-la-page="#{$laPage|escape:'html'}" data-la-role="#{if !$user}guest#{elseif $user.business_level}merchant#{else}member#{/if}">

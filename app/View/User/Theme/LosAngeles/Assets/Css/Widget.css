@@ -1,0 +1,2677 @@
+/* ============================================================================
+   洛杉矶 · 共享组件层
+   ----------------------------------------------------------------------------
+   1) 商品卡 / 楼层头 —— 两端共用同一份 DOM（LA.card 渲染），
+      结构与视觉主体放这里，端特有的微调各自在 Pc.Page.css / App.Page.css。
+   2) 平台组件换肤 —— layer 弹层、layui、toastr、bootstrap-table、select2、
+      .mcy-card。这些由共享控制器生成，主题改不了结构，只能改皮。
+   ========================================================================= */
+
+/* ================================================================ 商品卡
+
+   拼多多那一路的卡：图占大头、名两行、**价格是整张卡上最大的东西**。
+   卡片本身不做描边、不做投影、不做 hover 位移 —— 灰底已经把白卡分出来了，
+   再加边框和投影，六列并排就变成一片网格牢笼。hover 只给一点点底色变化。   */
+
+.la-goods {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;              /* 填满网格格子：同一行里的卡永远一样高 */
+    border-radius: var(--la-r-md);
+    background: var(--la-surface);
+    overflow: hidden;
+    color: inherit;
+    transition: box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+.la-goods:hover { box-shadow: var(--la-sh-3); }
+.la-goods:active { opacity: .92; }
+
+.la-goods__media {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: var(--la-surface-3);
+    overflow: hidden;
+}
+
+/* 淡入靠"还挂着 data-src 就透明"，加载完 LA.lazy 会把属性摘掉，
+   不需要 JS 再补一个类 —— 少一次 DOM 写入，也不会因为类名对不上而全白。 */
+.la-goods__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity var(--la-d3) var(--la-e-smooth);
+}
+
+.la-goods__img[data-src] { opacity: 0; }
+
+/* 秒杀角标压在图左上角，斜切一刀，是电商里最省地方的"抢"信号 */
+.la-goods__flag {
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+    padding: 3px 9px 3px 7px;
+    font-size: var(--la-t-2xs);
+    font-weight: 800;
+    letter-spacing: .02em;
+    color: #fff;
+    background: var(--la-blaze);
+    border-end-end-radius: var(--la-r-md);
+}
+
+.la-goods__out {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: var(--la-t-md);
+    font-weight: 800;
+    color: #fff;
+    background: rgba(0, 0, 0, .45);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+}
+
+.la-goods.is-out .la-goods__img { filter: grayscale(.8); }
+
+.la-goods__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;                   /* 卡身吃掉多出来的高度…… */
+    gap: 5px;
+    padding: var(--la-card-pad);
+}
+
+.la-goods__name {
+    font-size: var(--la-t-base);
+    font-weight: 400;          /* 名字不加粗：加粗了就和价格抢视线 */
+    line-height: var(--la-lh-snug);
+    color: var(--la-ink);
+    /* 两行定高，六列并排时基线才对得齐 */
+    min-height: calc(var(--la-t-base) * var(--la-lh-snug) * 2);
+}
+
+.la-goods__tags { display: flex; gap: 4px; overflow: hidden; height: 16px; }
+.la-goods__tags:empty { display: none; }
+
+/* 价格行：价格 + 会员价 + 已售，一行装完。这三个数放一起才成立 */
+/* ……价格行贴底。有标签的卡和没标签的卡在同一行里，价格和已售必须压在同一条线上，
+   否则没标签的那张价格会"浮"在半空，下面留一块空白 —— 一眼就看得出参差。 */
+.la-goods__buy {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 1px;
+}
+
+.la-goods__member {
+    font-size: var(--la-t-2xs);
+    color: var(--la-c1);
+    background: var(--la-tint);
+    padding: 1px 4px;
+    border-radius: var(--la-r-xs);
+    white-space: nowrap;
+    align-self: center;
+}
+
+/* 已售 / 库存靠右，能被压缩 —— 卡片窄的时候先牺牲它们，绝不牺牲价格 */
+.la-goods__meta {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-inline-start: auto;
+    min-width: 0;
+    font-size: var(--la-t-2xs);
+    color: var(--la-ink-3);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.la-goods__sold, .la-goods__stock { overflow: hidden; text-overflow: ellipsis; }
+/* 库存状态按**语义色**着色，不用品牌色：
+   0 售罄=灰  1 所剩无几=红（赶紧下单）  2 数量有限=橙  3/4 现货充足·库存爆棚=绿 */
+.la-goods__stock[data-state="0"] { color: var(--la-ink-4); }
+.la-goods__stock[data-state="1"] { color: var(--la-bad); font-weight: 600; }
+.la-goods__stock[data-state="2"] { color: var(--la-warn); }
+.la-goods__stock[data-state="3"], .la-goods__stock[data-state="4"] { color: var(--la-ok); }
+
+.la-goods__shop {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--la-t-2xs);
+    color: var(--la-ink-3);
+    min-width: 0;
+}
+
+.la-goods__shopimg { width: 13px; height: 13px; border-radius: 50%; object-fit: cover; flex: none; }
+
+/* 「立即购买」胶囊：只有横向轨道卡和秒杀位才出，密集栅格里不出 */
+.la-goods__go {
+    display: block;
+    margin-top: 2px;
+    padding: 5px 0;
+    border-radius: var(--la-r-pill);
+    text-align: center;
+    font-size: var(--la-t-xs);
+    font-weight: 700;
+    color: #fff;
+    background: var(--la-sunset);
+}
+
+.la-goods--ghost { pointer-events: none; }
+.la-goods--ghost:hover { box-shadow: none; }
+
+/* ================================================================ 商品栅格
+
+   密度就在这里。1200 版心 / 六列 / 8px 缝，卡片落在 190px 左右 ——
+   和拼多多 PC 的卡宽是一个量级。            */
+
+.la-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--la-grid-cols), minmax(0, 1fr));
+    gap: var(--la-card-gap);
+}
+
+.la-grid--side { grid-template-columns: repeat(var(--la-grid-cols-2), minmax(0, 1fr)); }
+.la-grid__full { grid-column: 1 / -1; }
+
+@media (max-width: 1240px) {
+    .la-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .la-grid--side { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1024px) {
+    .la-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .la-grid--side { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* 横向轨道（秒杀 / 楼层） */
+.la-rail {
+    display: flex;
+    gap: var(--la-card-gap);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+}
+
+.la-rail::-webkit-scrollbar { display: none; }
+.la-rail > .la-goods { flex: none; width: 160px; scroll-snap-align: start; }
+
+/* ================================================================ 楼层
+
+   楼层头压到最小：一行小标题 + 右侧「更多」。
+   原来那种大标题+副标题占掉的两行，在货源站上应该拿去放商品。   */
+
+.la-floor { margin-top: var(--la-s5); }
+
+.la-floor__head {
+    display: flex;
+    align-items: center;
+    gap: var(--la-s4);
+    padding: var(--la-s4) 0 var(--la-s3);
+}
+
+.la-floor__title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--la-t-lg);
+    font-weight: 800;
+}
+
+.la-floor__title .la-i { width: 18px; height: 18px; color: var(--la-c1); }
+
+.la-floor__sub {
+    font-size: var(--la-t-xs);
+    font-weight: 400;
+    color: var(--la-ink-3);
+}
+
+.la-floor__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-inline-start: auto;
+    font-size: var(--la-t-xs);
+    color: var(--la-ink-3);
+    white-space: nowrap;
+    transition: color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-floor__more:hover { color: var(--la-c1); }
+.la-floor__more .la-i { width: 13px; height: 13px; }
+
+/* 秒杀楼层：整条红带，白字，倒计时压在带子里 */
+.la-floor--seckill { border-radius: var(--la-r-lg); overflow: hidden; background: var(--la-surface); }
+
+.la-floor--seckill .la-floor__band {
+    display: flex;
+    align-items: center;
+    gap: var(--la-s4);
+    padding: 9px var(--la-s5);
+    color: #fff;
+    background: var(--la-blaze);
+}
+
+.la-floor--seckill .la-floor__title { color: #fff; font-size: var(--la-t-md); }
+.la-floor--seckill .la-floor__title .la-i { color: #fff; width: 16px; height: 16px; }
+.la-floor--seckill .la-floor__sub { color: rgba(255, 255, 255, .85); }
+.la-floor--seckill .la-floor__more { color: rgba(255, 255, 255, .9); }
+.la-floor--seckill .la-floor__more:hover { color: #fff; }
+.la-floor--seckill .la-floor__body { padding: var(--la-s4); }
+
+.la-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-2xs);
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255, 255, 255, .22);
+}
+
+.la-live__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    animation: la-pulse 1.4s var(--la-e-in-out) infinite;
+}
+
+/* 倒计时（商详用；列表接口不下发结束时间，首页不做假倒计时） */
+.la-count { display: inline-flex; align-items: center; gap: 3px; font-family: var(--la-font-num); }
+
+.la-count__cell {
+    display: inline-grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 4px;
+    border-radius: var(--la-r-xs);
+    font-size: var(--la-t-sm);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--la-ink-inv);
+    background: var(--la-ink);
+}
+
+.la-floor--seckill .la-count__cell { color: var(--la-c1); background: #fff; }
+.la-floor--seckill .la-count__sep { color: #fff; }
+
+.la-count__sep { font-weight: 800; opacity: .6; }
+.la-count__day { display: inline-flex; align-items: center; gap: 3px; }
+.la-count .is-hidden { display: none; }
+
+/* ================================================================ 平台组件换肤 */
+
+.layui-layer {
+    border-radius: var(--la-r-xl) !important;
+    box-shadow: var(--la-sh-4) !important;
+    background: var(--la-surface) !important;
+    color: var(--la-ink) !important;
+    border: 1px solid var(--la-line) !important;
+    overflow: hidden;
+}
+
+.layui-layer-title {
+    height: 52px !important;
+    line-height: 52px !important;
+    padding: 0 52px 0 20px !important;
+    font-size: var(--la-t-md) !important;
+    font-weight: 700 !important;
+    color: var(--la-ink) !important;
+    background: var(--la-surface) !important;
+    border-bottom: 1px solid var(--la-line) !important;
+}
+
+.layui-layer-content { color: var(--la-ink); }
+.layui-layer-page .layui-layer-content { background: var(--la-surface); }
+.layui-layer-setwin { top: 17px !important; right: 16px !important; }
+.layui-layer-setwin a { color: var(--la-ink-3) !important; }
+.layui-layer-shade { background-color: var(--la-scrim) !important; }
+
+.layui-layer-btn { padding: 0 20px 18px !important; border-top: 0 !important; text-align: right !important; }
+
+.layui-layer-btn a {
+    height: 38px !important;
+    line-height: 38px !important;
+    padding: 0 20px !important;
+    margin-left: 8px !important;
+    border: 0 !important;
+    border-radius: var(--la-r-pill) !important;
+    font-weight: 600 !important;
+    color: var(--la-ink-2) !important;
+    background: var(--la-surface-2) !important;
+}
+
+.layui-layer-btn .layui-layer-btn0 {
+    color: var(--la-on-brand) !important;
+    background: var(--la-sunset) !important;
+    box-shadow: var(--la-sh-brand);
+}
+
+.layui-layer-dialog .layui-layer-content { padding: 22px 20px !important; font-size: var(--la-t-md) !important; line-height: var(--la-lh); }
+.layui-layer-msg { border-radius: var(--la-r-pill) !important; }
+.layui-layer-loading { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+
+#toast-container > div {
+    border-radius: var(--la-r-md) !important;
+    box-shadow: var(--la-sh-3) !important;
+    opacity: 1 !important;
+    font-family: var(--la-font);
+    padding: 14px 16px 14px 48px !important;
+}
+
+#toast-container > .toast-success { background-color: var(--la-ok) !important; }
+#toast-container > .toast-error { background-color: var(--la-bad) !important; }
+#toast-container > .toast-warning { background-color: var(--la-warn) !important; }
+#toast-container > .toast-info { background-color: var(--la-sea) !important; }
+
+:root[data-theme] .layui-input, :root[data-theme] .layui-textarea, :root[data-theme] .layui-select {
+    border-radius: var(--la-r-md) !important;
+    border-color: var(--la-line) !important;
+    background: var(--la-surface-2) !important;
+    color: var(--la-ink) !important;
+}
+
+:root[data-theme] .layui-input:not(textarea), :root[data-theme] .layui-select {
+    height: 40px !important;
+    line-height: 38px;
+}
+
+/* 多行框：高度跟内容或控制器给的内联高度走（商品「配置参数」框是 style="height:480px"），
+   只兜一个最小值。component.css 写了 min-height:auto !important，必须同样 important 才压得住；
+   height 不能带 important，否则内联高度永远输。 */
+:root[data-theme] .layui-textarea, :root[data-theme] textarea.layui-input {
+    min-height: 84px !important;
+    height: auto;
+    padding: 10px 12px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+:root[data-theme] .layui-input:focus, :root[data-theme] .layui-textarea:focus {
+    border-color: var(--la-c1) !important;
+    box-shadow: var(--la-focus) !important;
+}
+
+.layui-form-select dl {
+    border-radius: var(--la-r-md);
+    border-color: var(--la-line);
+    background: var(--la-surface);
+    box-shadow: var(--la-sh-3);
+}
+
+.layui-form-select dl dd.layui-this { color: var(--la-c1); background: var(--la-tint); }
+.layui-btn { border-radius: var(--la-r-pill); background: var(--la-c1); }
+.layui-btn-primary { border-color: var(--la-line-2); color: var(--la-ink-2); background: transparent; }
+
+/* 平台表格：行高压到 40 上下，字号 13，表头浅灰底。
+   会员中心的表格是站长每天看的东西，一屏能多看五行比什么都强。
+   平台的 md-components.css 用 :root[data-theme] 前缀写规则，这里必须同样带前缀才压得住。 */
+:root[data-theme] .bootstrap-table .fixed-table-container { border-radius: var(--la-r-md); border-color: var(--la-line); }
+
+:root[data-theme] .bootstrap-table .table > thead > tr > th {
+    padding: 9px 10px !important;
+    border-bottom-color: var(--la-line) !important;
+    background: var(--la-surface-2) !important;
+    color: var(--la-ink-2) !important;
+    font-weight: 600;
+    font-size: var(--la-t-sm);
+    white-space: nowrap;
+}
+
+:root[data-theme] .bootstrap-table .table > tbody > tr > td {
+    padding: 8px 10px !important;
+    border-color: var(--la-line) !important;
+    color: var(--la-ink);
+    font-size: var(--la-t-base);
+    line-height: 1.45;
+    vertical-align: middle;
+}
+
+:root[data-theme] .bootstrap-table .table > tbody > tr:hover > td { background: var(--la-hover) !important; }
+/* 表头的真实高度来自 bootstrap-table 自己塞的 .th-inner：平台用
+   `.fixed-table-container thead th .th-inner { padding: 13px … !important }` 写死了，
+   只能用更长的选择器压回去 */
+:root[data-theme] .bootstrap-table .fixed-table-container thead th .th-inner { padding: 0 !important; line-height: 1.4 !important; }
+:root[data-theme] .bootstrap-table .fixed-table-container thead th .th-inner.sortable { padding-right: 18px !important; }
+:root[data-theme] .bootstrap-table .fixed-table-container thead th .fht-cell { display: none; }
+/* 单元格横向内边距 8：六七列的表在 984 宽主区里正好放下，不出横向滚动条 */
+:root[data-theme] .bootstrap-table .table > tbody > tr > td,
+:root[data-theme] .bootstrap-table .table > thead > tr > th { padding-left: 8px !important; padding-right: 8px !important; }
+/* 十一列以上的宽表（商品订单 12 列）：内边距再收到 6，正好不出横向滚动条 */
+:root[data-theme] .bootstrap-table .table:has(> thead > tr > th:nth-child(11)) > tbody > tr > td,
+:root[data-theme] .bootstrap-table .table:has(> thead > tr > th:nth-child(11)) > thead > tr > th { padding-left: 6px !important; padding-right: 6px !important; }
+:root[data-theme] .bootstrap-table .fixed-table-body { scrollbar-width: thin; }
+:root[data-theme] .fixed-table-toolbar .search input { border-radius: var(--la-r-pill); height: 34px; }
+:root[data-theme] .fixed-table-pagination .pagination .page-link { border-radius: var(--la-r-sm) !important; margin: 0 2px; min-width: 30px; height: 30px; line-height: 28px; padding: 0 8px; font-size: var(--la-t-sm); }
+:root[data-theme] .fixed-table-pagination .pagination-detail,
+:root[data-theme] .fixed-table-pagination .pagination-info { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+:root[data-theme] .fixed-table-pagination .page-list .btn { height: 28px; padding: 0 10px; font-size: var(--la-t-xs); border-radius: var(--la-r-sm); }
+
+/* ================================================================ 平台 Table 组件生成的筛选工具栏（form.table-search）
+   结构（search.js 吐的）：一排 .layui-input-inline —— 文本 / 起止日期（中间一个只装 "~" 的 .text-center）/
+   下拉（.mui-sf--select）/ 最后一格装 .query-button。每格里是 input.layui-input + label.mui-sf__label，
+   input 的 placeholder 是一个空格，标签由平台做成 Material 浮动标签（绝对定位、白底、有值时缩到上边框）。
+   放进我们的会员中心里又大又杂：44 高的输入框上贴着一块白底标签，下拉的标签又浮在框外，一行放不下就散成两行。
+   这里按主题口径重做成一条紧凑筛选条：
+     · 浅灰面板 + 32 高白底圆角小输入框，标签就当占位符（有值即隐藏）
+     · 起止日期拼成一个整体（左框 ~ 右框），不再是三个零件
+     · 下拉的标签做成字段前缀「查询商品 | 全部 ▾」
+     · 查询按钮品牌色实心
+   平台这套皮（_.css 里的 _material 段 + md-components）几乎每条都带 !important，且 md-components 的那几条在层内。
+   唯一能全压住的位置是更早声明的 @layer la-first，且层内每条都必须 !important（层内普通声明输给任何层外普通声明）。
+   下面整块由脚本统一追加了 !important，别手工混写。 */
+@layer la-first {
+:root[data-theme] .table-search {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+    margin: 12px 12px 0 !important;
+    padding: 10px 12px !important;
+    border: 1px solid var(--la-line) !important;
+    border-radius: var(--la-r-lg) !important;
+    background: var(--la-surface-2) !important;
+    box-shadow: none !important;
+}
+
+/* 平台给每格 190 宽（小屏 100% !important），这里全部改走 flex-basis：文本框 150 起步、按需长到 220 */
+:root[data-theme] .table-search .layui-input-inline {
+    position: relative !important;
+    display: block !important;
+    flex: 1 1 150px !important;
+    width: auto !important;
+    max-width: 220px !important;
+    height: 32px !important;
+    margin: 0 !important;
+    align-self: auto !important;
+}
+:root[data-theme] .table-search .layui-input-inline.hide { display: none !important; }   /* 控制器藏起来的条件格（如卡密的 race） */
+:root[data-theme] .table-search .layui-input-inline:has(> .query-button) {
+    flex: none !important;
+    max-width: none !important;
+}
+:root[data-theme] .table-search .mui-sf {
+    min-height: 0 !important;
+    min-width: 0 !important;
+}
+
+/* 输入框：32 高、白底、13px */
+:root[data-theme] .table-search .layui-input-inline > .layui-input {
+    width: 100% !important;
+    height: 32px !important;
+    line-height: 30px !important;
+    padding: 0 10px !important;
+    font-size: var(--la-t-base) !important;
+    font-weight: 400 !important;
+    color: var(--la-ink) !important;
+    border: 1px solid var(--la-line) !important;
+    border-radius: var(--la-r-md) !important;
+    background: var(--la-surface) !important;
+    box-shadow: none !important;
+    transition: border-color var(--la-d1) var(--la-e-smooth), box-shadow var(--la-d1) var(--la-e-smooth) !important;
+}
+:root[data-theme] .table-search .layui-input-inline > .layui-input:hover { border-color: var(--la-line-2) !important; }
+:root[data-theme] .table-search .layui-input-inline > .layui-input:focus {
+    border-color: var(--la-c1) !important;
+    box-shadow: var(--la-focus) !important;
+}
+
+/* 标签当占位符：铺在输入框里、灰字、单行省略；有值就隐藏（平台把 placeholder 设成一个空格，:placeholder-shown 仍成立） */
+:root[data-theme] .table-search .mui-sf__label {
+    position: absolute !important;
+    left: 11px !important;
+    right: 11px !important;
+    top: 0 !important;
+    z-index: 2 !important;
+    height: 32px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    transform: none !important;
+    font-size: var(--la-t-base) !important;
+    line-height: 32px !important;
+    font-weight: 400 !important;
+    color: var(--la-ink-4) !important;
+    background: transparent !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    pointer-events: none !important;
+    transition: opacity var(--la-d1) var(--la-e-smooth) !important;
+}
+:root[data-theme] .table-search .mui-sf:focus-within > .mui-sf__label { color: var(--la-ink-4) !important; }
+:root[data-theme] .table-search .mui-sf:has(> .layui-input:not(:placeholder-shown)) > .mui-sf__label { opacity: 0 !important; }
+
+/* 起止日期拼成一个整体：左框收掉右圆角和右边框，"~" 那格做成白底的中段，右框收掉左圆角；
+   用负外边距吃掉 flex gap；聚焦时只变边框色，不画会被切成半截的外发光 */
+/* Center.js 把三件套包进 .la-daterange，折行时整组一起折；组内三件不再吃外层 gap，用负边距吃掉的那 8px 改由组内不设间距实现 */
+:root[data-theme] .table-search .layui-input-inline.la-daterange {
+    display: flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    height: 32px !important;
+}
+:root[data-theme] .table-search .layui-input-inline[class*="e-between-"] {
+    flex: 0 0 124px !important;
+    max-width: none !important;
+}
+:root[data-theme] .table-search .la-daterange > .layui-input-inline.text-center { margin: 0 !important; }
+:root[data-theme] .table-search .layui-input-inline.text-center {
+    flex: 0 0 18px !important;
+    width: 18px !important;
+    height: 32px !important;
+    margin: 0 -8px !important;
+    padding: 0 !important;
+    z-index: 1 !important;
+    line-height: 30px !important;
+    font-size: var(--la-t-sm) !important;
+    text-align: center !important;
+    color: var(--la-ink-4) !important;
+    background: var(--la-surface) !important;
+    border-top: 1px solid var(--la-line) !important;
+    border-bottom: 1px solid var(--la-line) !important;
+}
+:root[data-theme] .table-search .mui-sf:has(+ .text-center) > .layui-input {
+    border-start-end-radius: 0 !important;
+    border-end-end-radius: 0 !important;
+    border-right-color: transparent !important;
+}
+:root[data-theme] .table-search .text-center + .mui-sf > .layui-input {
+    border-start-start-radius: 0 !important;
+    border-end-start-radius: 0 !important;
+    border-left-color: transparent !important;
+}
+:root[data-theme] .table-search .layui-input-inline[class*="e-between-"] > .layui-input:focus { box-shadow: none !important; }
+
+/* 下拉：整格是一个白底圆角框，标签做成前缀「查询商品 | 全部 ▾」，里面 layui 的输入框去边框去底 */
+:root[data-theme] .table-search .mui-sf--select {
+    display: flex !important;
+    align-items: center !important;
+    flex: 0 1 auto !important;
+    max-width: none !important;
+    padding-left: 10px !important;
+    border: 1px solid var(--la-line) !important;
+    border-radius: var(--la-r-md) !important;
+    background: var(--la-surface) !important;
+    transition: border-color var(--la-d1) var(--la-e-smooth), box-shadow var(--la-d1) var(--la-e-smooth) !important;
+}
+:root[data-theme] .table-search .mui-sf--select:hover { border-color: var(--la-line-2) !important; }
+:root[data-theme] .table-search .mui-sf--select:focus-within {
+    border-color: var(--la-c1) !important;
+    box-shadow: var(--la-focus) !important;
+}
+:root[data-theme] .table-search .mui-sf--select > .mui-sf__label {
+    position: static !important;
+    order: -1 !important;
+    flex: none !important;
+    height: auto !important;
+    max-width: 9em !important;
+    margin: 0 2px 0 0 !important;
+    padding: 0 8px 0 0 !important;
+    border-right: 1px solid var(--la-line) !important;
+    font-size: var(--la-t-sm) !important;
+    line-height: 14px !important;
+    color: var(--la-ink-3) !important;
+    opacity: 1 !important;
+}
+:root[data-theme] .table-search .mui-sf--select > .layui-form-select {
+    position: static !important;
+    flex: 1 1 auto !important;
+    min-width: 88px !important;
+}
+:root[data-theme] .table-search .mui-sf--select .layui-form-select .layui-input {
+    width: 100% !important;
+    height: 30px !important;
+    line-height: 30px !important;
+    padding: 0 26px 0 6px !important;
+    font-size: var(--la-t-base) !important;
+    color: var(--la-ink) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+:root[data-theme] .table-search .layui-form-select dl { top: 36px !important; }
+:root[data-theme] .table-search .layui-form-select .layui-edge { right: 9px !important; }
+
+/* 查询按钮：品牌色实心，和输入框同高 */
+:root[data-theme] .table-search .layui-btn.query-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    height: 32px !important;
+    min-height: 0 !important;
+    line-height: 32px !important;
+    margin: 0 !important;
+    padding: 0 14px !important;
+    border: 0 !important;
+    border-radius: var(--la-r-md) !important;
+    font-size: var(--la-t-base) !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    color: #fff !important;
+    background: var(--la-c1) !important;
+    box-shadow: none !important;
+    transition: filter var(--la-d1) var(--la-e-smooth), transform var(--la-d1) var(--la-e-smooth) !important;
+}
+:root[data-theme] .table-search .layui-btn.query-button i {
+    color: currentColor !important;
+    font-size: 12px !important;
+}
+:root[data-theme] .table-search .layui-btn.query-button:hover { filter: brightness(1.06) !important; }
+:root[data-theme] .table-search .layui-btn.query-button:active {
+    transform: scale(.97) !important;
+    filter: none !important;
+}
+
+/* 平台在工具栏后面再吐一排状态胶囊（全部 / 已支付 / 未支付），和面板对齐、留一口气 */
+:root[data-theme] .table-search + .layui-btn-group,
+:root[data-theme] .table-search + div { margin: 10px 12px 6px !important; }
+
+/* 手机端：面板贴着卡片内缩 12，文本框 / 下拉 / 按钮各占整行；起止日期仍拼成一行 */
+:root[data-theme] body.la--app .table-search {
+    margin: 10px 12px 0 !important;
+    padding: 10px !important;
+}
+:root[data-theme] body.la--app .table-search .layui-input-inline {
+    flex: 1 1 100% !important;
+    max-width: none !important;
+}
+:root[data-theme] body.la--app .table-search .layui-input-inline.la-daterange { flex: 1 1 100% !important; }
+:root[data-theme] body.la--app .table-search .layui-input-inline[class*="e-between-"] {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+}
+:root[data-theme] body.la--app .table-search .layui-input-inline.text-center { flex: 0 0 18px !important; }
+:root[data-theme] body.la--app .table-search .mui-sf--select { flex: 1 1 100% !important; }
+:root[data-theme] body.la--app .table-search .layui-input-inline:has(> .query-button) { flex: 1 1 100% !important; }
+:root[data-theme] body.la--app .table-search .layui-btn.query-button { width: 100% !important; }
+}
+/* ---- end table-search ---- */
+
+/* 单元格里的两行组合（编号 / 时间、数量 / 金额）：主行 13、副行 11 灰 */
+:root[data-theme] .md-pair { gap: 2px; }
+:root[data-theme] .md-pair__row { display: flex; align-items: baseline; gap: 4px; }
+:root[data-theme] .md-pair__k { font-size: var(--la-t-2xs); color: var(--la-ink-3); }
+:root[data-theme] .md-pair__v { font-size: var(--la-t-base); color: var(--la-ink); font-variant-numeric: tabular-nums; }
+:root[data-theme] .md-pair__v--muted { font-size: var(--la-t-2xs) !important; color: var(--la-ink-3); }
+
+/* 徽章：矮、方角、淡底深字，和商品卡上的标签一个口径 */
+:root[data-theme] .a-badge,
+:root[data-theme] .acg-badge,
+:root[data-theme] .table-item,
+:root[data-theme] .badge-soft,
+:root[data-theme] .shipment-badge {
+    height: 22px;
+    padding: 0 8px !important;
+    gap: 4px;
+    border: 0 !important;
+    border-radius: var(--la-r-xs) !important;
+    font-size: var(--la-t-sm) !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    color: var(--la-ink-2) !important;
+    background: var(--la-surface-3) !important;
+    white-space: nowrap;
+}
+
+:root[data-theme] .a-badge-success, :root[data-theme] .badge-light-success, :root[data-theme] .shipment-paid { color: var(--la-ok) !important; background: var(--la-ok-bg) !important; }
+:root[data-theme] .a-badge-warning, :root[data-theme] .badge-light-warning, :root[data-theme] .shipment-waiting { color: var(--la-warn) !important; background: var(--la-warn-bg) !important; }
+:root[data-theme] .a-badge-danger, :root[data-theme] .badge-light-danger { color: var(--la-bad) !important; background: var(--la-bad-bg) !important; }
+:root[data-theme] .a-badge-primary, :root[data-theme] .badge-light-primary { color: var(--la-c1) !important; background: var(--la-tint) !important; }
+:root[data-theme] .a-badge-info, :root[data-theme] .badge-light-info { color: var(--la-sea) !important; background: var(--la-info-bg) !important; }
+:root[data-theme] .a-badge-dark, :root[data-theme] .a-badge-secondary { color: var(--la-ink-2) !important; background: var(--la-surface-3) !important; }
+
+/* ================================================================ 表内统一尺度
+   平台各个控制器往单元格里吐的是五花八门的组件：.md-pair 两行组合、.table-item 商品胶囊、
+   .pay-item 支付方式、.a-badge 状态徽章、.a-badge-glass 操作按钮、内联 color:green 的金额……
+   各自带各自的字号和高度（实测 10 / 12 / 13 / 13.5 / 14px，22 / 30 / 36px 高），放在一行里就是一锅粥。
+   这里定死一套：正文 13、次要 11；**凡是胶囊一律 24 高、12 号字、6px 圆角**；金额品牌色加粗等宽。 */
+:root[data-theme] .bootstrap-table .table > tbody > tr > td { font-size: var(--la-t-base) !important; }
+/* 次要文字 11px（--la-t-xs）。--la-t-2xs 是 10px，在表格里贴着 13px 正文看会显得像脚注 */
+:root[data-theme] .bootstrap-table .md-pair__k,
+:root[data-theme] .bootstrap-table .md-pair__v--muted,
+:root[data-theme] .bootstrap-table td small { font-size: var(--la-t-xs) !important; color: var(--la-ink-3); }
+
+/* 推广中心「N 组 ⓘ」这类行内链接：12 号、品牌色、图标同字号 */
+:root[data-theme] .bootstrap-table a.sku-detail { display: inline-flex; align-items: center; gap: 4px; font-size: var(--la-t-sm); color: var(--la-c1); font-weight: 600; }
+:root[data-theme] .bootstrap-table a.sku-detail i { font-size: 12px; }
+:root[data-theme] .bootstrap-table .md-pair__row { min-height: 18px; }
+
+/* 胶囊统一：徽章 / 商品 / 支付方式 / 操作按钮 / 工单状态 / 发货标 */
+:root[data-theme] .bootstrap-table .a-badge,
+:root[data-theme] .bootstrap-table .acg-badge,
+:root[data-theme] .bootstrap-table .table-item,
+:root[data-theme] .bootstrap-table .pay-item,
+:root[data-theme] .bootstrap-table .a-badge-glass,
+:root[data-theme] .bootstrap-table .badge-soft,
+:root[data-theme] .bootstrap-table .shipment-badge,
+:root[data-theme] .bootstrap-table .uc-ticket-pill,
+:root[data-theme] .bootstrap-table .layui-btn-sm,
+:root[data-theme] .bootstrap-table .btn-sm {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 5px;
+    height: 24px !important;
+    padding: 0 8px !important;
+    margin: 0 !important;
+    border-radius: var(--la-r-sm) !important;
+    font-size: var(--la-t-sm) !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    white-space: nowrap;
+    vertical-align: middle;
+    box-shadow: none !important;
+}
+
+/* 中性胶囊（商品、支付方式）：浅灰底深灰字，18px 圆头像 */
+:root[data-theme] .bootstrap-table .table-item,
+:root[data-theme] .bootstrap-table .pay-item { color: var(--la-ink-2) !important; background: var(--la-surface-3) !important; border: 0 !important; max-width: 100%; }
+:root[data-theme] .bootstrap-table .table-item-icon,
+:root[data-theme] .bootstrap-table .pay-item .item-icon { width: 18px !important; height: 18px !important; border-radius: 50%; object-fit: cover; flex: none; margin: 0 !important; }
+:root[data-theme] .bootstrap-table .table-item-name,
+:root[data-theme] .bootstrap-table .pay-item .item-name { font-size: var(--la-t-sm) !important; color: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
+
+/* 操作按钮（查看卡密 / 详情 / 删除…）：品牌色描边，hover 淡底；图标和文字一个字号 */
+:root[data-theme] .bootstrap-table .a-badge-glass {
+    color: var(--la-c1) !important;
+    background: transparent !important;
+    border: 1px solid rgba(var(--la-c1-rgb), .55) !important;
+    cursor: pointer;
+    transition: background-color var(--la-d2) var(--la-e-smooth), border-color var(--la-d2) var(--la-e-smooth);
+}
+
+:root[data-theme] .bootstrap-table .a-badge-glass:hover { background: var(--la-tint) !important; border-color: var(--la-c1) !important; }
+:root[data-theme] .bootstrap-table .a-badge-glass .btn-title { font-size: var(--la-t-sm) !important; }
+:root[data-theme] .bootstrap-table .a-badge-glass i,
+:root[data-theme] .bootstrap-table .a-badge-glass .material-icons-outlined { font-size: 13px !important; width: auto; height: auto; line-height: 1; }
+/* 危险类操作（删除 / 取消）保持语义红 */
+:root[data-theme] .bootstrap-table .a-badge-glass.text-danger { color: var(--la-bad) !important; border-color: rgba(var(--la-bad-rgb), .55) !important; }
+:root[data-theme] .bootstrap-table .a-badge-glass.text-danger:hover { background: var(--la-bad-bg) !important; }
+
+/* 金额：控制器内联的 color:green 统一成品牌色、加粗、等宽数字 */
+:root[data-theme] .bootstrap-table .md-pair__v > span[style*="color"],
+:root[data-theme] .bootstrap-table td > span[style*="color: green"],
+:root[data-theme] .bootstrap-table td > span[style*="color:green"] {
+    color: var(--la-c1) !important;
+    font-weight: 600;
+    font-family: var(--la-font-num);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 商品 / 用户胶囊（带头像的 .table-item、.md-user-cell）：头像 22，名字 13，去掉阴影和边框 */
+:root[data-theme] .table-item { max-width: 100%; }
+:root[data-theme] .table-item-icon, :root[data-theme] .md-user-cell__avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex: none; }
+:root[data-theme] .table-item-name { font-size: var(--la-t-base); color: var(--la-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
+:root[data-theme] .md-user-cell { gap: 8px; }
+:root[data-theme] .md-user-cell__name { font-size: var(--la-t-base); }
+:root[data-theme] .md-user-cell__id { font-size: var(--la-t-2xs); color: var(--la-ink-3); }
+
+/* 表格里的小按钮 */
+:root[data-theme] .bootstrap-table .layui-btn,
+:root[data-theme] .bootstrap-table .btn { height: 28px; line-height: 28px; padding: 0 12px; font-size: var(--la-t-sm); border-radius: var(--la-r-pill); }
+
+.mcy-card {
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+}
+
+.select2-container--default .select2-selection--single {
+    height: 40px;
+    border-radius: var(--la-r-md);
+    border-color: var(--la-line);
+    background: var(--la-surface-2);
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 40px; color: var(--la-ink); }
+.select2-dropdown { border-radius: var(--la-r-md); border-color: var(--la-line); background: var(--la-surface); }
+.select2-container--default .select2-results__option--highlighted[aria-selected] { background: var(--la-c1); }
+
+/* 弹窗内容区：统一 20px 内边距。平台控制器往 layer 里塞的是裸 HTML，不带任何留白 */
+:root[data-theme] .layui-layer-page .layui-layer-content { padding: 16px 20px 20px; max-height: 72vh; overflow: auto; }
+:root[data-theme] .layui-layer-page .layui-layer-content > .md-secret,
+:root[data-theme] .layui-layer-page .layui-layer-content > .uc-cardtip { margin: 0; }
+
+/* 弹窗里的裸表格（SKU 收益明细、批发阶梯之类）：细线、浅灰表头、等宽数字、可横向滚动 */
+:root[data-theme] .layui-layer-content table:not(.table) {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 10px;
+    font-size: var(--la-t-sm);
+    border: 1px solid var(--la-line);
+    border-radius: var(--la-r-md);
+    overflow: hidden;
+}
+
+:root[data-theme] .layui-layer-content table:not(.table) th,
+:root[data-theme] .layui-layer-content table:not(.table) td { padding: 7px 10px; text-align: start; white-space: nowrap; border-bottom: 1px solid var(--la-line); }
+:root[data-theme] .layui-layer-content table:not(.table) th { background: var(--la-surface-2); color: var(--la-ink-2); font-weight: 600; font-size: var(--la-t-xs); }
+:root[data-theme] .layui-layer-content table:not(.table) td { font-variant-numeric: tabular-nums; }
+:root[data-theme] .layui-layer-content table:not(.table) tr:last-child td { border-bottom: 0; }
+:root[data-theme] .layui-layer-content table:not(.table) tbody tr:hover td { background: var(--la-hover); }
+:root[data-theme] .layui-layer-content .goods-sku { display: block; overflow-x: auto; }
+
+/* ================================================================ 平台弹窗表单（component.popup）
+   结构：.layui-layer.component-popup > .layui-layer-content > .layui-card-body > form.layui-form.layui-form-pane
+         > .layui-form-item.block-xxx > label.layui-form-label + .layui-input-block > 控件
+   平台自己那套皮（md-components 的 mui-float 浮动标签）在级联层里输给了 layui.css，
+   露出的是 layui 原生：标签左浮 140px、大 textarea 带拉伸角、粉色开关、最小化/最大化钮。
+   这里按主题口径重做：标签在上、控件通栏、开关做成 40×22 胶囊、去掉窗口钮、收紧留白。 */
+:root[data-theme] .component-popup .layui-layer-min,
+:root[data-theme] .component-popup .layui-layer-max { display: none !important; }
+/* layui 打开弹窗的瞬间按当时的内容高度给 .layui-layer-content 写死一个内联 height；
+   我的 textarea min-height 随后把内容撑高 36px，内容区就溢出、出滚动条、把开关行顶没了。
+   让内容区高度跟着内容走（上限 72vh 内滚动），弹窗自然长高。 */
+:root[data-theme] .component-popup .layui-layer-content { padding: 14px 20px 4px !important; height: auto !important; max-height: 72vh; overflow: auto; }
+:root[data-theme] .component-popup .layui-card-body { padding: 0; }
+
+:root[data-theme] .component-popup .layui-form-item { margin: 0 0 14px; display: block; }
+:root[data-theme] .component-popup .layui-form-item.hide { display: none; }
+:root[data-theme] .component-popup .layui-form-item::after { content: none; }
+
+/* 标签在上 */
+:root[data-theme] .component-popup .layui-form-pane .layui-form-label,
+:root[data-theme] .component-popup .layui-form-label {
+    position: static;
+    float: none;
+    display: block;
+    width: auto;
+    height: auto;
+    margin: 0 0 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 1.4;
+    text-align: start;
+    font-size: var(--la-t-sm);
+    font-weight: 600;
+    color: var(--la-ink-2);
+    transform: none;
+}
+
+/* 控制器 title:false 的字段（商品介绍 / 配置参数）吐的是 label.hide，里面只有一枚必填星号；
+   上面那条把它重新 display:block 了，星号就孤零零漏在编辑器上方。同特异度、写在后面，必须 important */
+:root[data-theme] .component-popup .layui-form-label.hide { display: none !important; }
+
+:root[data-theme] .component-popup .layui-input-block,
+:root[data-theme] .component-popup .layui-input-inline { margin: 0; min-height: 0; width: 100%; display: block; }
+
+/* 控件通栏，和页面上的 .la-input 一个口径 */
+:root[data-theme] .component-popup .layui-input,
+:root[data-theme] .component-popup .layui-textarea,
+:root[data-theme] .component-popup .layui-select {
+    width: 100%;
+    padding: 0 12px;
+    font-size: var(--la-t-base);
+}
+
+:root[data-theme] .component-popup .layui-textarea {
+    padding: 10px 12px;               /* 上面那条通栏规则把 padding 压成 0 12px，多行框要还回来 */
+    line-height: 1.6;
+    max-height: 56vh;                 /* 配置参数框内联 480px，矮屏上别把弹窗撑爆；最小高度由全局规则兜底 */
+}
+
+:root[data-theme] .layui-textarea::-webkit-resizer, :root[data-theme] textarea.layui-input::-webkit-resizer { display: none; }   /* 全站统一：多行框可竖向拉伸但不画角标 */
+
+/* ---- 控件编辑器（form.js addWidget 吐的 .widget-block 卡片，商品弹窗「控件」页）
+   md-components 给它做的是 Material 浮动标签：label 绝对定位压在输入框里，有值 / 下拉时缩小浮到上边框。
+   这个弹窗里其它字段全是"标签在上"，浮动标签显得格格不入，而且「类型」那枚浮起来的标签
+   直接顶进了上方的卡片头。统一改成静态标签在上，并把 md 藏掉的占位符放回来。 */
+:root[data-theme] .component-popup .widget-block {
+    margin: 0 0 12px !important;
+    padding: 12px 14px 14px;
+    border: 1px solid var(--la-line) !important;
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface-2);
+}
+:root[data-theme] .component-popup .widget-head { margin-bottom: 10px; }
+:root[data-theme] .component-popup .widget-title { font-size: var(--la-t-sm); color: var(--la-ink-2); }
+:root[data-theme] .component-popup .widget-title i { color: var(--la-c1); }
+:root[data-theme] .component-popup .widget-btn { width: 28px; height: 28px; border-radius: var(--la-r-sm); color: var(--la-ink-3); }
+:root[data-theme] .component-popup .widget-btn:hover { background: var(--la-bad-bg); color: var(--la-bad); }
+:root[data-theme] .component-popup .widget-grid { gap: 10px 12px; }
+:root[data-theme] .component-popup .widget-field { position: static; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+:root[data-theme] .component-popup .widget-field > label {
+    position: static;
+    order: -1;                        /* 选项行的 label 写在 input 后面，用 order 提到上面 */
+    transform: none;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+    background: none;
+    font-size: var(--la-t-xs);
+    line-height: 1.4;
+    font-weight: 600;
+    color: var(--la-ink-3);
+    pointer-events: auto;
+    transition: none;
+}
+:root[data-theme] .component-popup .widget-field:focus-within > label { color: var(--la-c1); }
+:root[data-theme] .component-popup .widget-field .layui-input,
+:root[data-theme] .component-popup .widget-field .widget-general { background: var(--la-surface) !important; }
+:root[data-theme] .component-popup .widget-data-field { margin-top: 2px; }
+:root[data-theme] .component-popup .widget-options { gap: 8px; }
+:root[data-theme] .component-popup .widget-option-row { align-items: end; }
+:root[data-theme] .component-popup .widget-option-row .widget-btn { margin-bottom: 6px; }   /* 40px 输入框里居中 */
+:root[data-theme] .component-popup .widget-option-add { color: var(--la-c1); font-size: var(--la-t-xs); font-weight: 600; }
+:root[data-theme] .component-popup .widget-advanced { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--la-line); }
+:root[data-theme] .component-popup .widget-advanced-toggle { font-size: var(--la-t-xs); font-weight: 600; color: var(--la-ink-3); }
+:root[data-theme] .component-popup .widget-advanced-toggle:hover { color: var(--la-c1); }
+:root[data-theme] .component-popup .widget-add-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 6px;
+    padding: 8px 16px;
+    border: 1px dashed var(--la-line-strong);
+    border-radius: var(--la-r-md);
+    background: transparent;
+    color: var(--la-c1);
+    font-size: var(--la-t-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--la-d1) var(--la-e-smooth), border-color var(--la-d1) var(--la-e-smooth);
+}
+:root[data-theme] .component-popup .widget-add-control:hover { background: rgba(var(--la-c1-rgb), .06); border-color: var(--la-c1); }
+
+@layer la-first {
+    /* md-components 把浮动标签字段的占位符设成透明 !important（标签本身充当占位符）；
+       标签改成静态在上后占位符要放回来 —— 层内 important 才压得过它 */
+    :root[data-theme] .component-popup .widget-field > .layui-input::placeholder,
+    :root[data-theme] .component-popup .widget-field > .layui-textarea::placeholder { color: var(--la-ink-4) !important; }
+    /* 标题行里相册 / 外链两枚钮的图标：md 给的 15px 灰是层内 important，只能在这里压 */
+    :root[data-theme] .component-popup .layui-form-label .photo-album i,
+    :root[data-theme] .component-popup .layui-form-label .external-input i { font-size: 12px !important; color: var(--la-ink-3) !important; }
+    :root[data-theme] .component-popup .layui-form-label .photo-album:hover i,
+    :root[data-theme] .component-popup .layui-form-label .external-input:hover i { color: var(--la-c1) !important; }
+}
+
+/* ---- 图片上传控件（form.js uploadImage：.image-render > button.btn-upload.image-upload 空态 | img.image-upload 已选）
+   md-components 给它做的 108×108 虚线投放区在层里，宽高 / 纵向排列这些普通声明输给了 layui.css 的 .layui-btn
+   （38 高、横向内边距），露出来的就是那块又扁又宽的虚线框 + 飘在框外的相机。这里把尺寸和排列接管回来；
+   md 那几条 !important（透明底、虚线边、圆角、字色、悬停变品牌色）和主题口径一致，直接沿用。 */
+:root[data-theme] .component-popup .image-render { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+:root[data-theme] .component-popup .image-render .btn-upload {
+    flex-direction: column;
+    gap: 6px;
+    width: 96px;
+    height: 96px;
+    margin: 0;
+    line-height: 1.3;
+    font-size: var(--la-t-xs);
+    font-weight: 600;
+    white-space: normal;
+    text-align: center;
+}
+:root[data-theme] .component-popup .image-render .btn-upload i { display: block; margin: 0; }
+:root[data-theme] .component-popup .image-render img.image-upload { max-height: 108px; max-width: 100%; border-radius: var(--la-r-md); border: 1px solid var(--la-line); }
+
+/* 标题行里的两枚模式钮（相册 / 外链）：26px 圆形浅底钮，和标题文字居中对齐 */
+:root[data-theme] .component-popup .layui-form-label .photo-album,
+:root[data-theme] .component-popup .layui-form-label .external-input {
+    width: 26px;
+    height: 26px;
+    margin: 0 0 0 6px !important;
+    top: 0 !important;
+    border-radius: 50%;
+    background: var(--la-surface-2);
+    vertical-align: middle;
+    transition: background-color var(--la-d1) var(--la-e-smooth);
+}
+:root[data-theme] .component-popup .layui-form-label .photo-album:hover,
+:root[data-theme] .component-popup .layui-form-label .external-input:hover { background: var(--la-tint); }
+
+/* 必填星号：平台给它的 .fs-10 根本没定义，星号就跟着标签字号跑成一颗大红星；收成 9px 的小星 */
+:root[data-theme] .component-popup .layui-form-label .fa-asterisk {
+    position: relative;
+    top: -1px;
+    margin-left: 3px !important;
+    font-size: 9px !important;
+    color: var(--la-bad) !important;
+    vertical-align: middle;
+}
+
+/* 开关（所有上下文：弹窗、表格单元格、页面表单）：40×22 胶囊，开=品牌色。隐藏 layui 塞在里面的 ON/OFF 文字 */
+:root[data-theme] .layui-form-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px !important;
+    min-width: 0 !important;          /* layui 给开关的 min-width 会把 40 顶成 44，滑块就到不了右边 */
+    height: 22px !important;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 11px;
+    background: var(--la-surface-3);
+    transition: background-color var(--la-d2) var(--la-e-smooth);
+    vertical-align: middle;
+}
+
+:root[data-theme] .layui-form-switch > div { display: none; }
+:root[data-theme] .layui-form-switch > i {
+    position: absolute;
+    margin: 0;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .18);
+    transition: left var(--la-d2) var(--la-e-spring);
+}
+
+/* 尺寸、位置、底色写在 @layer la-first 里（文件末尾）：
+   md-components 给开关的是一整套带 !important 的 MD2 皮（滑块 left / transform / 开态半透明底），
+   它在 la-platform 层里，层内 important 压层外 important，只有更早的层能赢。 */
+
+/* 表格单元格里的开关：和文字基线对齐，别顶到单元格上沿 */
+:root[data-theme] .bootstrap-table .layui-form-switch { vertical-align: middle; margin: 0; }
+
+/* 复选 / 单选：方角圆角化、选中品牌色 */
+:root[data-theme] .component-popup .layui-form-checkbox { margin: 0 12px 0 0; padding-right: 10px; height: 30px; line-height: 28px; border-radius: var(--la-r-sm); border-color: var(--la-line-2); }
+:root[data-theme] .component-popup .layui-form-checkbox span { height: 28px; line-height: 28px; background: var(--la-surface-2); color: var(--la-ink-2); font-size: var(--la-t-sm); border-radius: var(--la-r-sm) 0 0 var(--la-r-sm); }
+:root[data-theme] .component-popup .layui-form-checkbox i { height: 28px; line-height: 28px; border-color: var(--la-line-2); }
+:root[data-theme] .component-popup .layui-form-checked span { background: var(--la-c1); color: #fff; }
+:root[data-theme] .component-popup .layui-form-checked i { color: var(--la-c1); border-color: var(--la-c1); }
+:root[data-theme] .component-popup .layui-form-radio > i { color: var(--la-ink-4); }
+:root[data-theme] .component-popup .layui-form-radioed > i { color: var(--la-c1); }
+
+/* 弹窗里的说明文字 */
+:root[data-theme] .component-popup .layui-form-mid,
+:root[data-theme] .component-popup .layui-word-aux { padding: 4px 0 0; font-size: var(--la-t-xs); color: var(--la-ink-3); }
+
+/* 平台弹层里的卡密结构（dashboard / purchase.record 控制器生成的 .md-secret） */
+.md-secret__code {
+    padding: 16px;
+    border-radius: var(--la-r-md);
+    background: var(--la-surface-2);
+    border: 1px dashed var(--la-line-2);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: var(--la-t-base);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 46vh;
+    overflow: auto;
+}
+
+.md-secret__bar { display: flex; gap: 8px; margin-top: 14px; }
+
+.md-secret__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 38px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: var(--la-r-pill);
+    font-weight: 600;
+    color: var(--la-ink-2);
+    background: var(--la-surface-2);
+    cursor: pointer;
+}
+
+.md-secret__btn--primary { color: var(--la-on-brand); background: var(--la-sunset); box-shadow: var(--la-sh-brand); }
+
+/* 卡密弹窗里的备注 / 使用说明：控制器吐的是一个没有类名、只带 style="margin-top:12px" 的裸 div，
+   贴在弹窗左下角像漏出来的文字。做成一条浅底提示行（.md-secret 下不带类名的 div 就是它） */
+.md-secret > div:not([class]),
+.md-secret__meta,
+.uc-cardtip {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: var(--la-r-md);
+    background: var(--la-surface-2);
+    font-size: var(--la-t-sm);
+    line-height: 1.6;
+    color: var(--la-ink-2);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.uc-cardtip__warn { display: flex; align-items: flex-start; gap: 8px; color: var(--la-warn); }
+.uc-cardtip .material-icons-outlined { flex: none; font-size: 18px; line-height: 1.3; }
+.uc-cardtip a { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+
+/* 站内消息预览（component.previewMessage 的 .md-message-layer）：正文是站长写的富文本，
+   Base.css 的重置把 ul/ol 的项目符号抹了、链接也和正文一个色，这里给回来 */
+:root[data-theme] .md-message-preview__content ul { list-style: disc; padding-inline-start: 1.4em; margin: 6px 0; }
+:root[data-theme] .md-message-preview__content ol { list-style: decimal; padding-inline-start: 1.4em; margin: 6px 0; }
+:root[data-theme] .md-message-preview__content li { margin: 2px 0; }
+:root[data-theme] .md-message-preview__content a { color: var(--la-c1); text-decoration: underline; text-underline-offset: 2px; }
+
+/* SKU 收益明细弹窗（推广中心）：基准行 + 表格 */
+.uc-skupop__meta { font-size: var(--la-t-base); color: var(--la-ink-2); }
+.uc-skupop__meta b { color: var(--la-c1); font-family: var(--la-font-num); font-variant-numeric: tabular-nums; }
+.uc-skupop__delta { color: var(--la-ink-3); }
+.uc-skupop__delta--up, .uc-skupop__delta.is-up { color: var(--la-ok); }
+.uc-skupop__delta--down, .uc-skupop__delta.is-down { color: var(--la-bad); }
+.uc-cardtip__code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--la-surface-3); padding: 1px 6px; border-radius: var(--la-r-xs); }
+.uc-cardtip__legend { font-size: var(--la-t-2xs); color: var(--la-ink-3); }
+
+/* ================================================================ 下单表单（两端共用） */
+
+.la-buy { display: flex; flex-direction: column; gap: var(--la-s4); }
+
+.la-buy__row { display: flex; flex-direction: column; gap: 8px; }
+.la-buy__row--inline { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 10px; }
+.la-buy__label { font-size: var(--la-t-sm); font-weight: 700; color: var(--la-ink-2); }
+.la-buy__row--inline .la-buy__label { margin: 0; }
+.la-buy__hint { display: flex; gap: 10px; font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-buy__widgets { gap: 12px; }
+.la-buy__widgets > div { display: flex; flex-direction: column; gap: 6px; }
+
+/* 规格 / 种类按钮 */
+
+.la-optgrid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.la-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 6px 14px;
+    border-radius: var(--la-r-md);
+    border: 1.5px solid var(--la-line);
+    background: var(--la-surface-2);
+    font-size: var(--la-t-base);
+    color: var(--la-ink-2);
+    cursor: pointer;
+    transition: color var(--la-d2) var(--la-e-smooth),
+    border-color var(--la-d2) var(--la-e-smooth),
+    background-color var(--la-d2) var(--la-e-smooth),
+    transform var(--la-d1) var(--la-e-out);
+}
+
+.la-opt:hover { color: var(--la-ink); border-color: var(--la-line-2); }
+.la-opt:active { transform: scale(.97); }
+.la-opt__name { font-weight: 600; }
+.la-opt__price { font-family: var(--la-font-num); font-size: var(--la-t-sm); font-weight: 700; color: var(--la-c1); }
+
+.la-opt.is-primary {
+    color: var(--la-c1);
+    border-color: var(--la-c1);
+    background: rgba(var(--la-c1-rgb), .08);
+    box-shadow: 0 0 0 3px rgba(var(--la-c1-rgb), .10);
+}
+
+.la-opt.is-primary .la-opt__price { color: var(--la-c1); }
+
+/* 数量步进器 */
+
+.la-stepper {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    border-radius: var(--la-r-md);
+    border: 1px solid var(--la-line);
+    background: var(--la-surface-2);
+    overflow: hidden;
+}
+
+.la-stepper__btn {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 100%;
+    color: var(--la-ink-2);
+    transition: color var(--la-d1) var(--la-e-smooth), background-color var(--la-d1) var(--la-e-smooth);
+}
+
+.la-stepper__btn:hover { color: var(--la-c1); background: var(--la-tint); }
+.la-stepper__btn .la-i { width: 15px; height: 15px; }
+
+.la-stepper__input {
+    width: 62px;
+    height: 100%;
+    border: 0;
+    border-inline: 1px solid var(--la-line);
+    background: transparent;
+    text-align: center;
+    font-family: var(--la-font-num);
+    font-size: var(--la-t-md);
+    font-weight: 700;
+    color: var(--la-ink);
+    -moz-appearance: textfield;
+}
+
+.la-stepper__input::-webkit-outer-spin-button,
+.la-stepper__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* 验证码 / 指定卡密 */
+
+.la-captcha { display: flex; align-items: center; gap: 10px; }
+.la-captcha .la-input { flex: 1; min-width: 0; }
+.la-captcha__img { width: 116px; height: 44px; border-radius: var(--la-r-md); cursor: pointer; object-fit: cover; background: var(--la-surface-2); flex: none; }
+
+.la-draft { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.la-draft__picked { font-size: var(--la-t-sm); color: var(--la-c1); font-weight: 600; }
+.la-draft__fee { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+
+/* 批发阶梯 */
+
+.la-ladder {
+    padding: 12px 14px;
+    border-radius: var(--la-r-md);
+    background: linear-gradient(120deg, rgba(var(--la-sea-rgb), .07), rgba(var(--la-c1-rgb), .06));
+    border: 1px dashed rgba(var(--la-sea-rgb), .28);
+}
+
+.la-ladder__head { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: var(--la-t-sm); font-weight: 700; color: var(--la-sea); }
+.la-ladder__head .la-i { width: 16px; height: 16px; }
+.la-ladder__table { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.la-ladder__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 82px;
+    padding: 7px 12px;
+    border-radius: var(--la-r-sm);
+    background: var(--la-surface);
+    border: 1px solid var(--la-line);
+}
+
+.la-ladder__cell b { font-size: var(--la-t-md); font-weight: 800; color: var(--la-c1); }
+.la-ladder__cell span { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+
+/* 支付方式 / 卡密挑选（弹层与 Sheet 共用） */
+
+.la-panel { padding: 14px 18px 18px; }
+.la-pays, .la-cards { display: flex; flex-direction: column; gap: 8px; }
+
+.la-pays__row, .la-cards__row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: var(--la-r-md);
+    border: 1.5px solid var(--la-line);
+    background: var(--la-surface-2);
+    text-align: start;
+    cursor: pointer;
+    transition: border-color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth), transform var(--la-d1) var(--la-e-out);
+}
+
+.la-pays__row:hover, .la-cards__row:hover { border-color: var(--la-c1); background: rgba(var(--la-c1-rgb), .07); }
+.la-pays__row:active, .la-cards__row:active { transform: scale(.99); }
+.la-pays__ico { display: grid; place-items: center; width: 30px; height: 30px; flex: none; color: var(--la-c1); font-size: 20px; }
+.la-pays__ico img, .la-pays__ico .image-icon { width: 26px; height: 26px; object-fit: contain; }
+.la-pays__name { flex: 1; min-width: 0; font-size: var(--la-t-md); font-weight: 600; }
+.la-pays__row .la-i { width: 16px; height: 16px; color: var(--la-ink-4); }
+.la-cards { max-height: 52vh; overflow-y: auto; }
+.la-cards__txt { flex: 1; min-width: 0; font-size: var(--la-t-base); word-break: break-all; }
+.la-cards__fee { font-family: var(--la-font-num); font-size: var(--la-t-sm); font-weight: 700; color: var(--la-c1); flex: none; }
+
+/* 详情 Tab */
+
+.la-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--la-line); }
+
+.la-tabs__btn {
+    position: relative;
+    padding: 13px 20px;
+    font-size: var(--la-t-md);
+    font-weight: 700;
+    color: var(--la-ink-3);
+    transition: color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-tabs__btn::after {
+    content: "";
+    position: absolute;
+    inset-inline: 20px;
+    bottom: -1px;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: var(--la-sunset);
+    transform: scaleX(0);
+    transition: transform var(--la-d3) var(--la-e-out);
+}
+
+.la-tabs__btn:hover { color: var(--la-ink); }
+.la-tabs__btn.is-on { color: var(--la-c1); }
+.la-tabs__btn.is-on::after { transform: scaleX(1); }
+.la-tabs__pane { padding: var(--la-s6) 0; }
+
+/* 分段胶囊变体：会员中心卡片里用。一条浅灰槽，选中项白底浮起 */
+.la-tabs--pill {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 0;
+    border-radius: var(--la-r-pill);
+    background: var(--la-surface-3);
+}
+
+.la-tabs--pill .la-tabs__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 16px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-base);
+    font-weight: 600;
+    color: var(--la-ink-2);
+    transition: color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth), box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+.la-tabs--pill .la-tabs__btn::after { display: none; }
+.la-tabs--pill .la-tabs__btn .la-i { width: 15px; height: 15px; }
+.la-tabs--pill .la-tabs__btn:hover { color: var(--la-ink); }
+.la-tabs--pill .la-tabs__btn.is-on { color: var(--la-c1); background: var(--la-surface); box-shadow: var(--la-sh-1); }
+.la-tabs--pill + .la-tabs__pane { padding-top: var(--la-s5); }
+
+/* 我的店铺：Tab 条与面板 */
+.la-shop__tabs { margin-top: var(--la-s5); }
+.la-shop__pane { padding: var(--la-s5) 0 0; }
+.la-shop__pane > .la-card { margin-top: 0; }
+
+.la-shop__filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border-radius: var(--la-r-md);
+    background: var(--la-tint);
+    font-size: var(--la-t-sm);
+    color: var(--la-ink-2);
+}
+
+.la-shop__filter .la-i { width: 14px; height: 14px; color: var(--la-c1); }
+.la-shop__filter b { color: var(--la-c1); font-weight: 700; }
+.la-shop__filter a { margin-inline-start: auto; color: var(--la-c1); font-weight: 600; }
+
+/* ================================================================ 订单卡片（查询 / 记录共用） */
+
+.la-ocard {
+    border-radius: var(--la-r-lg);
+    border: 1px solid var(--la-line);
+    background: var(--la-surface);
+    box-shadow: var(--la-sh-1);
+    overflow: hidden;
+}
+
+.la-ocard + .la-ocard { margin-top: 12px; }
+
+.la-ocard__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 16px;
+    background: var(--la-surface-2);
+    border-bottom: 1px solid var(--la-line);
+}
+
+.la-ocard__no { font-size: var(--la-t-sm); font-weight: 700; color: var(--la-ink-2); letter-spacing: .02em; }
+
+.la-ostat {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-xs);
+    font-weight: 700;
+}
+
+.la-ostat--wait { color: var(--la-warn); background: var(--la-warn-bg); }
+.la-ostat--ship { color: var(--la-sea); background: var(--la-info-bg); }
+.la-ostat--done { color: var(--la-ok); background: var(--la-ok-bg); }
+
+.la-ocard__body { display: flex; gap: 12px; padding: 14px 16px; }
+.la-ocard__img { width: 62px; height: 62px; border-radius: var(--la-r-sm); object-fit: cover; background: var(--la-surface-2); flex: none; }
+.la-ocard__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.la-ocard__name { font-size: var(--la-t-base); font-weight: 600; }
+.la-ocard__spec { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-ocard__meta { display: flex; gap: 12px; font-size: var(--la-t-xs); color: var(--la-ink-3); flex-wrap: wrap; }
+.la-ocard__meta b { color: var(--la-ink-2); font-weight: 700; }
+.la-ocard__right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+.la-ocard__pay { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+
+.la-ocard__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 16px;
+    border-top: 1px dashed var(--la-line);
+    flex-wrap: wrap;
+}
+
+.la-ocard__contact { font-size: var(--la-t-xs); color: var(--la-ink-3); word-break: break-all; }
+.la-ocard__tip { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+
+.la-queryload { display: grid; place-items: center; padding: var(--la-s9) 0; }
+
+/* ================================================================ 输入弹窗 */
+
+.la-prompt { display: flex; flex-direction: column; gap: 12px; }
+.la-prompt__desc { font-size: var(--la-t-sm); color: var(--la-ink-2); line-height: var(--la-lh); }
+.la-prompt__acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.la--app .la-prompt { padding-bottom: 8px; }
+.la--app .la-prompt__acts .la-btn { flex: 1; }
+
+/* ================================================================ 表单原语（会员中心共用） */
+
+.la-form { display: flex; flex-direction: column; gap: var(--la-s5); }
+.la-form--card { padding: var(--la-s6); border-radius: var(--la-r-lg); border: 1px solid var(--la-line); background: var(--la-surface); box-shadow: var(--la-sh-1); }
+.la-field { display: flex; flex-direction: column; gap: 7px; }
+.la-field b { color: var(--la-bad); }
+.la-field em { font-style: normal; font-weight: 400; }
+.la-sendrow { display: flex; gap: 8px; }
+.la-sendrow .la-input { flex: 1; min-width: 0; }
+.la-sendrow .la-btn { flex: none; height: 44px; }
+.la-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-size: var(--la-t-base); color: var(--la-ink-2); }
+.la-link { color: var(--la-c1); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.la-editor { min-height: 180px; border-radius: var(--la-r-md); border: 1px solid var(--la-line); overflow: hidden; background: var(--la-surface-2); }
+.la-domainrow { display: flex; gap: 8px; }
+.la-domainrow .la-input:first-child { flex: 1; }
+.la-domainrow select { flex: none; width: 40%; max-width: 190px; }
+
+.la-cname {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: var(--la-r-xs);
+    background: var(--la-surface-2);
+    border: 1px dashed var(--la-line-2);
+    cursor: pointer;
+    font-size: var(--la-t-xs);
+}
+
+.la-cname .la-i { width: 13px; height: 13px; color: var(--la-ink-3); }
+.la-cname:hover { border-color: var(--la-c1); }
+
+.la-upload { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.la-upload__preview { width: 64px; height: 64px; border-radius: var(--la-r-md); object-fit: cover; background: var(--la-surface-2); }
+.la-upload__qr { width: 108px; height: 108px; display: grid; place-items: center; border-radius: var(--la-r-md); background: var(--la-surface-2); overflow: hidden; }
+.la-upload__qr canvas, .la-upload__qr img { max-width: 100%; height: auto; }
+
+/* 金额输入框。默认就要看得出是个输入框：白底 + 细描边。
+   以前默认是 --la-surface-2 底 + 透明边框，放进同样是 --la-surface-2 底的充值 / 提现卡片里，
+   整块和背景同色，看起来就是一行没有样式的大字 */
+.la-amountbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 56px;
+    padding: 0 16px;
+    border-radius: var(--la-r-md);
+    background: var(--la-surface);
+    border: 1.5px solid var(--la-line);
+    transition: border-color var(--la-d2) var(--la-e-smooth), box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+.la-amountbox:hover { border-color: var(--la-line-2); }
+.la-amountbox:focus-within { border-color: var(--la-c1); box-shadow: var(--la-focus); }
+.la-amountbox__unit { font-size: var(--la-t-xl); font-weight: 800; color: var(--la-c1); }
+
+.la-amountbox__input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    font-family: var(--la-font-num);
+    font-size: var(--la-t-2xl);
+    font-weight: 800;
+    color: var(--la-ink);
+    -moz-appearance: textfield;
+}
+
+.la-amountbox__input::-webkit-outer-spin-button,
+.la-amountbox__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.la-amountbox__input::placeholder { color: var(--la-ink-4); font-weight: 500; }
+.la-amountbox__input:focus { outline: none; }
+.la-amountbox__all { flex: none; padding: 6px 12px; border-radius: var(--la-r-pill); font-size: var(--la-t-sm); font-weight: 700; color: var(--la-c1); background: var(--la-tint); }
+
+/* ================================================================ 统计卡 */
+
+.la-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--la-s3); }
+.la-stats--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.la-stats--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* 统计卡：扁平白卡，不悬浮。数字才是主角 —— 卡片自己别动 */
+.la-stat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: var(--la-s4) var(--la-s5);
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+    overflow: hidden;
+}
+
+.la-stat__ico {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 6px;
+    border-radius: var(--la-r-md);
+    color: var(--la-c1);
+    background: rgba(var(--la-c1-rgb), .10);
+}
+
+.la-stat__ico .la-i { width: 18px; height: 18px; }
+.la-stat__label { font-size: var(--la-t-sm); color: var(--la-ink-3); }
+.la-stat__value { font-family: var(--la-font-num); font-size: var(--la-t-2xl); font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.la-stat__value em { font-style: normal; font-size: var(--la-t-sm); font-weight: 600; color: var(--la-ink-3); margin-inline-start: 3px; }
+.la-stat__foot { font-size: var(--la-t-xs); color: var(--la-ink-4); }
+.la-stat--brand { color: #fff; background: var(--la-sunset); border-color: transparent; box-shadow: var(--la-sh-brand); }
+.la-stat--brand .la-stat__ico { color: #fff; background: rgba(255, 255, 255, .22); }
+.la-stat--brand .la-stat__label, .la-stat--brand .la-stat__foot { color: rgba(255, 255, 255, .84); }
+.la-stat--brand .la-stat__value em { color: rgba(255, 255, 255, .8); }
+
+/* ================================================================ 汇总 / 状态 / 提示 */
+
+.la-sumlist { display: flex; flex-direction: column; gap: 10px; }
+.la-sumlist > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.la-sumlist dt { font-size: var(--la-t-sm); color: var(--la-ink-3); }
+.la-sumlist dd { font-size: var(--la-t-base); font-weight: 700; text-align: end; }
+.la-sumlist__gift { color: var(--la-ok); }
+.la-sumlist__fee { color: var(--la-bad); }
+.la-sumlist__total { padding-top: 10px; border-top: 1px dashed var(--la-line); }
+.la-sumlist__total dt { font-size: var(--la-t-base); color: var(--la-ink); font-weight: 700; }
+
+.la-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: var(--la-s4) 0;
+    padding: 10px 14px;
+    border-radius: var(--la-r-md);
+    font-size: var(--la-t-sm);
+}
+
+.la-status .la-i { width: 16px; height: 16px; flex: none; }
+.la-status__ok, .la-status__wait { display: none; }
+.la-status.is-ready, .la-status.is-ok { color: var(--la-ok); background: var(--la-ok-bg); }
+.la-status.is-ready .la-status__ok, .la-status.is-ok .la-status__ok { display: inline-flex; }
+.la-status.is-waiting, .la-status.is-error { color: var(--la-warn); background: var(--la-warn-bg); }
+.la-status.is-waiting .la-status__wait, .la-status.is-error .la-status__wait { display: inline-flex; }
+.la-status.is-error { color: var(--la-bad); background: var(--la-bad-bg); }
+
+.la-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 14px;
+    border-radius: var(--la-r-md);
+    font-size: var(--la-t-sm);
+    color: var(--la-ink-2);
+    background: var(--la-surface-2);
+}
+
+.la-note .la-i { width: 16px; height: 16px; flex: none; color: var(--la-ink-3); }
+.la-note--warn { color: var(--la-warn); background: var(--la-warn-bg); }
+.la-note--warn .la-i { color: var(--la-warn); }
+
+.la-progress { height: 6px; border-radius: var(--la-r-pill); background: var(--la-surface-3); overflow: hidden; }
+.la-progress__bar { display: block; height: 100%; border-radius: var(--la-r-pill); background: var(--la-sunset); transition: width var(--la-d5) var(--la-e-out); }
+
+.la-tag--green { color: var(--la-ok); background: var(--la-ok-bg); }
+
+/* ================================================================ 表格卡 / 子导航 */
+
+.la-tablecard { padding: 0; overflow: hidden; }
+.la-tablecard + .la-tablecard { margin-top: var(--la-s4); }
+
+.la-tablecard__head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: var(--la-s4) var(--la-s5) var(--la-s3);
+    flex-wrap: wrap;
+}
+
+.la-tablecard__head > .la-i { width: 17px; height: 17px; color: var(--la-c1); flex: none; }
+.la-tablecard__head > div { flex: 1; min-width: 0; }
+.la-tablecard__head strong { display: block; font-size: var(--la-t-base); font-weight: 800; }
+.la-tablecard__head small { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-tablecard__acts { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.la-subnav { display: flex; gap: 3px; margin-bottom: var(--la-s4); overflow-x: auto; scrollbar-width: none; }
+.la-subnav::-webkit-scrollbar { display: none; }
+
+.la-subnav__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-sm);
+    font-weight: 600;
+    color: var(--la-ink-2);
+    background: var(--la-surface-2);
+    white-space: nowrap;
+    flex: none;
+    transition: color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-subnav__item .la-i { width: 15px; height: 15px; }
+.la-subnav__item:hover { color: var(--la-ink); background: var(--la-surface-3); }
+.la-subnav__item.is-on, .la-subnav__item.active { color: var(--la-on-brand); background: var(--la-sunset); box-shadow: var(--la-sh-brand); }
+.la-panelbox { display: none; }
+.la-panelbox.active { display: block; animation: la-fade var(--la-d3) var(--la-e-smooth) both; }
+
+/* 账户信息表 */
+.la-infocard { padding: var(--la-s6); }
+.la-infocard__head { display: flex; align-items: center; gap: 14px; padding-bottom: var(--la-s5); border-bottom: 1px solid var(--la-line); }
+.la-infocard__avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; background: var(--la-surface-2); }
+.la-infocard__id strong { display: block; font-size: var(--la-t-xl); font-weight: 800; }
+.la-info { display: flex; flex-direction: column; }
+.la-info__row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 0; border-bottom: 1px dashed var(--la-line); }
+.la-info__row:last-child { border-bottom: 0; }
+.la-info dt { font-size: var(--la-t-sm); color: var(--la-ink-3); flex: none; }
+.la-info dd { font-size: var(--la-t-base); text-align: end; word-break: break-all; }
+.la-info__key { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+/* bootstrap 给 <code> 的默认色是洋红 #d63384，会在个人资料页跳出主题；显式收回中性色 */
+.la-info__key code { padding: 4px 10px; border-radius: var(--la-r-xs); background: var(--la-surface-2); color: var(--la-ink-2); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: var(--la-t-sm); letter-spacing: .02em; }
+.la-info__warn { display: flex; align-items: center; gap: 7px; margin-top: var(--la-s4); font-size: var(--la-t-xs); color: var(--la-warn); }
+.la-info__warn .la-i { width: 14px; height: 14px; }
+
+/* ================================================================ 充值 / 兑现 / 推广 / 店铺 */
+
+.la-topup, .la-cash { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--la-s5); align-items: start; }
+.la-topup__box, .la-cash__box { display: flex; flex-direction: column; gap: var(--la-s5); padding: var(--la-s6); }
+
+.la-topup__balance {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: var(--la-s4) var(--la-s5);
+    border-radius: var(--la-r-md);
+    background: linear-gradient(120deg, rgba(var(--la-c1-rgb), .10), rgba(var(--la-c2-rgb), .07));
+}
+
+.la-topup__ico { display: grid; place-items: center; width: 42px; height: 42px; border-radius: var(--la-r-md); color: #fff; background: var(--la-sunset); box-shadow: var(--la-sh-brand); flex: none; }
+.la-topup__balance > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.la-topup__balance > div span { font-size: var(--la-t-xs); }
+.la-topup__balance > div b { font-size: var(--la-t-xl); font-weight: 800; color: var(--la-c1); }
+.la-topup__presets { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+/* 预设金额：默认白底描边胶囊（和金额输入框、支付方式按钮同一套），悬停描品牌色，选中换品牌渐变。
+   默认态以前直接吃 .la-chip 的 --la-surface-2 底，和卡片底同色，看起来就是一排裸文字 */
+.la-topup__presets .la-chip {
+    height: 36px;
+    padding: 0 16px;
+    border: 1.5px solid var(--la-line);
+    font-family: var(--la-font-num);
+    font-weight: 700;
+    color: var(--la-ink-2);
+    background: var(--la-surface);
+}
+.la-topup__presets .la-chip:not(.active):hover { color: var(--la-c1); background: var(--la-surface); border-color: rgba(var(--la-c1-rgb), .45); }
+.la-topup__presets .la-chip.active { color: var(--la-on-brand); background: var(--la-sunset); border-color: transparent; box-shadow: var(--la-sh-brand); }
+.la-topup__bonuses { padding: var(--la-s4); border-radius: var(--la-r-md); background: rgba(var(--la-c2-rgb), .10); }
+.la-topup__bonustitle { display: flex; align-items: center; gap: 6px; margin-bottom: 9px; font-size: var(--la-t-sm); font-weight: 700; color: var(--la-c2); }
+.la-topup__bonustitle .la-i { width: 15px; height: 15px; }
+.la-topup__bonuslist { display: flex; flex-wrap: wrap; gap: 7px; }
+.la-topup__bonus { padding: 4px 11px; border-radius: var(--la-r-pill); font-size: var(--la-t-xs); font-weight: 600; color: var(--la-ink-2); background: var(--la-surface); }
+.la-topup__summary { position: sticky; top: 94px; padding: var(--la-s6); }
+.la-topup__summary h3 { margin-bottom: var(--la-s4); font-size: var(--la-t-md); font-weight: 800; }
+.la-topup__growth { margin-top: var(--la-s5); padding-top: var(--la-s4); border-top: 1px dashed var(--la-line); display: flex; flex-direction: column; gap: 8px; }
+.la-topup__growthhead { display: flex; align-items: center; gap: 6px; font-size: var(--la-t-sm); }
+.la-topup__growthhead .la-i { width: 15px; height: 15px; color: var(--la-c2); }
+.la-topup__growthhead b { color: var(--la-c1); }
+
+.la-paylist { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.la-paylist .btn-pay {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 8px 16px;
+    border-radius: var(--la-r-md);
+    border: 1.5px solid var(--la-line);
+    background: var(--la-surface-2);
+    font-size: var(--la-t-base);
+    font-weight: 600;
+    color: var(--la-ink-2) !important;
+    cursor: pointer;
+    line-height: 1.4 !important;
+    transition: color var(--la-d2) var(--la-e-smooth), border-color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-paylist .btn-pay:hover { border-color: var(--la-line-2); }
+/* 与预设金额、金额输入框统一成白底控件，放在浅灰卡片上层次才清楚 */
+.la-paylist .btn-pay:not(.checked) { background: var(--la-surface); }
+.la-paylist .btn-pay.checked { color: var(--la-c1) !important; border-color: var(--la-c1); background: rgba(var(--la-c1-rgb), .08); box-shadow: 0 0 0 3px rgba(var(--la-c1-rgb), .10); }
+.la-paylist .pay-icon { width: 22px; height: 22px; object-fit: contain; }
+
+.la-paylist--wallet { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+.la-wallet {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 13px 15px;
+    border-radius: var(--la-r-md);
+    border: 1.5px solid var(--la-line);
+    background: var(--la-surface-2);
+    cursor: pointer;
+    text-align: start;
+    transition: color var(--la-d2) var(--la-e-smooth), border-color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-wallet .la-i { width: 18px; height: 18px; color: var(--la-ink-3); }
+.la-wallet__name { font-size: var(--la-t-base); font-weight: 700; }
+.la-wallet__note { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-wallet.checked { border-color: var(--la-c1); background: rgba(var(--la-c1-rgb), .08); }
+.la-wallet.checked .la-i, .la-wallet.checked .la-wallet__name { color: var(--la-c1); }
+.la-wallet.is-off { opacity: .5; }
+.la-cash__tip { margin-top: 8px; font-size: var(--la-t-xs); }
+
+/* 推广 */
+.la-promo { display: flex; flex-direction: column; gap: var(--la-s5); }
+.la-promo__link { display: flex; align-items: center; gap: var(--la-s7); padding: var(--la-s6); }
+.la-promo__main { flex: 1; min-width: 0; }
+.la-promo__title { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; font-size: var(--la-t-md); font-weight: 800; }
+.la-promo__title .la-i { width: 18px; height: 18px; color: var(--la-c1); }
+.la-promo__urlbox { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; border-radius: var(--la-r-pill); background: var(--la-surface-2); margin-bottom: 10px; }
+.la-promo__url { flex: 1; min-width: 0; font-family: var(--la-font-num); font-size: var(--la-t-sm); }
+.la-promo__qr { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: none; }
+.la-promo__qr > div { width: 108px; height: 108px; display: grid; place-items: center; padding: 6px; border-radius: var(--la-r-md); background: #fff; }
+
+/* 套餐 */
+.la-plans { display: flex; flex-direction: column; gap: var(--la-s6); }
+.la-plans__head { display: flex; align-items: center; gap: 14px; }
+.la-plans__head .la-i { color: var(--la-c1); }
+.la-plans__head h2 { font-size: var(--la-t-2xl); font-weight: 800; letter-spacing: -.02em; }
+.la-plans__head p { font-size: var(--la-t-sm); color: var(--la-ink-3); }
+.la-plans__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--la-s4); }
+
+.la-plan {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: var(--la-s6);
+    border-radius: var(--la-r-lg);
+    border: 1.5px solid var(--la-line);
+    background: var(--la-surface);
+    cursor: pointer;
+    text-align: start;
+    transition: transform var(--la-d3) var(--la-e-out), border-color var(--la-d2) var(--la-e-smooth), box-shadow var(--la-d3) var(--la-e-out);
+}
+
+.la-plan:hover { transform: translateY(-4px); box-shadow: var(--la-sh-3); }
+.la-plan.checked { border-color: var(--la-c1); box-shadow: 0 0 0 4px rgba(var(--la-c1-rgb), .12), var(--la-sh-3); }
+.la-plan--reco { border-color: rgba(var(--la-c2-rgb), .5); }
+.la-plan__badge { position: absolute; top: 12px; inset-inline-end: 12px; padding: 3px 10px; border-radius: var(--la-r-pill); font-size: var(--la-t-2xs); font-weight: 800; color: #fff; background: var(--la-sunset); }
+.la-plan__name { font-size: var(--la-t-lg); font-weight: 800; }
+.la-plan__feats { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.la-plan__feat { display: flex; align-items: center; gap: 6px; font-size: var(--la-t-sm); color: var(--la-ink-2); }
+.la-plan__feat .la-i { width: 15px; height: 15px; color: var(--la-ok); }
+.la-plan__feat.is-off { color: var(--la-ink-4); text-decoration: line-through; }
+.la-plan__feat.is-off .la-i { color: var(--la-ink-4); }
+.la-plan__fee { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-plan__fee b { color: var(--la-c1); }
+.la-plans__acts { display: flex; gap: 10px; }
+
+/* 店铺 */
+.la-shop { display: flex; flex-direction: column; gap: var(--la-s5); }
+.la-shop__status { display: flex; align-items: center; gap: var(--la-s5); padding: var(--la-s5) var(--la-s6); flex-wrap: wrap; }
+.la-shop__crown { display: grid; place-items: center; width: 46px; height: 46px; border-radius: var(--la-r-md); color: #fff; background: var(--la-sunset); box-shadow: var(--la-sh-brand); flex: none; }
+.la-shop__level strong { display: block; font-size: var(--la-t-lg); font-weight: 800; }
+.la-shop__feats { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
+.la-shop__feat { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: var(--la-r-pill); font-size: var(--la-t-xs); font-weight: 600; color: var(--la-ok); background: var(--la-ok-bg); }
+.la-shop__feat .la-i { width: 14px; height: 14px; }
+.la-shop__feat.is-off { color: var(--la-ink-4); background: var(--la-surface-2); }
+.la-shop__form { padding: var(--la-s6); display: flex; flex-direction: column; gap: var(--la-s7); }
+.la-shop__sec { display: flex; flex-direction: column; gap: var(--la-s5); }
+.la-shop__sec h3 { display: flex; align-items: center; gap: 8px; font-size: var(--la-t-md); font-weight: 800; padding-bottom: 10px; border-bottom: 1px solid var(--la-line); }
+.la-shop__sec h3 .la-i { width: 18px; height: 18px; color: var(--la-c1); }
+
+/* 收益走势条 */
+.la-chart { padding: var(--la-s5) var(--la-s6) var(--la-s4); }
+.la-chart__head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--la-s5); }
+.la-chart__head strong { font-size: var(--la-t-md); font-weight: 800; }
+.la-chart__bars { display: flex; align-items: flex-end; gap: 10px; height: 140px; }
+.la-chart__col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+
+.la-chart__bar {
+    width: 100%;
+    max-width: 42px;
+    border-radius: var(--la-r-sm) var(--la-r-sm) 3px 3px;
+    background: var(--la-sunset);
+    opacity: .85;
+    transition: opacity var(--la-d2) var(--la-e-smooth), transform var(--la-d3) var(--la-e-out);
+    transform-origin: bottom;
+    animation: la-bar-grow var(--la-d5) var(--la-e-out) both;
+}
+
+.la-chart__col:hover .la-chart__bar { opacity: 1; }
+.la-chart__x { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+
+@keyframes la-bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* ================================================================ 工单 */
+
+.la-ticket { display: flex; flex-direction: column; gap: var(--la-s5); }
+
+.la-ticket__new {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: var(--la-s5) var(--la-s6);
+    border-radius: var(--la-r-lg);
+    color: #fff;
+    background: var(--la-sunset);
+    background-size: 180% 100%;
+    box-shadow: var(--la-sh-brand);
+    transition: background-position var(--la-d4) var(--la-e-out), transform var(--la-d3) var(--la-e-out);
+}
+
+.la-ticket__new:hover { color: #fff; background-position: 100% 0; transform: translateY(-2px); }
+.la-ticket__newico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--la-r-md); background: rgba(255, 255, 255, .22); flex: none; }
+.la-ticket__newcopy { flex: 1; min-width: 0; }
+.la-ticket__newcopy strong { display: block; font-size: var(--la-t-md); font-weight: 800; }
+.la-ticket__newcopy small { font-size: var(--la-t-xs); opacity: .86; }
+
+.la-ticket__stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+
+.la-tstat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 14px 8px;
+    border-radius: var(--la-r-md);
+    border: 1.5px solid var(--la-line);
+    background: var(--la-surface);
+    cursor: pointer;
+    transition: color var(--la-d2) var(--la-e-smooth), border-color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-tstat b { font-family: var(--la-font-num); font-size: var(--la-t-xl); font-weight: 800; }
+.la-tstat span { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-tstat:hover { border-color: var(--la-line-2); }
+.la-tstat.is-active { color: var(--la-c1); border-color: var(--la-c1); background: rgba(var(--la-c1-rgb), .07); }
+.la-tstat.is-active span { color: var(--la-c1); }
+
+.la-ticket__board { padding: var(--la-s5) var(--la-s6) var(--la-s6); }
+.la-ticket__tools { display: flex; gap: 10px; margin-bottom: var(--la-s5); flex-wrap: wrap; }
+
+.la-ticket__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+    height: 42px;
+    padding: 0 14px;
+    border-radius: var(--la-r-md);
+    background: var(--la-surface-2);
+    border: 1.5px solid transparent;
+    transition: border-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-ticket__search:focus-within { border-color: var(--la-c1); background: var(--la-surface); }
+.la-ticket__search .la-i { width: 17px; height: 17px; color: var(--la-ink-3); flex: none; }
+.la-ticket__search input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--la-ink); }
+.la-ticket__search input::-webkit-search-cancel-button { display: none; }
+.uc-ticket-search__clear { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--la-ink-3); flex: none; }
+.uc-ticket-search__clear:hover { background: var(--la-hover); }
+.la-ticket__filter { flex: none; min-width: 150px; }
+.la-ticket__filter select { height: 42px; }
+.la-ticket__loading { display: flex; flex-direction: column; gap: 10px; }
+.la-ticket__loading .la-skeleton { height: 74px; }
+.la-ticket__list { display: flex; flex-direction: column; gap: 10px; }
+.la-pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: var(--la-s5); }
+.la-pager__meta { font-size: var(--la-t-sm); color: var(--la-ink-3); }
+
+/* 工单详情 */
+.la-tdetail { display: flex; flex-direction: column; gap: var(--la-s5); }
+.la-tdetail__loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: var(--la-s10) 0; color: var(--la-ink-3); }
+.la-tdetail__head { padding: var(--la-s6); display: flex; flex-direction: column; gap: 12px; }
+.la-tdetail__headtop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.la-tdetail__head h2 { font-size: var(--la-t-xl); font-weight: 800; }
+.la-tdetail__ctx { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; padding-top: 12px; border-top: 1px dashed var(--la-line); }
+.la-tdetail__ctx dt { font-size: var(--la-t-xs); color: var(--la-ink-3); margin-bottom: 3px; }
+.la-tdetail__ctx dd { font-size: var(--la-t-sm); font-weight: 600; }
+.la-tdetail__thread { padding: var(--la-s6); display: flex; flex-direction: column; gap: var(--la-s4); }
+.la-tdetail__msgs { display: flex; flex-direction: column; gap: var(--la-s4); }
+.la-tdetail__reply { padding: var(--la-s6); display: flex; flex-direction: column; gap: 12px; }
+.la-tdetail__proof img { max-width: 320px; border-radius: var(--la-r-md); }
+
+/* 工单创建 */
+.la-tcreate__layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--la-s5); align-items: start; }
+.la-tcreate__form { padding: var(--la-s6); display: flex; flex-direction: column; gap: var(--la-s8); }
+.la-tcreate__sec { display: flex; flex-direction: column; gap: var(--la-s5); }
+.la-tcreate__head { display: flex; align-items: center; gap: 12px; }
+.la-tcreate__step { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-size: var(--la-t-sm); font-weight: 800; color: #fff; background: var(--la-sunset); flex: none; }
+.la-tcreate__head strong { display: block; font-size: var(--la-t-md); font-weight: 800; }
+.la-tcreate__head small { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-tcreate__types { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+
+.la-tcreate__type {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--la-r-md);
+    border: 1.5px solid var(--la-line);
+    background: var(--la-surface-2);
+    cursor: pointer;
+    text-align: start;
+    transition: border-color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-tcreate__type .uc-ticket-type__icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: var(--la-r-md); color: var(--la-c1); background: rgba(var(--la-c1-rgb), .10); flex: none; }
+.la-tcreate__type .uc-ticket-type__copy { flex: 1; min-width: 0; }
+.la-tcreate__type strong { display: block; font-size: var(--la-t-base); font-weight: 700; }
+.la-tcreate__type small { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-tcreate__type.is-active { border-color: var(--la-c1); background: rgba(var(--la-c1-rgb), .08); }
+.la-tcreate__prio { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+
+.la-prio {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 14px;
+    border-radius: var(--la-r-md);
+    border: 1.5px solid var(--la-line);
+    background: var(--la-surface-2);
+    cursor: pointer;
+    text-align: start;
+}
+
+.la-prio__dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--la-ink-4); }
+.uc-ticket-priority-dot--low { background: var(--la-ok); }
+.uc-ticket-priority-dot--medium { background: var(--la-c2); }
+.uc-ticket-priority-dot--high { background: var(--la-bad); }
+.la-prio strong { display: block; font-size: var(--la-t-sm); font-weight: 700; }
+.la-prio small { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-prio.is-active { border-color: var(--la-c1); background: rgba(var(--la-c1-rgb), .08); }
+
+.la-segment { display: inline-flex; padding: 3px; border-radius: var(--la-r-pill); background: var(--la-surface-2); }
+.la-segment__btn { padding: 8px 18px; border-radius: var(--la-r-pill); font-size: var(--la-t-sm); font-weight: 600; color: var(--la-ink-2); }
+.la-segment__btn.is-active { color: var(--la-on-brand); background: var(--la-sunset); box-shadow: var(--la-sh-brand); }
+
+.la-drop {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--la-r-md);
+    border: 1.5px dashed var(--la-line-2);
+    background: var(--la-surface-2);
+    cursor: pointer;
+    text-align: start;
+    transition: border-color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-drop:hover { border-color: var(--la-c1); background: rgba(var(--la-c1-rgb), .05); }
+.la-drop .uc-ticket-proof__icon { color: var(--la-c1); flex: none; }
+.la-drop .uc-ticket-proof__copy { flex: 1; min-width: 0; }
+.la-drop strong { display: block; font-size: var(--la-t-base); font-weight: 700; }
+.la-drop small { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-drop__preview { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 12px; border-radius: var(--la-r-md); background: var(--la-surface-2); }
+.la-drop__preview img { width: 56px; height: 56px; border-radius: var(--la-r-sm); object-fit: cover; }
+.la-drop__preview > div { flex: 1; min-width: 0; }
+.la-tcreate__summary { position: sticky; top: 94px; padding: var(--la-s6); display: flex; flex-direction: column; gap: var(--la-s4); }
+.la-tcreate__summary .uc-ticket-summary__head { display: flex; align-items: center; gap: 8px; font-size: var(--la-t-md); font-weight: 800; }
+.la-tcreate__summary .uc-ticket-summary__head .la-i { width: 18px; height: 18px; color: var(--la-c1); }
+
+/* ================================================================ 两端共用的页面级组件
+   下面这些原本写在 Pc.css / Pc.Page.css 里，但手机端模板同样在用 ——
+   手机端不加载 Pc.*，留在那边就是一片没有样式的裸 DOM。 */
+
+/* 维护页（两端共用） */
+
+.la-closed {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    padding: var(--la-s8) var(--la-s5);
+    overflow: hidden;
+}
+
+.la-closed__glow {
+    position: absolute;
+    top: -20vh;
+    left: 50%;
+    width: 120vw;
+    max-width: 1400px;
+    height: 80vh;
+    margin-left: -60vw;
+    background: radial-gradient(50% 50% at 50% 50%, rgba(var(--la-c1-rgb), .20), transparent 70%),
+    radial-gradient(40% 45% at 72% 40%, rgba(var(--la-c2-rgb), .18), transparent 70%);
+    filter: blur(20px);
+    pointer-events: none;
+}
+
+.la-closed__card {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    padding: var(--la-s8) var(--la-s7);
+    text-align: center;
+    border-radius: var(--la-r-2xl);
+    border: 1px solid var(--la-line);
+    background: var(--la-surface);
+    box-shadow: var(--la-sh-4);
+}
+
+.la-closed__mark {
+    display: grid;
+    place-items: center;
+    width: 68px;
+    height: 68px;
+    margin: 0 auto var(--la-s5);
+    border-radius: var(--la-r-xl);
+    color: #fff;
+    background: var(--la-sunset);
+    box-shadow: var(--la-sh-brand);
+}
+
+.la-closed__mark .la-i { width: 32px; height: 32px; animation: la-spin 9s linear infinite; }
+.la-closed__title { font-size: var(--la-t-2xl); margin-bottom: var(--la-s3); }
+.la-closed__msg { color: var(--la-ink-2); line-height: var(--la-lh); }
+.la-closed__msg p { margin: 0 0 8px; }
+.la-closed__acts { display: flex; justify-content: center; gap: 10px; margin-top: var(--la-s6); }
+.la-closed__sign { margin-top: var(--la-s6); font-size: var(--la-t-sm); color: var(--la-ink-4); }
+
+
+/* 排序箭头 */
+.la-sortbar { display: flex; gap: 6px; }
+.la-sortbar__ar { display: inline-flex; transition: transform var(--la-d2) var(--la-e-out); }
+.la-sortbar__ar .la-i { width: 12px; height: 12px; }
+.la-sortbar__ar.is-desc { transform: rotate(180deg); }
+
+/* 开关 */
+/* 开关 */
+
+.la-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.la-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.la-switch__track {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    border-radius: var(--la-r-pill);
+    background: var(--la-line-2);
+    transition: background var(--la-d3) var(--la-e-smooth);
+}
+
+.la-switch__knob {
+    position: absolute;
+    top: 3px;
+    inset-inline-start: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: var(--la-sh-1);
+    transition: transform var(--la-d3) var(--la-e-spring);
+}
+
+.la-switch input:checked + .la-switch__track { background: var(--la-sunset); }
+.la-switch input:checked + .la-switch__track .la-switch__knob { transform: translateX(16px); }
+.la-switch input:focus-visible + .la-switch__track { box-shadow: var(--la-focus); }
+.la-switch__txt { font-size: var(--la-t-sm); font-weight: 600; color: var(--la-ink-2); }
+
+
+/* 分类树 —— 可折叠。
+   服务端只渲染一级 + 当前所在的那一支，其余分支点开由 JS 现建；
+   缩进靠行内的 --d（深度）算，不靠一层层嵌套的 padding，
+   这样 JS 建出来的节点和服务端渲染的节点结构完全一致。 */
+
+.la-tree { display: flex; flex-direction: column; }
+.la-tree__row { display: flex; align-items: center; gap: 2px; padding-inline-start: calc(var(--d, 0) * 14px); }
+
+.la-tree__toggle {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 30px;
+    flex: none;
+    border: 0;
+    background: none;
+    color: var(--la-ink-4);
+    cursor: pointer;
+    border-radius: var(--la-r-xs);
+}
+
+/* 箭头用 CSS 画，不出 SVG —— 一棵树里几百个 SVG 就是几十 KB 纯白开销 */
+.la-tree__arr {
+    width: 6px;
+    height: 6px;
+    border-top: 1.6px solid currentColor;
+    border-inline-end: 1.6px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform var(--la-d2) var(--la-e-spring);
+}
+
+.la-tree__toggle:hover { color: var(--la-c1); }
+.la-tree__toggle.is-leaf { cursor: default; }
+.la-tree__node.is-open > .la-tree__row > .la-tree__toggle .la-tree__arr { transform: rotate(135deg) translate(-1px, -1px); }
+
+.la-tree__link {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: var(--la-r-sm);
+    font-size: var(--la-t-sm);
+    color: var(--la-ink-2);
+    transition: color var(--la-d1) var(--la-e-smooth), background-color var(--la-d1) var(--la-e-smooth);
+}
+
+.la-tree__row:has(> .la-tree__toggle:not(.is-leaf)) .la-tree__link { font-weight: 600; }
+.la-tree__link:hover { color: var(--la-c1); background: var(--la-hover); }
+.la-tree__row.is-on > .la-tree__link { color: var(--la-c1); background: var(--la-tint); font-weight: 700; }
+.la-tree__link > span { flex: 1; min-width: 0; }
+.la-tree__link small { display: block; font-size: var(--la-t-2xs); font-weight: 400; color: var(--la-ink-4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.la-tree__row:has(small) { align-items: flex-start; }
+.la-tree__row:has(small) .la-tree__link { height: auto; padding-block: 5px; }
+
+.la-tree__num {
+    flex: none;
+    padding: 0 6px;
+    height: 17px;
+    line-height: 17px;
+    border-radius: var(--la-r-pill);
+    background: var(--la-surface-3);
+    color: var(--la-ink-4);
+    font-size: var(--la-t-2xs);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+}
+
+.la-tree__row.is-on .la-tree__num { background: rgba(var(--la-c1-rgb), .16); color: var(--la-c1); }
+.la-tree__ico { width: 18px; height: 18px; object-fit: contain; border-radius: 4px; flex: none; }
+.la-tree__load { display: grid; place-items: center; padding: 10px 0; }
+.la-tree__empty { padding: var(--la-s6) 10px; text-align: center; font-size: var(--la-t-sm); color: var(--la-ink-4); }
+.la-tree__rest { padding: 10px; text-align: center; font-size: var(--la-t-2xs); line-height: 1.5; color: var(--la-ink-4); border-top: 1px dashed var(--la-line); margin-top: 6px; }
+
+/* 展开动画：只动 opacity/transform，不动 height —— 子级数量不确定，
+   高度动画会在几十个节点时明显掉帧 */
+.la-tree__kids { animation: la-tree-in var(--la-d2) var(--la-e-out) both; }
+
+@keyframes la-tree-in {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .la-tree__kids { animation: none; }
+}
+
+/* 侧栏筛选框 */
+.la-treefilter {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 4px var(--la-s3);
+    padding: 0 10px;
+    height: 34px;
+    border-radius: var(--la-r-md);
+    border: 1px solid var(--la-line);
+    background: var(--la-surface-2);
+    transition: border-color var(--la-d2) var(--la-e-smooth), box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+.la-treefilter:focus-within { border-color: var(--la-c1); box-shadow: 0 0 0 3px rgba(var(--la-c1-rgb), .13); }
+.la-treefilter .la-i { width: 15px; height: 15px; flex: none; color: var(--la-ink-4); }
+.la-treefilter input { flex: 1; min-width: 0; border: 0; background: none; color: var(--la-ink); font: inherit; font-size: var(--la-t-sm); }
+.la-treefilter input:focus { outline: none; }
+.la-treefilter input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+
+/* 会员等级徽章 */
+.la-mnav__lv {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+    padding: 1px 8px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-2xs);
+    font-style: normal;
+    font-weight: 600;
+    color: var(--la-c2);
+    background: rgba(var(--la-c2-rgb), .16);
+}
+
+/* 查询结果容器 */
+.la-query__result { margin-top: var(--la-s6); }
+
+/* 手机端表格卡外壳 */
+.la-tablecard--app { border-radius: 0; border-inline: 0; }
+
+
+/* ================================================================ @layer la-first
+   级联层对 !important 是反着算的：更早声明的层里的 important 优先。
+   Head 里声明了 `@layer la-first, la-platform`，md-components 装在 la-platform，
+   所以凡是要压过它 !important 规则的声明，只能放在这里、并且同样 !important。
+   只放确有此需要的几条，别把普通规则搬进来（层内普通声明反而输给层外）。 */
+@layer la-first {
+    :root[data-theme] .layui-form-switch {
+        width: 40px !important;
+        min-width: 0 !important;
+        height: 22px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 11px !important;
+        background: var(--la-surface-3) !important;
+    }
+
+    :root[data-theme] .layui-form-switch > i {
+        display: block !important;
+        left: 2px !important;
+        top: 2px !important;
+        right: auto !important;
+        width: 18px !important;
+        height: 18px !important;
+        transform: none !important;
+        background: #fff !important;
+    }
+
+    :root[data-theme] .layui-form-onswitch { background: var(--la-c1) !important; }
+    :root[data-theme] .layui-form-onswitch > i { left: 20px !important; background: #fff !important; }
+}
+
+
+/* ================================================================ 商户管理页操作栏 */
+.la-actbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.la-actbar__sep { width: 1px; height: 18px; background: var(--la-line-2); margin: 0 2px; }
+.la-actbar__end { margin-inline-start: auto; }
+.la-actbar__note { font-size: var(--la-t-xs); color: var(--la-ink-3); align-self: center; }   /* 站内消息：控制器改写的「共 N 条消息」 */
+.la-actbar .la-btn .la-i { width: 14px; height: 14px; }
+.la-btn--danger { color: var(--la-bad); background: var(--la-bad-bg); }
+.la-btn--danger:hover { background: rgba(var(--la-bad-rgb), .18); }
+
+/* 手机端：一行横向滑动，不换行 */
+.la-actbar--app { flex-wrap: nowrap; overflow-x: auto; padding: 0 12px 4px; margin: 10px 0 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.la-actbar--app::-webkit-scrollbar { display: none; }
+.la-actbar--app .la-btn { flex: none; --btn-h: 32px; }
+.la-actbar--app .la-actbar__end { margin-inline-start: 0; }
+
+/* ================================================================ 工单行（user/ticket.js 渲染，两端共用）
+   控制器吐的是一整套 .uc-ticket-row__* 结构（左侧状态色条、类型图标、编号 + 三枚胶囊、
+   标题、最新一条摘要、关联商品/订单、相对时间、右箭头），主题此前一条样式都没给，
+   于是全挤成了一段带图标的散文。这里按 APP 的消息列表口径把它做完。 */
+:root[data-theme] .uc-ticket-list { display: flex; flex-direction: column; }
+
+:root[data-theme] .uc-ticket-row {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 4px 14px 16px;
+    border-top: 1px solid var(--la-line);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color var(--la-d1) var(--la-e-smooth);
+}
+
+:root[data-theme] .uc-ticket-list > .uc-ticket-row:first-child { border-top: 0; }
+:root[data-theme] .uc-ticket-row:hover { background: var(--la-hover); }
+:root[data-theme] .uc-ticket-row:active { background: var(--la-surface-2); }
+
+/* 左沿一根状态色条 */
+:root[data-theme] .uc-ticket-row__rail {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--la-line-2);
+}
+:root[data-theme] .uc-ticket-row__rail.is-waiting { background: var(--la-warn); }
+:root[data-theme] .uc-ticket-row__rail.is-reply { background: var(--la-c1); }
+:root[data-theme] .uc-ticket-row__rail.is-resolved { background: var(--la-ok); }
+:root[data-theme] .uc-ticket-row__rail.is-closed { background: var(--la-line-strong); }
+
+/* 类型图标 */
+:root[data-theme] .uc-ticket-row__icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--la-r-md);
+    background: var(--la-surface-3);
+    color: var(--la-ink-3);
+}
+:root[data-theme] .uc-ticket-row__icon .material-icons-outlined { font-size: 20px; }
+:root[data-theme] .uc-ticket-row__icon.is-presale { color: var(--la-c1); background: var(--la-tint); }
+:root[data-theme] .uc-ticket-row__icon.is-aftersale { color: var(--la-sea); background: rgba(var(--la-sea-rgb, 11, 95, 255), .1); }
+
+:root[data-theme] .uc-ticket-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+
+:root[data-theme] .uc-ticket-row__top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+:root[data-theme] .uc-ticket-row__number {
+    font-size: var(--la-t-sm);
+    font-weight: 700;
+    color: var(--la-ink-3);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 三枚小胶囊：类型 / 优先级 / 状态 */
+:root[data-theme] .uc-ticket-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: var(--la-r-xs);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--la-ink-3);
+    background: var(--la-surface-3);
+}
+:root[data-theme] .uc-ticket-pill .material-icons-outlined { font-size: 12px; }
+:root[data-theme] .uc-ticket-pill.is-presale { color: var(--la-c1); background: var(--la-tint); }
+:root[data-theme] .uc-ticket-pill.is-aftersale { color: var(--la-sea); background: rgba(var(--la-sea-rgb, 11, 95, 255), .1); }
+:root[data-theme] .uc-ticket-pill.is-waiting { color: var(--la-warn); background: var(--la-warn-bg); }
+:root[data-theme] .uc-ticket-pill.is-reply { color: var(--la-c1); background: var(--la-tint); }
+:root[data-theme] .uc-ticket-pill.is-resolved { color: var(--la-ok); background: var(--la-ok-bg); }
+:root[data-theme] .uc-ticket-pill.is-closed { color: var(--la-ink-4); background: var(--la-surface-3); }
+/* 优先级只用一枚小圆点表示，文字保持中性，免得一行三种颜色打架 */
+:root[data-theme] .uc-ticket-pill.is-low i,
+:root[data-theme] .uc-ticket-pill.is-medium i,
+:root[data-theme] .uc-ticket-pill.is-high i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+:root[data-theme] .uc-ticket-pill.is-low { color: var(--la-ink-4); }
+:root[data-theme] .uc-ticket-pill.is-medium { color: var(--la-warn); background: var(--la-warn-bg); }
+:root[data-theme] .uc-ticket-pill.is-high { color: var(--la-bad); background: var(--la-bad-bg); }
+
+:root[data-theme] .uc-ticket-row__unread {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: var(--la-r-pill);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--la-on-brand, #fff);
+    background: var(--la-c1);
+}
+
+:root[data-theme] .uc-ticket-row__title {
+    font-size: var(--la-t-md);
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--la-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+:root[data-theme] .uc-ticket-row.has-unread .uc-ticket-row__title { color: var(--la-ink); }
+
+:root[data-theme] .uc-ticket-row__excerpt {
+    font-size: var(--la-t-sm);
+    line-height: 1.5;
+    color: var(--la-ink-4);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+:root[data-theme] .uc-ticket-row__excerpt b { color: var(--la-ink-3); font-weight: 600; }
+
+:root[data-theme] .uc-ticket-row__bottom {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 1px;
+    font-size: var(--la-t-xs);
+    color: var(--la-ink-4);
+}
+:root[data-theme] .uc-ticket-row__context,
+:root[data-theme] .uc-ticket-row__time { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+:root[data-theme] .uc-ticket-row__context { max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-theme] .uc-ticket-row__bottom .material-icons-outlined { font-size: 13px; }
+:root[data-theme] .uc-ticket-row__context.is-empty { color: var(--la-ink-4); opacity: .75; }
+:root[data-theme] .uc-ticket-row__context em {
+    margin-inline-start: 4px;
+    padding: 0 5px;
+    border-radius: var(--la-r-xs);
+    font-style: normal;
+    color: var(--la-warn);
+    background: var(--la-warn-bg);
+}
+
+:root[data-theme] .uc-ticket-row__go { flex: none; align-self: center; color: var(--la-ink-4); }
+:root[data-theme] .uc-ticket-row__go .material-icons-outlined { font-size: 20px; }
+
+/* 骨架屏 */
+:root[data-theme] .uc-ticket-skeleton { height: 74px; margin: 10px 0; border-radius: var(--la-r-md); }
+
+/* ================================================================ SweetAlert2 对话框
+   平台的人机验证（message.prompt + 验证码图）、确认框（message.ask）、结果提示（message.alert）、
+   危险操作二次确认（dangerPrompt）都是 SweetAlert2。组件自带的皮是 40px 大圆角、蓝色聚焦环、直角小按钮；
+   md-components 在 la-platform 层里只换了颜色，而且层内的普通声明输给组件自带的层外规则，圆角都没改掉。
+   这里整体按主题重做：卡片 + 主题输入框 + 胶囊按钮（取消在左、主操作在右）。分两处写：
+   · 普通声明写在层外，:root[data-theme] 前缀压过组件自带的类选择器；
+   · md-components 给确认 / 取消按钮的底色和字色写了 !important，组件自带的「输入有误」红框也是 !important，
+     这几项只能进 @layer la-first 用 !important 压。
+   轻提示（.swal2-toast）不在此列。 */
+
+:root[data-theme] .swal2-container.swal2-backdrop-show { background: var(--la-scrim); }
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) {
+    padding: 26px 24px 22px;
+    border: 1px solid var(--la-line);
+    border-radius: 20px;
+    background: var(--la-surface);
+    color: var(--la-ink-2);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .18), 0 2px 8px rgba(0, 0, 0, .06);
+    font-size: 14px;
+}
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-title {
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -.01em;
+    color: var(--la-ink);
+}
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-html-container {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--la-ink-3);
+}
+
+/* 人机验证：标题上方一枚盾牌徽标；验证码图装进一个可点的相框（点图刷新由平台 csp-bind.js 处理），
+   下面一行「看不清？点图片换一张」和输入框占位文字由 Kit.js 补 */
+:root[data-theme] .swal2-popup.la-swal--captcha .swal2-title { position: relative; padding-top: 62px; }
+
+:root[data-theme] .swal2-popup.la-swal--captcha .swal2-title::before,
+:root[data-theme] .swal2-popup.la-swal--captcha .swal2-title::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+:root[data-theme] .swal2-popup.la-swal--captcha .swal2-title::before {
+    top: 0;
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    background: rgba(var(--la-c1-rgb), .10);
+}
+
+:root[data-theme] .swal2-popup.la-swal--captcha .swal2-title::after {
+    top: 13px;
+    width: 24px;
+    height: 24px;
+    background: var(--la-c1);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+:root[data-theme] .swal2-popup .prompt-image-code {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: 52px;
+    margin: 6px auto 0;
+    padding: 6px 16px;
+    border: 1px solid var(--la-line);
+    border-radius: var(--la-r-lg);
+    background: #fff;   /* 验证码是深色字，深色模式下也保持白底才看得清 */
+    cursor: pointer;
+    transition: opacity var(--la-d2) var(--la-e-smooth), transform var(--la-d1) var(--la-e-out), border-color var(--la-d2) var(--la-e-smooth);
+}
+
+:root[data-theme] .swal2-popup .prompt-image-code:hover { border-color: rgba(var(--la-c1-rgb), .45); }
+:root[data-theme] .swal2-popup .prompt-image-code:active { transform: scale(.97); }
+:root[data-theme] .swal2-popup .prompt-image-code.is-refreshing { opacity: .35; }
+:root[data-theme] .swal2-popup .la-swal-captcha__hint { margin-top: 8px; font-size: 12px; line-height: 1.4; color: var(--la-ink-4); }
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-input {
+    width: 100%;
+    height: 46px;
+    margin: 16px 0 0;
+    padding: 0 14px;
+    border: 1px solid var(--la-line-2);
+    border-radius: var(--la-r-lg);
+    background: var(--la-surface);
+    color: var(--la-ink);
+    font-size: 15px;
+    box-shadow: none;
+    transition: border-color var(--la-d2) var(--la-e-smooth), box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-input::placeholder { color: var(--la-ink-4); }
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-input:focus { border-color: var(--la-c1); box-shadow: var(--la-focus); outline: 0; }
+:root[data-theme] .swal2-popup.la-swal--captcha .swal2-input { text-align: center; font-weight: 600; letter-spacing: .18em; }
+:root[data-theme] .swal2-popup.la-swal--captcha .swal2-input::placeholder { font-weight: 400; letter-spacing: 0; }
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-validation-message {
+    justify-content: flex-start;
+    margin: 10px 0 0;
+    padding: 8px 12px;
+    border-radius: var(--la-r-md);
+    background: var(--la-bad-bg);
+    color: var(--la-bad);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: start;
+}
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-validation-message::before {
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
+    margin: 0 8px 0 0;
+    font-size: 11px;
+    line-height: 16px;
+    background-color: var(--la-bad);
+}
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-actions {
+    width: 100%;
+    margin: 20px 0 0;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-styled {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 44px;
+    margin: 0;
+    padding: 0 18px;
+    border-radius: var(--la-r-pill);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    transition: transform var(--la-d1) var(--la-e-out), box-shadow var(--la-d3) var(--la-e-smooth),
+    background-position var(--la-d4) var(--la-e-out), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-styled:active { transform: scale(.98); }
+/* 取消在左、主操作在右：APP 的习惯，拇指最常点的主按钮落在右手边 */
+:root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-cancel { order: -1; }
+
+:root[data-theme] .swal2-popup.swal2-show:not(.swal2-toast) { animation: la-swal-in .26s var(--la-e-out); }
+:root[data-theme] .swal2-popup.swal2-hide:not(.swal2-toast) { animation: la-swal-out .16s var(--la-e-in-out) forwards; }
+
+@keyframes la-swal-in { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes la-swal-out { to { opacity: 0; transform: scale(.97); } }
+
+@media (prefers-reduced-motion: reduce) {
+    :root[data-theme] .swal2-popup.swal2-show:not(.swal2-toast),
+    :root[data-theme] .swal2-popup.swal2-hide:not(.swal2-toast) { animation: none; }
+}
+
+@layer la-first {
+    :root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-actions .swal2-styled.swal2-confirm {
+        border: 0 !important;
+        color: var(--la-on-brand) !important;
+        background: var(--la-sunset) !important;
+        background-size: 160% 100% !important;
+        box-shadow: var(--la-sh-brand) !important;
+    }
+
+    :root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-actions .swal2-styled.swal2-confirm:hover {
+        background-position: 100% 0 !important;
+        box-shadow: var(--la-sh-brand-lg) !important;
+    }
+
+    :root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-actions .swal2-styled.swal2-cancel {
+        border: 0 !important;
+        color: var(--la-ink-2) !important;
+        background: var(--la-surface-2) !important;
+        box-shadow: none !important;
+    }
+
+    :root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-actions .swal2-styled.swal2-cancel:hover {
+        color: var(--la-ink) !important;
+        background: var(--la-surface-3) !important;
+    }
+
+    :root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-actions .swal2-styled:focus-visible { box-shadow: var(--la-focus) !important; }
+
+    :root[data-theme] .swal2-popup:not(.swal2-toast) .swal2-input.swal2-inputerror {
+        border-color: var(--la-bad) !important;
+        box-shadow: 0 0 0 3px var(--la-bad-bg) !important;
+    }
+}

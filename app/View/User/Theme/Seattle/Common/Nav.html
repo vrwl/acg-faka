@@ -1,0 +1,45 @@
+<aside class="st-nav" aria-label="#{t('会员中心导航')}">
+    <div class="st-nav__profile">
+        <img src="#{$user.avatar|escape:'html'}" alt="" data-acg-fallback="#{$favicon|escape:'html'}">
+        <div><strong>#{$user.username|escape:'html'}</strong><small>UID #{$user.id}</small></div>
+    </div>
+    <div class="st-nav__wallet"><span><small>#{t("余额")}</small><strong>#{$config.currency_symbol}#{$user.balance}</strong></span><span><small>#{t("硬币")}</small><strong>#{$user.coin}</strong></span></div>
+    <nav class="st-nav__links">
+        <div class="st-nav__group"><small>#{t("主页")}</small>
+            <a href="/user/dashboard/index" data-st-nav-group="home" class="#{active('/user/dashboard','is-active')}"><span class="material-icons-outlined">home</span><span>#{t("会员主页")}</span></a>
+            <a href="/user/message/index" data-st-nav-group="messages" class="#{active('/user/message','is-active')}"><span class="material-icons-outlined">notifications</span><span>#{t("消息中心")}</span><em class="st-badge st-message-nav-badge is-empty">0</em></a>
+        </div>
+        <div class="st-nav__group"><small>#{t("消费与财务")}</small>
+            <a href="/user/personal/purchaseRecord" data-st-nav-group="orders" class="#{active('/user/personal/purchaseRecord','is-active')}"><span class="material-icons-outlined">receipt_long</span><span>#{t("购买记录")}</span></a>
+            <a href="/user/recharge/index" data-st-nav-group="wallet" class="#{active('/user/recharge','is-active')}"><span class="material-icons-outlined">account_balance_wallet</span><span>#{t("充值中心")}</span></a>
+            <a href="/user/bill/index" class="#{active('/user/bill','is-active')}"><span class="material-icons-outlined">payments</span><span>#{t("我的账单")}</span></a>
+            <a href="/user/cash/index" class="#{active('/user/cash','is-active')}"><span class="material-icons-outlined">currency_exchange</span><span>#{t("硬币兑现")}</span></a>
+            <a href="/user/ticket/index" class="#{active('/user/ticket','is-active')}"><span class="material-icons-outlined">support_agent</span><span>#{t("我的工单")}</span><em class="st-badge st-ticket-badge is-empty">0</em></a>
+        </div>
+        <div class="st-nav__group"><small>#{t("经营")}</small>
+            <a href="/user/business/index" data-st-nav-group="business" class="#{active('/user/business','is-active')}"><span class="material-icons-outlined">storefront</span><span>#{t("我的店铺")}</span></a>
+            #{if $user.businessLevel and $user.businessLevel.supplier == 1}
+                <a href="/user/category/index" class="#{active('/user/category','is-active')}"><span class="material-icons-outlined">category</span><span>#{t("商品分类")}</span></a>
+                <a href="/user/commodity/index" class="#{active('/user/commodity','is-active')}"><span class="material-icons-outlined">inventory_2</span><span>#{t("我的商品")}</span></a>
+                <a href="/user/card/index" class="#{active('/user/card','is-active')}"><span class="material-icons-outlined">vpn_key</span><span>#{t("卡密管理")}</span></a>
+                <a href="/user/coupon/index" class="#{active('/user/coupon','is-active')}"><span class="material-icons-outlined">local_offer</span><span>#{t("代券管理")}</span></a>
+                <a href="/user/order/index" class="#{active('/user/order','is-active')}"><span class="material-icons-outlined">local_shipping</span><span>#{t("商品订单")}</span></a>
+            #{/if}
+        </div>
+        <div class="st-nav__group"><small>#{t("账户")}</small>
+            <a href="/user/agent/promote" class="#{active('/user/agent/promote','is-active')}"><span class="material-icons-outlined">campaign</span><span>#{t("推广中心")}</span></a>
+            <a href="/user/agent/member" class="#{active('/user/agent/member','is-active')}"><span class="material-icons-outlined">groups</span><span>#{t("我的下级")}</span></a>
+            <a href="/user/security/personal" data-st-nav-group="account" class="#{active('/user/security','is-active')}"><span class="material-icons-outlined">shield</span><span>#{t("账户安全")}</span></a>
+        </div>
+        <!--start::HOOK-->
+        #{* 插件入口（如博客）按 Cartoon 的 <li><a> 结构输出：先接住，有内容才排成「其他」分组，样式与原生菜单项一致 *}
+        #{capture assign="stPluginMenu"}#{hook(\App\Consts\Hook::USER_VIEW_MENU)}#{/capture}
+        #{if $stPluginMenu|trim != ''}
+        <div class="st-nav__group st-nav__hook"><small>#{t("其他")}</small>
+            <ul class="st-nav__hook-list">#{$stPluginMenu}</ul>
+        </div>
+        #{/if}
+        <!--end::HOOK-->
+    </nav>
+</aside>
+<button type="button" class="st-nav-shade" data-st-nav-close aria-label="#{t('关闭导航')}"></button>

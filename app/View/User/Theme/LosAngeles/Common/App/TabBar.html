@@ -1,0 +1,20 @@
+#{*
+  洛杉矶 · 手机端底部 TabBar（APP 形态）
+  站长可在后台配置，最多 5 格；url 以 # 开头表示在首页内切换视图而不是跳页。
+*}
+#{assign var=laTabs value=\App\View\User\Theme\LosAngeles\Support::tabbar($setting, $user)}
+#{if $laTabs}
+    <nav class="la-tabbar" data-la-tabbar aria-label="#{t('底部导航')}">
+        <div class="la-tabbar__in">
+            #{foreach $laTabs as $tab}
+                #{* is_on 由 Support::tabbar() 用「最长前缀命中」算好：不能在这里逐个调 active()，
+                   那是前缀匹配，「我的」的 /user 会把 /user/index/query、/user/personal/… 一起吃掉，同时亮两格 *}
+                <a class="la-tabbar__item#{if $tab.is_on} is-on#{/if}"
+                   href="#{$tab.url|escape:'html'}"#{if $tab.view} data-la-view="#{$tab.view|escape:'html'}"#{/if}>
+                    <span class="la-tabbar__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg($tab.icon)}</span>
+                    <span class="la-tabbar__txt">#{$tab.name|escape:'html'}</span>
+                </a>
+            #{/foreach}
+        </div>
+    </nav>
+#{/if}

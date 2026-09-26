@@ -1,0 +1,22 @@
+<!-- 终态遮罩：支付成功 / 已过期。三个通道共用 -->
+<div class="overlay paid">
+    <svg class="mark" viewBox="0 0 92 92" aria-hidden="true">
+        <circle class="ok-bg" cx="46" cy="46" r="46"></circle>
+        <circle class="ok-ring" cx="46" cy="46" r="42"></circle>
+        <path class="tick" d="M30 47.5 41.5 59 63 35"></path>
+    </svg>
+    <h2>支付成功</h2>
+    <div class="paid-amt">¥ #{$order.pay_amount}</div>
+    <p id="paidText">收款已确认<br>订单已自动完成</p>
+    <a class="btn ok" href="#{$order.return_url|escape}">返回商户</a>
+</div>
+
+<div class="overlay expired">
+    <svg class="mark" viewBox="0 0 92 92" aria-hidden="true">
+        <circle class="x-bg" cx="46" cy="46" r="46"></circle>
+        <path d="M46 26v22l14 8"></path>
+    </svg>
+    <h2>订单已过期</h2>
+    <p>超时未收到这笔金额的付款<br>请返回商户重新下单</p>
+    <a class="btn btn-ghost" href="#{$order.return_url|escape}">返回重新下单</a>
+</div>

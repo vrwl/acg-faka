@@ -1,0 +1,19 @@
+#{if $user}
+<button type="button"
+        class="ny-icon-button ny-message-button uc-message-btn"
+        data-ny-sheet-open="messages"
+        data-ny-message-trigger
+        aria-label="#{t('没有未读消息')}"
+        aria-haspopup="dialog"
+        aria-controls="ny-message-sheet"
+        aria-expanded="false">
+    <span class="material-icons-outlined uc-message-btn__icon" data-ny-message-icon aria-hidden="true">notifications_none</span>
+    <span class="ny-message-badge uc-message-badge is-empty" aria-hidden="true">0</span>
+</button>
+#{else}
+<a class="ny-icon-button ny-message-button uc-message-btn is-guest"
+   href="/user/authentication/login?goto=%2Fuser%2Fmessage%2Findex"
+   aria-label="#{t('登录后查看消息')}">
+    <span class="material-icons-outlined uc-message-btn__icon" aria-hidden="true">notifications_none</span>
+</a>
+#{/if}

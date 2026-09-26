@@ -41,9 +41,6 @@ abstract class ManagePlugin extends \App\Controller\Base\Manage
                 };
             }
             $data['manage_view_path'] = BASE_PATH . '/app/View/Admin/';
-            $data['_store_initialize'] = file_exists(BASE_PATH . "/kernel/Plugin.php");
-
-            $data['_app_store_load_state'] = defined('_APP_STORE_LOAD_STATE') && \_APP_STORE_LOAD_STATE === true;
             return View::render($template, $data, BASE_PATH . "/app/Plugin/" . ($controller ? \Kernel\Util\Plugin::$currentControllerPluginName : \Kernel\Util\Plugin::$currentPluginName) . "/View");
         } catch (\SmartyException $e) {
             throw new ViewException($e->getMessage());

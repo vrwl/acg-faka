@@ -1,0 +1,14 @@
+<nav class="st-subnav st-subtab" aria-label="#{t('账户安全')}">
+    <a href="/user/security/personal" data-ptab="info" #{if active('/user/security/personal')}class="active" aria-current="page"#{/if}><span class="material-icons-outlined">shield</span><span>#{t("账户信息")}</span></a>
+    <a href="/user/security/personal?tab=edit" data-ptab="edit"><span class="material-icons-outlined">edit</span><span>#{t("修改资料")}</span></a>
+    <a href="/user/security/password" #{if active('/user/security/password')}class="is-active active" aria-current="page"#{/if}><span class="material-icons-outlined">password</span><span>#{t("密码")}</span></a>
+    #{if $config.registered_type == 2 || active('/user/security/email')}
+        <a href="/user/security/email" #{if active('/user/security/email')}class="is-active active" aria-current="page"#{/if}><span class="material-icons-outlined">alternate_email</span><span>#{t("邮箱")}</span></a>
+    #{/if}
+    #{if $config.registered_type == 1 || active('/user/security/phone')}
+        <a href="/user/security/phone" #{if active('/user/security/phone')}class="is-active active" aria-current="page"#{/if}><span class="material-icons-outlined">smartphone</span><span>#{t("手机")}</span></a>
+    #{/if}
+    <!--start::HOOK-->
+    #{hook(\App\Consts\Hook::USER_VIEW_SECURITY_NAV)}
+    <!--end::HOOK-->
+</nav>

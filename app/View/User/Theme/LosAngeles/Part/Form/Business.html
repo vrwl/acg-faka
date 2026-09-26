@@ -1,0 +1,181 @@
+#{*
+  洛杉矶 · 我的店铺（两端共用）
+
+  business/business.js 的契约：
+    套餐：.business-group[data-id]（.checked = 选中）+ .payButton
+    设置：.form-data（shop_name/title/subdomain/suffix/topdomain/master_display）
+          .notice-editor（ace 挂载点）+ .save-config
+    域名：.clipboard[data-text] / .unbind-subdomain / .unbind-topdomain
+    主站货源：#master_category + #master_commodity 两张表，
+             以及 .category-show[data-state] / .commodity-show[data-state] / .commodity-premium
+
+  说明：Cartoon 在模板里调 gethostbyname() 做解析检测——那是一次阻塞 DNS 查询，
+  会把整页渲染卡在网络上，这里不做，改为提示用户自行核对。
+*}
+#{if !$business || ($purchase == 1 && $business)}
+    <section class="la-plans">
+        <header class="la-plans__head">
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('store','la-i--xl')}
+            <div>
+                <h2>#{if !$business}#{t("开通店铺")}#{else}#{t("升级店铺")}#{/if}</h2>
+                <p>#{if !$business}#{t("选择一个套餐，立刻拥有自己的分站")}#{else}#{t("升级后可解锁更多权益")}#{/if}</p>
+            </div>
+        </header>
+
+        <div class="la-plans__grid">
+            #{foreach $level as $le}
+                <button type="button" class="la-plan business-group#{if $le@last && $le@total > 1} la-plan--reco#{/if}" data-id="#{$le.id}">
+                    #{if $le@last && $le@total > 1}<span class="la-plan__badge">#{t("推荐")}</span>#{/if}
+                    <span class="la-plan__name">#{lang($le.name, 'dyn')|escape:'html'}</span>
+                    <span class="la-price la-price--md"><span class="la-price__sym">#{$config.currency_symbol}</span><span class="la-price__int">#{$le.price|default:0|escape:'html'}</span></span>
+                    <span class="la-plan__feats">
+                        <span class="la-plan__feat#{if $le.substation != 1} is-off#{/if}">#{\App\View\User\Theme\LosAngeles\Icons::svg('check')}#{t("分站功能")}</span>
+                        <span class="la-plan__feat#{if $le.top_domain != 1} is-off#{/if}">#{\App\View\User\Theme\LosAngeles\Icons::svg('check')}#{t("独立域名")}</span>
+                        <span class="la-plan__feat#{if $le.supplier != 1} is-off#{/if}">#{\App\View\User\Theme\LosAngeles\Icons::svg('check')}#{t("供货权限")}</span>
+                    </span>
+                    <span class="la-plan__fee">#{t("供货手续费")} <b>#{if $le.supplier == 1}#{$le.cost*100}%#{else}—#{/if}</b></span>
+                </button>
+            #{foreachelse}
+                <div class="la-empty">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('box')}
+                    <div class="la-empty__title">#{t("暂无可开通的套餐")}</div>
+                </div>
+            #{/foreach}
+        </div>
+
+        <div class="la-plans__acts">
+            <button type="button" class="la-btn la-btn--brand la-btn--lg payButton">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('sparkle')}
+                <span>#{if !$business}#{t("立即开通")}#{else}#{t("立即升级")}#{/if}</span>
+            </button>
+            #{if $purchase == 1}
+                <a class="la-btn la-btn--ghost la-btn--lg" href="/user/business/index">#{t("返回店铺")}</a>
+            #{/if}
+        </div>
+    </section>
+
+#{else}
+    #{* 店铺设置 / 主站分类 / 主站商品 三块用 Tab 切换，不再竖着堆三屏。
+       平台控制器 business.js 按固定 ID（#master_category / #master_commodity）和类名挂表格、绑按钮，
+       所以这里只做显隐：DOM 一个不动。bootstrap-table 在 display:none 里初始化会把列宽算成 0，
+       切换时 Kit.js 的 tabs 控制器会对刚显示的面板里的表格补一次 resetView。 *}
+    <div class="la-shop" data-la-tabs="business">
+        <section class="la-card la-shop__status">
+            <div class="la-shop__crown">#{\App\View\User\Theme\LosAngeles\Icons::svg('crown','la-i--lg')}</div>
+            <div class="la-shop__level">
+                <strong>#{if $user.businessLevel}#{lang($user.businessLevel.name, 'dyn')|escape:'html'}#{else}#{t("店铺已开通")}#{/if}</strong>
+                <span class="la-faint">#{t("当前套餐")}</span>
+            </div>
+            <div class="la-shop__feats">
+                <span class="la-shop__feat#{if !$user.businessLevel || $user.businessLevel.top_domain != 1} is-off#{/if}">#{\App\View\User\Theme\LosAngeles\Icons::svg('globe')}#{t("独立域名")}</span>
+                <span class="la-shop__feat#{if !$user.businessLevel || $user.businessLevel.supplier != 1} is-off#{/if}">#{\App\View\User\Theme\LosAngeles\Icons::svg('truck')}#{t("供货权限")}</span>
+            </div>
+            #{if $level && $level|@count > 0}
+                <a class="la-btn la-btn--line la-btn--sm" href="/user/business/index?purchase=1">#{t("升级套餐")}</a>
+            #{/if}
+        </section>
+
+        <nav class="la-tabs la-tabs--pill la-shop__tabs" role="tablist" aria-label="#{t('我的店铺')}">
+            <button type="button" class="la-tabs__btn is-on" role="tab" data-la-tab="settings" aria-selected="true">#{\App\View\User\Theme\LosAngeles\Icons::svg('store')}<span>#{t("店铺设置")}</span></button>
+            <button type="button" class="la-tabs__btn" role="tab" data-la-tab="category" aria-selected="false">#{\App\View\User\Theme\LosAngeles\Icons::svg('grid')}<span>#{t("主站分类")}</span></button>
+            <button type="button" class="la-tabs__btn" role="tab" data-la-tab="commodity" aria-selected="false">#{\App\View\User\Theme\LosAngeles\Icons::svg('box')}<span>#{t("主站商品")}</span></button>
+        </nav>
+
+        <div class="la-tabs__pane la-shop__pane" data-la-pane="settings" role="tabpanel">
+        <form class="layui-form form-data la-card la-shop__form">
+            <div class="la-shop__sec">
+                <h3>#{\App\View\User\Theme\LosAngeles\Icons::svg('store')}<span>#{t("店铺信息")}</span></h3>
+                <div class="la-field">
+                    <label class="la-label">#{t("店铺名称")}</label>
+                    <input class="la-input" type="text" name="shop_name" value="#{$business.shop_name|escape:'html'}" autocomplete="off" placeholder="#{t('显示在分站页头')}">
+                </div>
+                <div class="la-field">
+                    <label class="la-label">#{t("网页标题")}</label>
+                    <input class="la-input" type="text" name="title" value="#{$business.title|escape:'html'}" autocomplete="off" placeholder="#{t('浏览器标签上显示的文字')}">
+                </div>
+                <div class="la-field">
+                    <label class="la-label">#{t("店铺公告")}</label>
+                    <div class="notice-editor la-editor"></div>
+                </div>
+                <label class="la-check">
+                    <input type="checkbox" name="master_display" lay-ignore value="1" class="form-check-input" #{if $business.master_display == 1}checked#{/if}>
+                    <span>#{t("同时展示主站商品")}</span>
+                </label>
+            </div>
+
+            <div class="la-shop__sec">
+                <h3>#{\App\View\User\Theme\LosAngeles\Icons::svg('globe')}<span>#{t("域名绑定")}</span></h3>
+                <div class="la-field">
+                    <label class="la-label">#{t("二级域名")}</label>
+                    <div class="la-domainrow">
+                        <input class="la-input" type="text" name="subdomain" value="#{$business.subdomain|escape:'html'}" autocomplete="off" placeholder="myshop" #{if $business.subdomain}disabled#{/if}>
+                        <select class="la-input" name="suffix" lay-ignore #{if $business.subdomain}disabled#{/if}>
+                            #{foreach $domain as $d}<option value="#{$d|escape:'html'}">.#{$d|escape:'html'}</option>#{/foreach}
+                        </select>
+                    </div>
+                    <p class="la-faint">
+                        #{t("绑定后可通过「前缀 . 后缀」访问你的店铺")}
+                        #{if $business.subdomain}
+                            <span class="la-tag la-tag--green">#{t("已绑定")}</span>
+                            <a class="unbind-subdomain la-link">#{t("解绑")}</a>
+                        #{/if}
+                    </p>
+                </div>
+
+                #{if $user.businessLevel && $user.businessLevel.top_domain == 1}
+                    <div class="la-field">
+                        <label class="la-label">#{t("独立域名")}</label>
+                        <input class="la-input" type="text" name="topdomain" value="#{$business.topdomain|escape:'html'}" autocomplete="off" placeholder="shop.yourdomain.com" #{if $business.topdomain}disabled#{/if}>
+                        <p class="la-faint">
+                            #{t("请把该域名 CNAME 解析到")}
+                            <button type="button" class="la-cname clipboard" data-text="#{$config.cname|escape:'html'}">
+                                <code>#{$config.cname|escape:'html'}</code>#{\App\View\User\Theme\LosAngeles\Icons::svg('copy')}
+                            </button>
+                            #{if $business.topdomain}<a class="unbind-topdomain la-link">#{t("解绑")}</a>#{/if}
+                        </p>
+                    </div>
+                #{/if}
+
+                <button type="button" class="la-btn la-btn--brand la-btn--lg save-config">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('check')}<span>#{t("保存设置")}</span>
+                </button>
+            </div>
+        </form>
+        </div>
+
+        <div class="la-tabs__pane la-shop__pane" data-la-pane="category" role="tabpanel" hidden>
+        <section class="la-card la-tablecard">
+            <div class="la-tablecard__head">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('grid')}
+                <div><strong>#{t("主站分类")}</strong><small>#{t("控制哪些主站分类在你的店铺里可见")}</small></div>
+                <span class="la-tablecard__acts">
+                    <button type="button" class="la-btn la-btn--line la-btn--sm category-show" data-state="1">#{t("全部显示")}</button>
+                    <button type="button" class="la-btn la-btn--ghost la-btn--sm category-show" data-state="0">#{t("全部隐藏")}</button>
+                </span>
+            </div>
+            <table id="master_category" lay-filter="master_category"></table>
+        </section>
+        </div>
+
+        <div class="la-tabs__pane la-shop__pane" data-la-pane="commodity" role="tabpanel" hidden>
+        <section class="la-card la-tablecard">
+            <div class="la-tablecard__head">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('box')}
+                <div><strong>#{t("主站商品")}</strong><small>#{t("在「主站分类」里点「查看商品」可只看某个分类，也可以批量控制显隐与加价")}</small></div>
+                <span class="la-tablecard__acts">
+                    <button type="button" class="la-btn la-btn--line la-btn--sm commodity-show" data-state="1">#{t("全部显示")}</button>
+                    <button type="button" class="la-btn la-btn--ghost la-btn--sm commodity-show" data-state="0">#{t("全部隐藏")}</button>
+                    <button type="button" class="la-btn la-btn--soft la-btn--sm commodity-premium">#{t("批量加价")}</button>
+                </span>
+            </div>
+            #{* 从「主站分类」点「查看商品」跳过来时，这里显示当前筛选的分类；「显示全部」回到不过滤的列表 *}
+            <div class="la-shop__filter" data-la-shop-filter hidden>
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('filter')}
+                <span>#{t("当前筛选")}：<b data-la-shop-filter-name></b></span>
+                <a href="#tab-commodity" data-la-shop-filter-clear>#{t("显示全部")}</a>
+            </div>
+            <table id="master_commodity" lay-filter="master_commodity"></table>
+        </section>
+        </div>
+    </div>
+#{/if}

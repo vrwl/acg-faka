@@ -1,0 +1,715 @@
+/* ============================================================================
+   洛杉矶 · 电脑端外壳
+   顶部细条 / 吸顶主导航 / 全部分类巨型菜单 / 大搜索 / 账户浮层 / 页脚
+   ——只在 Client::isMobile() 为假时下发。
+   ========================================================================= */
+
+/* ---------------------------------------------------------------- 版心 */
+
+/* 全站唯一的版心。页头/顶栏/页脚的内层容器也都必须是这三行 ——
+   max-width 同一个、padding 同一个，正文的左右边缘才和页头的 logo/账户区对齐。
+
+   铁律：.la-wrap 只能是**透明容器**，不能同时是一张带底色/描边的卡。
+   卡片自己当 .la-wrap 的话，它的底色会铺满整个 1200（含两侧 gutter），
+   比版心里的其它子元素宽 24px —— 金刚区就这么溢出过一次。 */
+.la-wrap {
+    width: 100%;
+    max-width: var(--la-page);
+    margin: 0 auto;
+    padding: 0 var(--la-gutter);
+}
+
+/* 历史类名，保留但不再收窄：全站只有一条版心 */
+.la-wrap--narrow { max-width: var(--la-page); }
+
+/* ---------------------------------------------------------------- 顶部细条 */
+
+/* 顶栏的层级必须比页头**高一级**。
+   顶栏里的语言/外观浮层是往下弹的，弹出来的位置正好在吸顶页头的那 56px 里；
+   页头是不透明白底、DOM 里又在顶栏后面 —— 两者同 z 的话面板会被页头整块盖住，
+   表现就是"点了没反应"。面板自己的 z-index 再高也没用，它被困在顶栏的层叠上下文里。 */
+.la-topbar {
+    position: relative;
+    z-index: calc(var(--la-z-header) + 1);
+    background: var(--la-bg-2);
+    border-bottom: 1px solid var(--la-line);
+    font-size: var(--la-t-xs);
+    color: var(--la-ink-3);
+}
+
+.la-topbar__in {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--la-s5);
+    height: 30px;
+    max-width: var(--la-page);
+    margin: 0 auto;
+    padding: 0 var(--la-gutter);
+}
+
+.la-topbar__left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.la-topbar__horn .la-i { width: 15px; height: 15px; color: var(--la-c1); }
+.la-topbar__hi b { color: var(--la-ink); font-weight: 700; }
+.la-topbar__right { display: flex; align-items: center; gap: 2px; flex: none; }
+
+.la-topbar__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: var(--la-r-pill);
+    color: var(--la-ink-2);
+    font-size: var(--la-t-sm);
+    white-space: nowrap;
+    transition: color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-topbar__btn:hover { color: var(--la-ink); background: var(--la-hover); }
+.la-topbar__btn .la-i { width: 14px; height: 14px; }
+.la-topbar__btn--hl { color: var(--la-c1); font-weight: 700; }
+.la-topbar__btn--hl:hover { color: var(--la-c1); background: var(--la-tint); }
+
+/* 明暗按钮：两枚图标叠放，按当前主题露出一枚 */
+.la-theme-btn { position: relative; width: 30px; padding: 0; justify-content: center; }
+.la-theme-btn__ico { display: grid; place-items: center; transition: opacity var(--la-d2) var(--la-e-smooth), transform var(--la-d3) var(--la-e-spring); }
+.la-theme-btn__ico--dark { position: absolute; inset: 0; opacity: 0; transform: rotate(-40deg) scale(.6); }
+:root[data-theme="dark"] .la-theme-btn__ico--light { opacity: 0; transform: rotate(40deg) scale(.6); }
+:root[data-theme="dark"] .la-theme-btn__ico--dark { opacity: 1; transform: none; }
+
+/* 滚动公告 */
+.la-marquee { position: relative; overflow: hidden; min-width: 0; flex: 1; height: 20px; }
+
+.la-marquee__text {
+    display: inline-block;
+    white-space: nowrap;
+    line-height: 20px;
+    will-change: transform;
+}
+
+.la-marquee.is-run .la-marquee__text {
+    animation: la-marquee-run var(--la-marquee-dur, 24s) linear infinite;
+    padding-left: 100%;
+}
+
+.la-marquee.is-run:hover .la-marquee__text { animation-play-state: paused; }
+
+@keyframes la-marquee-run { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-100%, 0, 0); } }
+
+/* ---------------------------------------------------------------- 主导航 */
+
+/* 页头是**实心白**，不做毛玻璃。
+   毛玻璃在密集商品流上滚动时会把下面的图糊成一片彩色噪点，
+   而且 backdrop-filter 会给它建包含块，把巨型菜单的定位一起带跑。 */
+.la-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--la-z-header);
+    background: var(--la-surface);
+    border-bottom: 1px solid transparent;
+    transition: box-shadow var(--la-d3) var(--la-e-smooth), border-color var(--la-d3) var(--la-e-smooth);
+}
+
+.la-header.is-stuck { border-bottom-color: var(--la-line); box-shadow: var(--la-sh-2); }
+
+.la-header__in {
+    display: flex;
+    align-items: center;
+    gap: var(--la-s5);
+    height: var(--la-header-h);
+    max-width: var(--la-page);
+    margin: 0 auto;
+    padding: 0 var(--la-gutter);
+}
+
+.la-header__spacer { flex: 1; }
+
+/* 搜索框宽度封顶 560px。这一行放不满时（商品详情这类没有「全部分类」按钮的页面），多出来的空白
+   必须落在搜索框左边，让「搜索 + 快捷导航 + 账户」整组贴住右边缘。以前空白没人承接、全堆在最右，
+   购物 / 订单查询 / 登录注册悬在半中间；首页有分类按钮占位，只差几像素所以没看出来。
+   窄屏下搜索框自己会收缩，没有剩余空间，这条自动失效。 */
+.la-header__in > .la-search { margin-inline-start: auto; }
+
+/* 电脑端页头里的 logo 排版（标记本体在 Base.css，两端共用） */
+.la-logo { max-width: 200px; flex: none; }
+.la-logo__text { font-size: var(--la-t-lg); }
+
+/* ---------------------------------------------------------------- 巨型菜单 */
+
+.la-mega { position: relative; flex: none; }
+
+.la-mega__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 42px;
+    padding: 0 16px;
+    border-radius: var(--la-r-md);
+    font-size: var(--la-t-md);
+    font-weight: 700;
+    color: var(--la-ink);
+    background: var(--la-surface-2);
+    transition: color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-mega__trigger:hover, .la-mega.is-open .la-mega__trigger { color: var(--la-on-brand); background: var(--la-sunset); }
+.la-mega__caret { transition: transform var(--la-d3) var(--la-e-out); }
+.la-mega.is-open .la-mega__caret { transform: rotate(180deg); }
+
+.la-mega__panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    inset-inline-start: 0;
+    z-index: var(--la-z-pop);
+    display: flex;
+    width: 940px;
+    max-width: calc(100vw - 48px);
+    height: 460px;
+    border-radius: var(--la-r-xl);
+    border: 1px solid var(--la-line);
+    background: var(--la-surface);
+    box-shadow: var(--la-sh-4);
+    overflow: hidden;
+    animation: la-fade-down var(--la-d3) var(--la-e-out) both;
+}
+
+.la-mega__rail {
+    width: 208px;
+    flex: none;
+    padding: 10px;
+    overflow-y: auto;
+    background: var(--la-surface-2);
+    border-inline-end: 1px solid var(--la-line);
+}
+
+.la-mega__cat {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 42px;
+    padding: 5px 10px;
+    border-radius: var(--la-r-sm);
+    font-size: var(--la-t-base);
+    font-weight: 600;
+    color: var(--la-ink-2);
+    text-align: start;
+    transition: color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-mega__cat:hover { color: var(--la-ink); background: var(--la-hover); }
+.la-mega__cat.is-on { color: var(--la-c1); background: var(--la-surface); box-shadow: var(--la-sh-1); }
+.la-mega__cat-ico { display: grid; place-items: center; width: 22px; height: 22px; flex: none; color: var(--la-ink-3); }
+.la-mega__cat.is-on .la-mega__cat-ico { color: var(--la-c1); }
+.la-mega__cat-ico img { width: 18px; height: 18px; object-fit: contain; border-radius: 5px; }
+.la-mega__cat.is-on .la-mega__cat-ico { color: var(--la-c1); }
+.la-mega__cat-name { flex: 1; min-width: 0; }
+.la-mega__cat-go {
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-top: 1.6px solid currentColor;
+    border-inline-end: 1.6px solid currentColor;
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity var(--la-d2) var(--la-e-smooth), transform var(--la-d2) var(--la-e-out);
+}
+.la-mega__cat.is-on .la-mega__cat-go { opacity: 1; transform: rotate(45deg) translate(1px, -1px); }
+
+.la-mega__body { flex: 1; min-width: 0; overflow-y: auto; padding: var(--la-s5) var(--la-s6); }
+
+.la-mega__pane-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--la-s4);
+    padding-bottom: 12px;
+    margin-bottom: var(--la-s4);
+    border-bottom: 1px solid var(--la-line);
+}
+
+.la-mega__pane-head h3 { font-size: var(--la-t-lg); font-weight: 800; }
+
+.la-mega__all {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: var(--la-t-sm);
+    font-weight: 600;
+    color: var(--la-c1);
+}
+
+.la-mega__all .la-i { width: 14px; height: 14px; }
+
+.la-mega__groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--la-s5) var(--la-s4); }
+
+.la-mega__sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--la-t-base);
+    font-weight: 700;
+    color: var(--la-ink);
+    margin-bottom: 7px;
+}
+
+.la-mega__sub:hover { color: var(--la-c1); }
+.la-mega__sub-ico { width: 30px; height: 30px; border-radius: var(--la-r-xs); object-fit: cover; background: var(--la-surface-2); }
+
+.la-mega__leaves { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+
+.la-mega__leaf {
+    font-size: var(--la-t-sm);
+    color: var(--la-ink-3);
+    transition: color var(--la-d1) var(--la-e-smooth);
+}
+
+.la-mega__leaf:hover { color: var(--la-c1); }
+
+.la-mega__solo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 300px;
+    border-radius: var(--la-r-lg);
+    background: linear-gradient(160deg, rgba(var(--la-c1-rgb), .08), rgba(var(--la-c2-rgb), .05));
+    border: 1px solid rgba(var(--la-c1-rgb), .16);
+    text-align: center;
+    transition: border-color var(--la-d2) var(--la-e-smooth), background var(--la-d3) var(--la-e-smooth);
+}
+
+.la-mega__solo:hover { border-color: var(--la-c1); }
+
+.la-mega__solo-ico {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--la-r-lg);
+    color: #fff;
+    background: var(--la-sunset);
+    box-shadow: var(--la-sh-brand);
+    overflow: hidden;
+}
+
+.la-mega__solo-ico img { width: 40px; height: 40px; object-fit: contain; }
+.la-mega__solo-name { font-size: var(--la-t-xl); font-weight: 800; letter-spacing: -.02em; color: var(--la-ink); }
+.la-mega__solo-desc { font-size: var(--la-t-sm); color: var(--la-ink-3); }
+
+.la-mega__solo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 8px 20px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-sm);
+    font-weight: 700;
+    color: var(--la-on-brand);
+    background: var(--la-sunset);
+    box-shadow: var(--la-sh-brand);
+}
+
+.la-mega__solo-btn .la-i { width: 14px; height: 14px; }
+
+/* ---------------------------------------------------------------- 搜索
+
+   页头的主角。拼多多/淘宝的搜索框是**常态就带主色描边**的，
+   不是聚焦才亮 —— 它要在页头上一眼可见，而不是等你找它。
+   宽度封顶 560，太宽会让 logo 和账户区显得散。               */
+
+.la-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    max-width: 560px;
+    height: 36px;
+    padding: 0 3px 0 12px;
+    border-radius: var(--la-r-pill);
+    background: var(--la-surface);
+    border: 2px solid var(--la-c1);
+    transition: box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+.la-search:focus-within { box-shadow: 0 0 0 3px rgba(var(--la-c1-rgb), .16); }
+
+.la-search__ico { display: grid; place-items: center; color: var(--la-ink-4); flex: none; }
+.la-search__ico .la-i { width: 15px; height: 15px; }
+
+.la-search__input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 8px;
+    border: 0;
+    background: transparent;
+    font-size: var(--la-t-base);
+    color: var(--la-ink);
+}
+
+.la-search__input::placeholder { color: var(--la-ink-4); }
+.la-search__input::-webkit-search-cancel-button { display: none; }
+
+.la-search__clear {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    color: var(--la-ink-3);
+    flex: none;
+}
+
+.la-search__clear:hover { color: var(--la-ink); background: var(--la-hover); }
+
+.la-search__go {
+    flex: none;
+    height: 28px;
+    padding: 0 20px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-base);
+    font-weight: 700;
+    color: var(--la-on-brand);
+    background: var(--la-sunset);
+    transition: filter var(--la-d2) var(--la-e-smooth);
+}
+
+.la-search__go:hover { background-position: 100% 0; box-shadow: var(--la-sh-brand); }
+
+.la-search__drop {
+    position: absolute;
+    top: calc(100% + 8px);
+    inset-inline: 0;
+    z-index: var(--la-z-pop);
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 6px;
+    border-radius: var(--la-r-lg);
+    border: 1px solid var(--la-line);
+    background: var(--la-surface);
+    box-shadow: var(--la-sh-4);
+    animation: la-fade-down var(--la-d2) var(--la-e-out) both;
+}
+
+.la-sugg {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--la-r-sm);
+    cursor: pointer;
+    transition: background-color var(--la-d1) var(--la-e-smooth);
+}
+
+.la-sugg:hover, .la-sugg.is-on { background: var(--la-hover); }
+.la-sugg__img { width: 38px; height: 38px; border-radius: var(--la-r-xs); object-fit: cover; background: var(--la-surface-2); flex: none; }
+.la-sugg__main { flex: 1; min-width: 0; }
+.la-sugg__name { font-size: var(--la-t-base); font-weight: 600; }
+.la-sugg__cat { font-size: var(--la-t-xs); color: var(--la-ink-3); }
+.la-sugg__hit { color: var(--la-c1); }
+.la-sugg__more { display: block; width: 100%; padding: 10px; border-radius: var(--la-r-sm); font-size: var(--la-t-sm); font-weight: 600; color: var(--la-c1); }
+.la-sugg__more:hover { background: var(--la-tint); }
+.la-sugg__empty { padding: 26px 10px; text-align: center; font-size: var(--la-t-sm); color: var(--la-ink-3); }
+
+/* ---------------------------------------------------------------- 快捷导航 / 账户 */
+
+.la-hnav { display: flex; align-items: center; gap: 2px; flex: none; }
+
+.la-hnav__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 13px;
+    border-radius: var(--la-r-md);
+    font-size: var(--la-t-base);
+    font-weight: 600;
+    color: var(--la-ink-2);
+    white-space: nowrap;
+    transition: color var(--la-d2) var(--la-e-smooth), background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-hnav__item:hover { color: var(--la-ink); background: var(--la-hover); }
+.la-hnav__item.is-on { color: var(--la-c1); background: var(--la-tint); }
+.la-hnav__item .la-i { width: 17px; height: 17px; }
+
+.la-hacct { display: flex; align-items: center; gap: 8px; flex: none; }
+
+.la-hacct__me {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 12px 0 6px;
+    border-radius: var(--la-r-pill);
+    color: var(--la-ink);
+    background: var(--la-surface-2);
+    transition: background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-hacct__me:hover { background: var(--la-surface-3); }
+.la-hacct__avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: var(--la-surface-3); }
+.la-hacct__name { max-width: 96px; font-size: var(--la-t-base); font-weight: 600; }
+.la-hacct__me .la-i { width: 14px; height: 14px; color: var(--la-ink-3); }
+
+/* ---------------------------------------------------------------- 通用浮层 */
+
+.la-pop { position: relative; }
+
+.la-pop__panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    inset-inline-start: 0;
+    z-index: var(--la-z-pop);
+    min-width: 170px;
+    padding: 6px;
+    border-radius: var(--la-r-lg);
+    border: 1px solid var(--la-line);
+    background: var(--la-surface);
+    box-shadow: var(--la-sh-4);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity var(--la-d2) var(--la-e-smooth),
+    transform var(--la-d3) var(--la-e-out),
+    visibility 0s linear var(--la-d3);
+}
+
+.la-pop--end .la-pop__panel { inset-inline-start: auto; inset-inline-end: 0; }
+.la-pop.is-open .la-pop__panel { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.la-pop__panel--sm { min-width: 148px; }
+.la-pop__panel--acct { min-width: 264px; padding: 10px; }
+
+.la-pop__item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    height: 38px;
+    padding: 0 11px;
+    border-radius: var(--la-r-sm);
+    font-size: var(--la-t-base);
+    font-weight: 500;
+    color: var(--la-ink);
+    text-align: start;
+    white-space: nowrap;
+    transition: color var(--la-d1) var(--la-e-smooth), background-color var(--la-d1) var(--la-e-smooth);
+}
+
+.la-pop__item span { flex: 1; min-width: 0; }
+.la-pop__item .la-i { width: 17px; height: 17px; color: var(--la-ink-3); }
+.la-pop__item:hover { color: var(--la-c1); background: var(--la-tint); }
+.la-pop__item:hover .la-i { color: var(--la-c1); }
+.la-pop__item.is-on { color: var(--la-c1); font-weight: 700; }
+.la-pop__item--quiet { color: var(--la-ink-2); }
+.la-pop__item--quiet:hover { color: var(--la-bad); background: var(--la-bad-bg); }
+.la-pop__item--quiet:hover .la-i { color: var(--la-bad); }
+.la-pop__sep { height: 1px; margin: 6px 4px; background: var(--la-line); }
+
+.la-acctcard { display: flex; align-items: center; gap: 11px; padding: 6px 6px 12px; }
+.la-acctcard__avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; background: var(--la-surface-2); }
+.la-acctcard__id { min-width: 0; }
+.la-acctcard__id strong { display: block; font-size: var(--la-t-md); font-weight: 700; }
+
+.la-acctcard__lv {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+    padding: 2px 8px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-xs);
+    font-weight: 600;
+    color: var(--la-c2);
+    background: rgba(var(--la-c2-rgb), .15);
+}
+
+.la-acctcard__lv img { width: 14px; height: 14px; object-fit: contain; }
+
+.la-acctcard__wallet { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.la-acctcard__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border-radius: var(--la-r-md);
+    background: var(--la-surface-2);
+    transition: background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-acctcard__cell:hover { background: var(--la-tint); }
+.la-acctcard__cell span { font-size: var(--la-t-xs); }
+.la-acctcard__cell b { font-size: var(--la-t-md); font-weight: 800; color: var(--la-c1); }
+
+/* ---------------------------------------------------------------- 页脚
+
+   电商页脚是"信息脚注"，不是第二个首屏：白底、单薄、字小。
+   内层容器和 .la-wrap 完全一样，页脚的左边缘要和页头 logo 对齐。   */
+
+.la-footer { margin-top: var(--la-s8); background: var(--la-surface); border-top: 1px solid var(--la-line); }
+
+.la-footer__in {
+    display: flex;
+    gap: var(--la-s9);
+    max-width: var(--la-page);
+    margin: 0 auto;
+    padding: var(--la-s6) var(--la-gutter) var(--la-s5);
+}
+
+.la-footer__brand { flex: none; width: 260px; }
+.la-logo--foot { margin-bottom: 8px; }
+.la-footer__desc { font-size: var(--la-t-xs); color: var(--la-ink-3); line-height: var(--la-lh); }
+.la-footer__acts { display: flex; gap: 6px; margin-top: var(--la-s3); }
+.la-footer__cols { display: flex; flex: 1; gap: var(--la-s8); flex-wrap: wrap; }
+.la-footer__col { min-width: 110px; }
+.la-footer__col h4 { margin-bottom: 8px; font-size: var(--la-t-sm); font-weight: 700; }
+.la-footer__col li { margin-bottom: 5px; }
+.la-footer__col a { font-size: var(--la-t-xs); color: var(--la-ink-3); transition: color var(--la-d1) var(--la-e-smooth); }
+.la-footer__col a:hover { color: var(--la-c1); }
+
+.la-footer__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--la-s4);
+    max-width: var(--la-page);
+    margin: 0 auto;
+    padding: var(--la-s3) var(--la-gutter);
+    border-top: 1px solid var(--la-line);
+    font-size: var(--la-t-xs);
+    color: var(--la-ink-4);
+}
+
+.la-footer__note { flex: 1; }
+
+.la-footer__top {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-inline-start: auto;
+    padding: 6px 14px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-sm);
+    font-weight: 600;
+    color: var(--la-ink-2);
+    background: var(--la-surface);
+    border: 1px solid var(--la-line);
+    transition: color var(--la-d2) var(--la-e-smooth), border-color var(--la-d2) var(--la-e-smooth), transform var(--la-d2) var(--la-e-out);
+}
+
+.la-footer__top:hover { color: var(--la-c1); border-color: var(--la-c1); transform: translateY(-2px); }
+
+/* 悬浮回顶 */
+.la-totop {
+    position: fixed;
+    inset-inline-end: 28px;
+    bottom: 32px;
+    z-index: var(--la-z-sticky);
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    color: var(--la-on-brand);
+    background: var(--la-sunset);
+    box-shadow: var(--la-sh-brand-lg);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(14px) scale(.9);
+    transition: opacity var(--la-d3) var(--la-e-smooth), transform var(--la-d4) var(--la-e-spring), visibility 0s linear var(--la-d4);
+}
+
+.la-totop.is-on { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.la-totop:hover { transform: translateY(-3px); }
+
+/* ---------------------------------------------------------------- 窄屏兜底
+   电脑端模板只在非移动 UA 下下发，但笔记本分屏 / 平板横屏仍可能很窄，
+   这里只做「不横向溢出」的收敛，不做手机适配（手机走 App.css）。 */
+
+@media (max-width: 1180px) {
+    .la-hnav { display: none; }
+    .la-mega__panel { width: 780px; }
+}
+
+@media (max-width: 900px) {
+    .la-wrap, .la-header__in, .la-topbar__in, .la-footer__in, .la-footer__bar { padding-inline: var(--la-gutter); }
+    .la-logo__text { display: none; }
+    .la-footer__in { flex-direction: column; gap: var(--la-s6); }
+    .la-footer__brand { width: auto; }
+    .la-mega__panel { width: calc(100vw - 32px); }
+}
+
+
+/* ---------------------------------------------------------------- 巨型菜单：
+   大站补丁。服务端只出一级导轨，子级面板按需建，导轨自带过滤框。 */
+
+.la-mega__filter {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: var(--la-s4) var(--la-s4) 6px;
+    padding: 0 10px;
+    height: 34px;
+    flex: none;
+    border-radius: var(--la-r-md);
+    border: 1px solid var(--la-line);
+    background: var(--la-surface);
+    transition: border-color var(--la-d2) var(--la-e-smooth), box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+.la-mega__filter:focus-within { border-color: var(--la-c1); box-shadow: 0 0 0 3px rgba(var(--la-c1-rgb), .13); }
+.la-mega__filter .la-i { width: 15px; height: 15px; flex: none; color: var(--la-ink-4); }
+.la-mega__filter input { flex: 1; min-width: 0; border: 0; background: none; color: var(--la-ink); font: inherit; font-size: var(--la-t-sm); }
+.la-mega__filter input:focus { outline: none; }
+.la-mega__filter input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.la-mega__side { display: flex; flex-direction: column; min-height: 0; }
+.la-mega__empty { padding: var(--la-s6) var(--la-s4); text-align: center; font-size: var(--la-t-sm); color: var(--la-ink-4); }
+.la-mega__loading { display: grid; place-items: center; min-height: 220px; }
+.la-mega__leaf--more { color: var(--la-c1) !important; font-weight: 600; }
+.la-mega__all { display: inline-flex; align-items: center; gap: 3px; font-size: var(--la-t-sm); font-weight: 600; color: var(--la-c1); }
+.la-mega__all .la-i { width: 14px; height: 14px; }
+
+/* 导轨里没有自定义图标的分类用 CSS 圆点，不出 SVG ——
+   300 个兜底 SVG 就是 70KB 纯白开销 */
+.la-mega__cat-ico.is-dot::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .32;
+}
+
+.la-mega__cat.is-on .la-mega__cat-ico.is-dot::after { opacity: 1; }
+
+/* 过滤命中的可能是二三级分类，副标题写出它的路径 */
+.la-mega__cat-name small { display: block; font-size: var(--la-t-2xs); color: var(--la-ink-4); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.la-mega__cat.is-on .la-mega__cat-name small { color: rgba(var(--la-c1-rgb), .7); }
+
+.la-mega__rest {
+    flex: none;
+    padding: 10px var(--la-s4) var(--la-s4);
+    font-size: var(--la-t-2xs);
+    color: var(--la-ink-4);
+    text-align: center;
+    border-top: 1px dashed var(--la-line);
+}
+
+/* 面板是现建的，给一点入场感，避免"啪"地换内容。
+   只动 opacity/transform，且动的是面板内部，不是 .la-mega（它是包含块） */
+.la-mega__pane { animation: la-mega-pane var(--la-d2) var(--la-e-out) both; }
+
+@keyframes la-mega-pane {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .la-mega__pane { animation: none; }
+}

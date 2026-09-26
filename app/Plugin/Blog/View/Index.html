@@ -1,0 +1,103 @@
+#{include file="./Layout/Header.html"}
+
+<div class="blog-container">
+
+    <!--页面本身不再重复站名（顶栏已经有了），只在站长填了副标题时留一句-->
+    #{if $blog.subtitle}
+        <header class="blog-hero blog-hero--slim">
+            <p class="blog-hero__subtitle">#{$blog.subtitle|escape:'html'}</p>
+        </header>
+    #{/if}
+
+    #{if $tops}
+        <section class="blog-tops" aria-label="#{t('置顶文章')}">
+            <div class="blog-tops__rail">
+                #{foreach $tops as $post}
+                    <a class="blog-topcard" href="#{$post.url}">
+                        #{if $post.cover}
+                            <img class="blog-topcard__media" src="#{$post.cover|escape:'html'}" alt="" decoding="async">
+                        #{/if}
+                        <div class="blog-topcard__scrim"></div>
+                        <div class="blog-topcard__body">
+                            <span class="blog-topcard__pin">#{t("置顶")}</span>
+                            <h2>#{$post.title|escape:'html'}</h2>
+                            <div class="blog-topcard__meta">
+                                #{if $post.category}<span>#{$post.category.name|escape:'html'}</span>#{/if}
+                                <time datetime="#{$post.publish_iso}">#{$post.publish_date}</time>
+                            </div>
+                        </div>
+                    </a>
+                #{/foreach}
+            </div>
+        </section>
+    #{/if}
+
+    <div class="blog-layout">
+        <section class="blog-flow" data-blog-list data-blog-infinite='{"exclude_top":1}'>
+            #{if $posts}
+                #{foreach $posts as $post}
+                    #{include file="./Partial/PostCard.html" post=$post}
+                #{/foreach}
+            #{else}
+                <div class="blog-empty">
+                    <div class="blog-empty__icon">✒️</div>
+                    <p>#{t("还没有文章，去后台写下第一篇吧")}</p>
+                </div>
+            #{/if}
+            <div class="blog-flow__skeletons" data-blog-skeletons hidden>
+                <div class="blog-skeleton"></div>
+                <div class="blog-skeleton"></div>
+                <div class="blog-skeleton"></div>
+            </div>
+            <div class="blog-flow__end" data-blog-end hidden>—— #{t("已经到底啦")} ——</div>
+            <div data-blog-sentinel></div>
+        </section>
+
+        <aside class="blog-rail" aria-label="#{t('侧栏')}">
+            <div class="blog-rail__card">
+                <div class="blog-rail__title">#{t("关于本站")}</div>
+                <p class="blog-rail__desc">#{if $blog.description}#{$blog.description|escape:'html'}#{else}#{$blog.name|escape:'html'}#{/if}</p>
+                #{if $blog.feed_enabled}
+                    <a class="blog-rail__rss" href="#{$blog.urls.feed}">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 11a8 8 0 0 1 8 8"/><path d="M5 5a14 14 0 0 1 14 14"/><circle cx="6" cy="18" r="1.6" fill="currentColor" stroke="none"/></svg>
+                        #{t("订阅 RSS")}
+                    </a>
+                #{/if}
+            </div>
+
+            #{if $hot_posts}
+                <div class="blog-rail__card">
+                    <div class="blog-rail__title">#{t("热门文章")}</div>
+                    <ol class="blog-hotlist">
+                        #{foreach $hot_posts as $hot}
+                            <li class="blog-hotlist__item">
+                                <a href="#{$hot.url}">
+                                    <span class="blog-hotlist__rank" aria-hidden="true">#{$hot@iteration}</span>
+                                    <span class="blog-hotlist__text">
+                                        <span class="blog-hotlist__title">#{$hot.title|escape:'html'}</span>
+                                        <span class="blog-hotlist__views">#{$hot.views} #{t("次阅读")}</span>
+                                    </span>
+                                </a>
+                            </li>
+                        #{/foreach}
+                    </ol>
+                </div>
+            #{/if}
+
+            #{if $hot_tags}
+                <div class="blog-rail__card">
+                    <div class="blog-rail__title">#{t("标签云")}</div>
+                    <div class="blog-chiprow">
+                        #{foreach $hot_tags as $tag}
+                            <a class="blog-chip blog-chip--tag" href="#{$tag.url}">##{$tag.name|escape:'html'}<em>#{$tag.count}</em></a>
+                        #{/foreach}
+                    </div>
+                </div>
+            #{/if}
+        </aside>
+    </div>
+
+    #{include file="./Partial/Pagination.html"}
+</div>
+
+#{include file="./Layout/Footer.html"}

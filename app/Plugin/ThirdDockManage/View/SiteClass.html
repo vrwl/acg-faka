@@ -1,0 +1,95 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Toolbar-->
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <!--end::Toolbar-->
+    <!--begin::Post-->
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="container-fluid">
+            <!--begin::Tables Widget 9-->
+            <div class="card mb-5 mb-xl-8">
+                <!--begin::Header-->
+                <div class="card-header border-0">
+                    <div class="card-toolbar">
+                        <button class="btn btn-sm btn-light-info btn-app-sync me-3"><i class="fa-duotone fa-regular fa-refresh"></i>
+                            同步选中的分类
+                        </button>
+                    </div>
+                </div>
+                <!--end::Header-->
+
+                <div class="card-body py-3">
+                    <table id="site-class"></table>
+                </div>
+            </div>
+
+            <!--end::Tables Widget 9-->
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Post-->
+</div>
+<!--end::Content-->
+
+#{set_script_var(["_dock_site_id" => $id])}
+<script>
+    documentReady(() => {
+        !function () {
+            const site_id = getVar('_dock_site_id') || 0;
+            const table = new Table('/plugin/ThirdDockManage/api/site/class?id=#{$id}', '#site-class');
+            table.disablePagination();
+            table.setColumns([
+                {checkbox: true},
+                {field: 'id', title: 'ID'},
+                {
+                    field: 'name',
+                    title: '名称',
+                    formatter: (_, item) => {
+                        let icon = item.img_url;
+                        if (!item.icon) {
+                            icon = '/favicon.ico';
+                        }
+                        return '<span class="btn-badge badge-light" style="cursor: pointer;" ><img src="' + icon + '"  style="width: 18px;border-radius: 100%;"/> ' + item.name + '</span>'
+                    }
+                },
+                {
+                    field: 'operate',
+                    title: '操作',
+                    type: 'button',
+                    buttons: [
+                        {
+                            icon: 'fa-duotone fa-regular fa-check',
+                            class: 'text-primary',
+                            click: (event, value, row) => {
+                                message.ask('新增分类: '+row.name+'？', () => {
+                                    util.post('/plugin/ThirdDockManage/api/site/addClass', {class_ids: [row.id],site_id: site_id}, res => {
+                                        message.success(res.msg || '操作成功');
+                                    });
+                                });
+                            }
+                        },
+                    ],
+                }
+            ]);
+            table.render();
+
+            $('.btn-app-sync').click(() => {
+                let data = table.getSelectionIds();
+                if (data.length === 0) {
+                    message.alert("请至少勾选1个分类进行操作", "error");
+                    return;
+                }
+                message.ask('新增选择的分类？', () => {
+                    let loaderIndex = layer.load(0, {shade: ['0.3', '#fff']});
+                    util.post('/plugin/ThirdDockManage/api/site/addClass', {class_ids: data,site_id: site_id}, res => {
+                        layer.close(loaderIndex);
+                        message.success(res.msg || '操作成功')
+                    });
+                });
+            });
+        }();
+    });
+</script>
+#{include file=$manage_view_path|cat:"Footer.html"}

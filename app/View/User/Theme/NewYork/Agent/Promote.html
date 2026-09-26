@@ -1,0 +1,90 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page" data-ny-page="promote">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("推广中心")}</h1><p>#{t("分享链接,好友成交即得分成")}</p></div>
+        </section>
+
+        <section class="ny-card">
+            <div class="ny-card__body">
+                <div class="ny-promo">
+                    <div class="ny-promo__main">
+                        <div class="ny-promo__title"><span class="material-icons-outlined">share</span>#{t("我的推广链接")}</div>
+                        <div class="ny-promo__link">
+                            <span class="ny-promo__url">#{$share_url}</span>
+                            <button type="button" class="ny-cta ny-promo__copy clipboard" data-text="#{$share_url}"><span class="material-icons-outlined">content_copy</span>#{t("复制链接")}</button>
+                        </div>
+                    </div>
+                    <div class="ny-promo__qr">
+                        <div id="share-qrcode" data-url="#{$share_url}"></div>
+                        <div class="ny-promo__qrhint">#{t("扫码直达")}</div>
+                    </div>
+                    <div class="ny-promo__rule">
+                        <span class="material-icons-outlined">info</span>
+                        <div>#{t("好友通过链接购买或注册成为下级后,每笔订单按「成交价 − 拿货价」得到分成,以硬币入账")}#{if $group},#{t("当前等级")} <b>#{$group.name}</b> #{t("的拿货价见下方列表")}#{/if}。</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="ny-stats">
+            <div class="ny-stat ny-stat--primary">
+                <div class="ny-stat__label"><span class="material-icons-outlined">groups</span>#{t("推广人数")}</div>
+                <div class="ny-stat__value">#{$children}<span class="ny-stat__unit">#{t("人")}</span></div>
+            </div>
+            <div class="ny-stat ny-stat--info">
+                <div class="ny-stat__label"><span class="material-icons-outlined">receipt_long</span>#{t("推广订单")}</div>
+                <div class="ny-stat__value">#{$promote_orders}<span class="ny-stat__unit">#{t("单")}</span></div>
+            </div>
+            <div class="ny-stat ny-stat--warning">
+                <div class="ny-stat__label"><span class="material-icons-outlined">calendar_month</span>#{t("本月收益")}</div>
+                <div class="ny-stat__value"><span class="cur">#{$config.currency_symbol}</span>#{$promote_month}</div>
+            </div>
+            <div class="ny-stat ny-stat--success">
+                <div class="ny-stat__label"><span class="material-icons-outlined">savings</span>#{t("累计收益")}</div>
+                <div class="ny-stat__value"><span class="cur">#{$config.currency_symbol}</span>#{$promote_total}</div>
+            </div>
+        </div>
+
+        <section class="ny-section">
+            <div class="ny-section-heading">
+                <h2>#{t("商品预计收益")}</h2>
+                <span class="ny-hint">#{t("按游客价估算")}</span>
+            </div>
+            <section class="ny-panel">
+                <div class="ny-panel-body ny-table-wrap"><table id="promote-table"></table></div>
+            </section>
+        </section>
+
+        <section class="ny-card">
+            <div class="ny-card__head">
+                <span class="material-icons-outlined">history</span>
+                <span class="ny-card__title">#{t("最近推广订单")}</span>
+            </div>
+            <div class="ny-card__body">
+                #{if count($recent) > 0}
+                <div class="ny-list">
+                    #{foreach $recent as $o}
+                    <div class="ny-list__row">
+                        <img class="ny-list__icon" src="#{$o.commodity.cover}" alt="">
+                        <div class="ny-list__main">
+                            <div class="ny-list__name">#{$o.commodity.name}</div>
+                            <div class="ny-list__time">#{$o.create_time}</div>
+                        </div>
+                        <div class="ny-list__end">
+                            <div class="ny-list__amount">#{$config.currency_symbol}#{$o.amount}</div>
+                            #{if $o.divide_amount > 0}<div class="ny-list__gain">#{t("分成")} #{$config.currency_symbol}#{$o.divide_amount}</div>#{/if}
+                        </div>
+                    </div>
+                    #{/foreach}
+                </div>
+                #{else}
+                <div class="ny-blank"><span class="material-icons-outlined">share</span><p>#{t("还没有推广订单,先把链接分享出去")}</p></div>
+                #{/if}
+            </div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/promote.js")}
+#{include file="../Common/Footer.html"}

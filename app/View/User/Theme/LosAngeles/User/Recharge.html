@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 充值中心 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/Recharge.html"}#{else}#{include file="./Pc/Recharge.html"}#{/if}

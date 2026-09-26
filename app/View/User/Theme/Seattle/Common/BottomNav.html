@@ -1,0 +1,16 @@
+<nav class="st-bottom-nav st-mobile-nav" data-st-mobile-nav aria-label="#{t('主要导航')}">
+    #{if !$user}
+        <a href="/" data-st-bottom="store"><span class="material-icons-outlined" aria-hidden="true">storefront</span><span>#{t("商城")}</span></a>
+        <a href="/#categories" data-st-bottom="categories" data-st-category-nav aria-label="#{t('浏览商品分类')}"><span class="material-icons-outlined" aria-hidden="true">category</span><span>#{t("分类")}</span></a>
+        <a href="/user/index/query" data-st-bottom="query"><span class="material-icons-outlined" aria-hidden="true">search</span><span>#{t("查单")}</span></a>
+        <a href="/user/authentication/login" data-st-bottom="account"><span class="material-icons-outlined" aria-hidden="true">person</span><span>#{t("登录")}</span></a>
+    #{else}
+        <a href="/" data-st-bottom="store"><span class="material-icons-outlined" aria-hidden="true">storefront</span><span>#{t("商城")}</span></a>
+        <a href="/user/personal/purchaseRecord" data-st-bottom="orders"><span class="material-icons-outlined" aria-hidden="true">receipt_long</span><span>#{t("订单")}</span></a>
+        #{if $user.businessLevel}
+            <button type="button" data-st-sheet-open="workbench" data-st-bottom="business" aria-haspopup="dialog" aria-controls="st-workbench-sheet" aria-expanded="false"><span class="material-icons-outlined" aria-hidden="true">space_dashboard</span><span>#{t("经营")}</span></button>
+        #{/if}
+        <a href="/user/recharge/index" data-st-bottom="wallet"><span class="material-icons-outlined" aria-hidden="true">account_balance_wallet</span><span>#{t("钱包")}</span></a>
+        <a href="/user/dashboard/index" data-st-bottom="account"><span class="material-icons-outlined" aria-hidden="true">person</span><span>#{t("我的")}</span></a>
+    #{/if}
+</nav>

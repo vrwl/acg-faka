@@ -1,0 +1,347 @@
+/* ==========================================================================
+   次元博客 · themes.css —— 四套主题令牌矩阵
+   维度：html[data-blog-style="glass|paper|mag|neon"] × html[data-theme="light|dark"]
+   纪律：主题层只改令牌与少量 ::before/::after 质感，禁改布局盒模型
+   ========================================================================== */
+
+/* ════════════════════════ 1) glass「流光」— 液态玻璃（默认） ════════════════════════ */
+
+html[data-blog-style="glass"] {
+    --blog-bg: #eef1f9;
+    --blog-surface: rgba(255, 255, 255, .62);
+    --blog-surface-2: rgba(255, 255, 255, .8);
+    --blog-surface-opaque: #f7f8fd;
+    --blog-surface-tint: rgba(110, 125, 170, .09);
+    --blog-blur: 24px;
+    --blog-saturate: 170%;
+    --blog-hi: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 -1px 0 rgba(255, 255, 255, .1);
+    --blog-shadow-1: 0 1px 2px rgba(24, 32, 64, .04), 0 4px 16px rgba(24, 32, 64, .06);
+    --blog-shadow-2: 0 2px 8px rgba(24, 32, 64, .07), 0 14px 40px rgba(24, 32, 64, .12);
+    --blog-shadow-3: 0 10px 26px rgba(24, 32, 64, .14), 0 30px 80px rgba(24, 32, 64, .22);
+    --blog-border: rgba(255, 255, 255, .55);
+    --blog-border-strong: rgba(150, 165, 210, .5);
+    --blog-ink: #171b26;
+    --blog-ink-2: #4e5668;
+    --blog-ink-3: #8a92a6;
+    --blog-accent: #2f6bff;
+    --blog-accent-soft: rgba(47, 107, 255, .13);
+    --blog-on-accent: #fff;
+    --blog-link: #2f6bff;
+    --blog-focus: #2f6bff;
+    --blog-glow-1: rgba(96, 140, 255, .4);
+    --blog-glow-2: rgba(255, 140, 216, .3);
+    --blog-glow-3: rgba(110, 231, 255, .3);
+    --blog-scrim: rgba(18, 22, 38, .42);
+    --blog-card-glow: rgba(255, 255, 255, .5);
+    --blog-code-bg: rgba(22, 26, 40, .045);
+    --blog-hl-kw: #a626a4; --blog-hl-str: #50a14f; --blog-hl-num: #c18401;
+    --blog-hl-cmt: #9aa2b1; --blog-hl-fn: #4078f2; --blog-hl-attr: #e45649;
+}
+
+html[data-blog-style="glass"][data-theme="dark"] {
+    --blog-bg: #0e1017;
+    --blog-surface: rgba(26, 30, 44, .58);
+    --blog-surface-2: rgba(32, 37, 54, .78);
+    --blog-surface-opaque: #171b28;
+    --blog-surface-tint: rgba(150, 165, 220, .1);
+    --blog-hi: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 -1px 0 rgba(0, 0, 0, .18);
+    --blog-shadow-1: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .3);
+    --blog-shadow-2: 0 2px 8px rgba(0, 0, 0, .35), 0 14px 40px rgba(0, 0, 0, .45);
+    --blog-shadow-3: 0 10px 26px rgba(0, 0, 0, .5), 0 30px 80px rgba(0, 0, 0, .6);
+    --blog-border: rgba(160, 175, 230, .16);
+    --blog-border-strong: rgba(160, 175, 230, .34);
+    --blog-ink: #e8eaf2;
+    --blog-ink-2: #a3abc0;
+    --blog-ink-3: #6b7288;
+    --blog-accent: #6f9dff;
+    --blog-accent-soft: rgba(111, 157, 255, .16);
+    --blog-glow-1: rgba(64, 100, 220, .34);
+    --blog-glow-2: rgba(190, 80, 190, .22);
+    --blog-glow-3: rgba(40, 170, 220, .2);
+    --blog-scrim: rgba(0, 0, 0, .55);
+    --blog-card-glow: rgba(140, 170, 255, .14);
+    --blog-code-bg: rgba(150, 165, 230, .07);
+    --blog-hl-kw: #c678dd; --blog-hl-str: #98c379; --blog-hl-num: #d19a66;
+    --blog-hl-cmt: #5f6b85; --blog-hl-fn: #61afef; --blog-hl-attr: #e06c75;
+}
+
+/* glass 质感层：氛围光斑 + 噪点 + 折射描边 */
+html[data-blog-style="glass"] .blog-aurora,
+html[data-blog-style="glass"] .blog-noise { display: block; }
+
+/* specular 渐变描边（mask-composite 画 1px 折射圈，叠在卡片边缘） */
+html[data-blog-style="glass"] .blog-card::after,
+html[data-blog-style="glass"] .blog-rail__card::after,
+html[data-blog-style="glass"] .blog-topcard::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .65), rgba(255, 255, 255, .04) 42%, rgba(255, 255, 255, .3));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: .8;
+}
+
+html[data-blog-style="glass"][data-theme="dark"] .blog-card::after,
+html[data-blog-style="glass"][data-theme="dark"] .blog-rail__card::after,
+html[data-blog-style="glass"][data-theme="dark"] .blog-topcard::after {
+    background: linear-gradient(135deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .02) 44%, rgba(255, 255, 255, .1));
+}
+
+html[data-blog-style="glass"] .blog-rail__card,
+html[data-blog-style="glass"] .blog-catgroup,
+html[data-blog-style="glass"] .blog-entrance { position: relative; }
+
+/* glass 的支持升级：spring 用真弹簧曲线 */
+@supports (transition-timing-function: linear(0, 1)) {
+    html[data-blog-style="glass"] {
+        --blog-ease-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001);
+    }
+}
+
+/* ════════════════════════ 2) paper「素笺」— 纸质极简 ════════════════════════ */
+
+html[data-blog-style="paper"] {
+    --blog-bg: #faf7f0;
+    --blog-surface: #fffdf8;
+    --blog-surface-2: #fffdf8;
+    --blog-surface-opaque: #fffdf8;
+    --blog-surface-tint: rgba(90, 75, 50, .06);
+    --blog-blur: 0px;
+    --blog-saturate: 100%;
+    --blog-hi: none;
+    --blog-shadow-1: 0 1px 2px rgba(80, 65, 40, .05);
+    --blog-shadow-2: 0 3px 10px rgba(80, 65, 40, .08);
+    --blog-shadow-3: 0 12px 34px rgba(80, 65, 40, .16);
+    --blog-border: rgba(90, 75, 50, .14);
+    --blog-border-strong: rgba(90, 75, 50, .3);
+    --blog-ink: #2b2620;
+    --blog-ink-2: #6a6156;
+    --blog-ink-3: #9c928a;
+    --blog-accent: #b4432c;
+    --blog-accent-soft: rgba(180, 67, 44, .1);
+    --blog-on-accent: #fff8f2;
+    --blog-link: #b4432c;
+    --blog-focus: #b4432c;
+    --blog-scrim: rgba(40, 32, 20, .4);
+    --blog-card-glow: transparent;
+    --blog-radius-s: 6px; --blog-radius-m: 10px; --blog-radius-l: 14px; --blog-radius-xl: 18px;
+    --blog-dur-2: 130ms; --blog-dur-3: 200ms;
+    --blog-ease-spring: cubic-bezier(.3, .9, .4, 1);
+    --blog-font-display: Georgia, "Times New Roman", "Songti SC", STSong, "Hiragino Mincho ProN", SimSun, "Noto Serif CJK SC", serif;
+    --blog-code-bg: rgba(90, 75, 50, .055);
+    --blog-hl-kw: #8b3fa8; --blog-hl-str: #3f7d45; --blog-hl-num: #a8651e;
+    --blog-hl-cmt: #a09689; --blog-hl-fn: #2a5db0; --blog-hl-attr: #b4432c;
+}
+
+html[data-blog-style="paper"][data-theme="dark"] {
+    --blog-bg: #191612;
+    --blog-surface: #201c17;
+    --blog-surface-2: #262119;
+    --blog-surface-opaque: #201c17;
+    --blog-surface-tint: rgba(230, 210, 170, .07);
+    --blog-shadow-1: 0 1px 2px rgba(0, 0, 0, .35);
+    --blog-shadow-2: 0 3px 10px rgba(0, 0, 0, .4);
+    --blog-shadow-3: 0 12px 34px rgba(0, 0, 0, .5);
+    --blog-border: rgba(230, 210, 170, .13);
+    --blog-border-strong: rgba(230, 210, 170, .3);
+    --blog-ink: #ece5d8;
+    --blog-ink-2: #b0a695;
+    --blog-ink-3: #7c7365;
+    --blog-accent: #d98e5f;
+    --blog-accent-soft: rgba(217, 142, 95, .14);
+    --blog-on-accent: #241a10;
+    --blog-scrim: rgba(0, 0, 0, .55);
+    --blog-code-bg: rgba(230, 210, 170, .07);
+    --blog-hl-kw: #c792ea; --blog-hl-str: #a9c77d; --blog-hl-num: #d9a35f;
+    --blog-hl-cmt: #6f6555; --blog-hl-fn: #82aaff; --blog-hl-attr: #e0876d;
+}
+
+/* 素笺质感：标题衬线、卡片细线化 */
+html[data-blog-style="paper"] .blog-largetitle,
+html[data-blog-style="paper"] .blog-card__title,
+html[data-blog-style="paper"] .blog-post__title,
+html[data-blog-style="paper"] .blog-section-title { font-family: var(--blog-font-display); letter-spacing: 0; }
+
+html[data-blog-style="paper"] .blog-hero { border-bottom: 1px solid var(--blog-border); }
+
+/* ════════════════════════ 3) mag「刊集」— 杂志编辑部 ════════════════════════ */
+
+html[data-blog-style="mag"] {
+    --blog-bg: #f4f3ef;
+    --blog-surface: #fbfaf7;
+    --blog-surface-2: #fbfaf7;
+    --blog-surface-opaque: #fbfaf7;
+    --blog-surface-tint: rgba(16, 16, 16, .05);
+    --blog-blur: 0px;
+    --blog-saturate: 100%;
+    --blog-hi: none;
+    --blog-shadow-1: none;
+    --blog-shadow-2: 4px 4px 0 rgba(16, 16, 16, .9);
+    --blog-shadow-3: 8px 8px 0 rgba(16, 16, 16, .9);
+    --blog-border: rgba(16, 16, 16, .82);
+    --blog-border-strong: #101010;
+    --blog-ink: #101010;
+    --blog-ink-2: #4a4a46;
+    --blog-ink-3: #8a8a83;
+    --blog-accent: #e4342b;
+    --blog-accent-soft: rgba(228, 52, 43, .1);
+    --blog-on-accent: #fff;
+    --blog-link: #101010;
+    --blog-focus: #e4342b;
+    --blog-scrim: rgba(16, 16, 16, .5);
+    --blog-card-glow: transparent;
+    --blog-radius-s: 2px; --blog-radius-m: 2px; --blog-radius-l: 3px; --blog-radius-xl: 3px;
+    --blog-dur-2: 140ms;
+    --blog-ease-spring: cubic-bezier(.2, .8, .3, 1);
+    --blog-fs-hero: clamp(34px, 7vw, 52px);
+    --blog-code-bg: rgba(16, 16, 16, .05);
+    --blog-hl-kw: #b0208a; --blog-hl-str: #1d7a34; --blog-hl-num: #b06b00;
+    --blog-hl-cmt: #98988e; --blog-hl-fn: #1445c7; --blog-hl-attr: #e4342b;
+}
+
+html[data-blog-style="mag"][data-theme="dark"] {
+    --blog-bg: #141412;
+    --blog-surface: #1b1b18;
+    --blog-surface-2: #1f1f1c;
+    --blog-surface-opaque: #1b1b18;
+    --blog-surface-tint: rgba(240, 240, 230, .07);
+    --blog-shadow-2: 4px 4px 0 rgba(240, 238, 228, .85);
+    --blog-shadow-3: 8px 8px 0 rgba(240, 238, 228, .85);
+    --blog-border: rgba(240, 238, 228, .78);
+    --blog-border-strong: #f0eee4;
+    --blog-ink: #f0eee4;
+    --blog-ink-2: #b8b6ac;
+    --blog-ink-3: #7e7d75;
+    --blog-accent: #ff5147;
+    --blog-accent-soft: rgba(255, 81, 71, .14);
+    --blog-link: #f0eee4;
+    --blog-scrim: rgba(0, 0, 0, .6);
+    --blog-code-bg: rgba(240, 238, 228, .07);
+    --blog-hl-kw: #e58ee0; --blog-hl-str: #8fd694; --blog-hl-num: #e6b455;
+    --blog-hl-cmt: #6e6d65; --blog-hl-fn: #7da7ff; --blog-hl-attr: #ff6f66;
+}
+
+/* 刊集质感：粗描边、大写字距、灰→彩图片 */
+html[data-blog-style="mag"] .blog-largetitle { font-weight: 900; letter-spacing: -.03em; text-transform: none; }
+html[data-blog-style="mag"] .blog-card,
+html[data-blog-style="mag"] .blog-catgroup,
+html[data-blog-style="mag"] .blog-rail__card,
+html[data-blog-style="mag"] .blog-entrance,
+html[data-blog-style="mag"] .blog-topcard,
+html[data-blog-style="mag"] .blog-searchbar { border-width: 2px; }
+html[data-blog-style="mag"] .blog-card { transition-property: transform, box-shadow; }
+
+@media (hover: hover) {
+    html[data-blog-style="mag"] .blog-card:hover { transform: translate(-3px, -3px); box-shadow: var(--blog-shadow-2); }
+    html[data-blog-style="mag"] .blog-card__media img { filter: grayscale(1); }
+    html[data-blog-style="mag"] .blog-card:hover .blog-card__media img { filter: none; transform: none; }
+}
+
+html[data-blog-style="mag"] .blog-chip { border-radius: 2px; text-transform: uppercase; letter-spacing: .07em; font-size: 11px; }
+html[data-blog-style="mag"] .blog-hero__kicker { color: var(--blog-accent); }
+html[data-blog-style="mag"] .blog-nav { border-bottom: 2px solid var(--blog-border-strong); background: var(--blog-surface-opaque); -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-blog-style="mag"] .blog-tab { border-top: 2px solid var(--blog-border-strong); background: var(--blog-surface-opaque); -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-blog-style="mag"] .blog-nav__links a[aria-current="page"] { background: var(--blog-ink); color: var(--blog-bg); }
+html[data-blog-style="mag"] .blog-card mark { background: var(--blog-accent); color: #fff; }
+
+/* ════════════════════════ 4) neon「霓虹」— 暗夜赛博 ════════════════════════ */
+
+html[data-blog-style="neon"] {
+    /* light = 晨雾霓虹（低饱和），dark 才是本体 */
+    --blog-bg: #eef1f6;
+    --blog-surface: rgba(255, 255, 255, .78);
+    --blog-surface-2: rgba(255, 255, 255, .92);
+    --blog-surface-opaque: #f6f8fc;
+    --blog-surface-tint: rgba(70, 90, 140, .08);
+    --blog-blur: 18px;
+    --blog-saturate: 140%;
+    --blog-hi: inset 0 1px 0 rgba(255, 255, 255, .7);
+    --blog-shadow-1: 0 1px 3px rgba(30, 40, 80, .06);
+    --blog-shadow-2: 0 6px 20px rgba(30, 40, 80, .1);
+    --blog-shadow-3: 0 14px 44px rgba(30, 40, 80, .18);
+    --blog-border: rgba(90, 110, 170, .22);
+    --blog-border-strong: rgba(90, 110, 170, .42);
+    --blog-ink: #17203a;
+    --blog-ink-2: #4c5878;
+    --blog-ink-3: #8b94ad;
+    --blog-accent: #0aa6c9;
+    --blog-accent-soft: rgba(10, 166, 201, .12);
+    --blog-on-accent: #fff;
+    --blog-link: #0aa6c9;
+    --blog-focus: #0aa6c9;
+    --blog-neon-2: #c249e8;
+    --blog-scrim: rgba(14, 18, 34, .45);
+    --blog-card-glow: rgba(10, 166, 201, .1);
+    --blog-glow-1: rgba(10, 166, 201, .2);
+    --blog-glow-2: rgba(194, 73, 232, .16);
+    --blog-glow-3: rgba(60, 120, 255, .14);
+    --blog-code-bg: rgba(20, 30, 60, .05);
+    --blog-hl-kw: #a626a4; --blog-hl-str: #2c8a5f; --blog-hl-num: #b0761e;
+    --blog-hl-cmt: #93a0b4; --blog-hl-fn: #2a6ee8; --blog-hl-attr: #d33682;
+}
+
+html[data-blog-style="neon"][data-theme="dark"] {
+    --blog-bg: #0a0d16;
+    --blog-surface: rgba(19, 24, 40, .66);
+    --blog-surface-2: rgba(24, 30, 50, .86);
+    --blog-surface-opaque: #131828;
+    --blog-surface-tint: rgba(120, 160, 255, .09);
+    --blog-hi: inset 0 1px 0 rgba(140, 200, 255, .12);
+    --blog-shadow-1: 0 1px 3px rgba(0, 0, 0, .4);
+    --blog-shadow-2: 0 6px 24px rgba(0, 0, 0, .5);
+    --blog-shadow-3: 0 16px 50px rgba(0, 0, 0, .65);
+    --blog-border: rgba(90, 140, 220, .2);
+    --blog-border-strong: rgba(90, 140, 220, .42);
+    --blog-ink: #dfe7ff;
+    --blog-ink-2: #93a0c2;
+    --blog-ink-3: #5d6884;
+    --blog-accent: #22d3ee;
+    --blog-accent-soft: rgba(34, 211, 238, .13);
+    --blog-on-accent: #04121a;
+    --blog-link: #22d3ee;
+    --blog-focus: #22d3ee;
+    --blog-neon-2: #e879f9;
+    --blog-scrim: rgba(0, 0, 0, .62);
+    --blog-card-glow: rgba(34, 211, 238, .12);
+    --blog-glow-1: rgba(34, 211, 238, .16);
+    --blog-glow-2: rgba(232, 121, 249, .13);
+    --blog-glow-3: rgba(80, 120, 255, .12);
+    --blog-code-bg: rgba(120, 160, 255, .07);
+    --blog-hl-kw: #e879f9; --blog-hl-str: #6ee7b7; --blog-hl-num: #fbbf24;
+    --blog-hl-cmt: #4b5878; --blog-hl-fn: #38bdf8; --blog-hl-attr: #fb7185;
+}
+
+/* 霓虹质感：网格纹理 + 渐变大标题 + hover 辉光 */
+html[data-blog-style="neon"] .blog-aurora { display: block; }
+
+html[data-blog-style="neon"] body.blog-body,
+html[data-blog-style="neon"] .blog-body {
+    background-image: repeating-linear-gradient(0deg, transparent 0 39px, var(--blog-grid, rgba(90, 140, 220, .05)) 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 39px, var(--blog-grid, rgba(90, 140, 220, .05)) 39px 40px);
+}
+
+html[data-blog-style="neon"][data-theme="dark"] { --blog-grid: rgba(90, 140, 220, .07); }
+html[data-blog-style="neon"]:not([data-theme="dark"]) { --blog-grid: rgba(60, 90, 160, .06); }
+
+html[data-blog-style="neon"] .blog-largetitle {
+    background: linear-gradient(100deg, var(--blog-accent), var(--blog-neon-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+@media (hover: hover) {
+    html[data-blog-style="neon"] .blog-card:hover {
+        border-color: color-mix(in srgb, var(--blog-accent) 55%, transparent);
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--blog-accent) 35%, transparent), 0 0 26px color-mix(in srgb, var(--blog-accent) 22%, transparent), var(--blog-shadow-2);
+    }
+}
+
+html[data-blog-style="neon"] .blog-chip--tag:hover { box-shadow: 0 0 14px color-mix(in srgb, var(--blog-accent) 30%, transparent); }
+html[data-blog-style="neon"] .blog-tab a[aria-current="page"] { text-shadow: 0 0 14px color-mix(in srgb, var(--blog-accent) 70%, transparent); }

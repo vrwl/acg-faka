@@ -1,0 +1,29 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page ny-message-page uc-message-page" data-ny-page="message">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main ny-message-main">
+        <section class="ny-page-intro ny-message-intro">
+            <div>
+                <span class="ny-ticket-screen-kicker">INBOX</span>
+                <h1>#{t("消息中心")}</h1>
+                <p class="uc-card__sub">#{t("打开消息后自动标记为已读")}</p>
+            </div>
+            <div class="ny-message-intro__actions">
+                <span class="ny-route-mark ny-route-mark--yellow" aria-hidden="true">M</span>
+                <button type="button" class="ny-icon-button ny-message-clear" data-message-action="clear" aria-label="#{t('清空全部消息')}"><span class="material-icons-outlined">cleaning_services</span></button>
+            </div>
+        </section>
+
+        <section class="ny-panel ny-message-panel">
+            <div class="ny-toolbar" data-ny-message-toolbar hidden>
+                <span>#{t("管理消息")}</span>
+                <div>
+                    <button type="button" data-message-action="delete-selected"><span class="material-icons-outlined" aria-hidden="true">delete_sweep</span>#{t("删除选中")}</button>
+                </div>
+            </div>
+            <div class="ny-panel-body ny-table-wrap ny-message-table-wrap"><table id="message-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/message.js")}
+#{include file="../Common/Footer.html"}

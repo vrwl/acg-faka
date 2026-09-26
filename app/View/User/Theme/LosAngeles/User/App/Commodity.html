@@ -1,0 +1,9 @@
+#{include file="../../Common/App/MemberTop.html" laPage="commodity-table" laTitle=t("我的商品")}
+
+#{include file="../../Part/Toolbar.html" laAdd=t("添加商品") laAddIcon="plus" laBulk=0 laSell=0 laApp=1}
+
+<div class="la-tablecard la-tablecard--app">
+    <table id="commodity-table"></table>
+</div>
+
+#{include file="../../Common/App/MemberBottom.html" laCtrl="/assets/user/controller/business/commodity.js"}

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="#{lang_code()}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta name="keywords" content="#{$config.keywords}">
+    <meta name="description" content="#{$config.description}">
+    <meta name="color-scheme" content="light dark">
+    <link href="#{$favicon}?v=#{$app.version}" rel="icon">
+    <title>#{$title} - #{$config.shop_name}</title>
+    #{include file="./ThemeBoot.html"}
+    #{css(
+    [
+    "/assets/common/css/bootstrap.min.css",
+    "/assets/common/css/_.css",
+    "/assets/user/css/_user.css",
+    "/assets/static/codemirror/lib/codemirror.css",
+    "/assets/common/css/_material.css",
+    "/assets/common/fonts/material-icons.css",
+    "/app/View/User/Theme/NewYork/Assets/Css/Theme.css"
+    ],
+    [
+    "/assets/common/css/font.min.css",
+    "/assets/common/js/layui/css/layui.css",
+    "/assets/common/css/select2.min.css",
+    "/assets/common/css/toastr.min.css",
+    "/assets/common/js/table/bootstrap-table.css",
+    "/assets/common/js/layer/theme/default/layer.css",
+    "/assets/common/css/component.css",
+    "/assets/user/css/global_2.css",
+    "/assets/static/codemirror/lib/codemirror.css",
+    "/assets/common/css/md-tokens.css",
+    "/assets/common/css/md-components.css",
+    "/assets/common/fonts/material-icons.css",
+    "/app/View/User/Theme/NewYork/Assets/Css/Theme.css"
+    ])}
+    #{js("/assets/common/js/ready.js")}
+    #{index_var()}
+    <!--start::HOOK-->
+    #{hook(\App\Consts\Hook::USER_VIEW_HEADER)}
+    <!--end::HOOK-->
+    <style>:root{--currency-symbol:"#{$config.currency_symbol}"}</style>
+</head>
+<body class="ny-body ny-member-body" data-ny-role="#{if $user.businessLevel}merchant#{else}member#{/if}">
+<div class="net-loading" style="display:none;"><div class="loading-view"><div class="loading-image"></div></div></div>
+<div class="ny-device-shell">
+    <header class="ny-appbar">
+        <a class="ny-appbar__brand" href="/user/dashboard/index" aria-label="#{t('会员主页')}"><span class="ny-brand-mark"><img src="#{$favicon}" alt=""></span><span><strong>#{$config.shop_name}</strong><small>#{t("纽约会员中心")}</small></span></a>
+        <div class="ny-appbar__actions">
+            <button type="button" class="ny-icon-button" data-ny-sheet-open="language" aria-label="#{t('切换语言')}"><span class="material-icons-outlined">language</span></button>
+            <button type="button" class="ny-icon-button" data-ny-sheet-open="appearance" aria-label="#{t('外观模式')}"><span class="material-icons-outlined">contrast</span></button>
+            #{include file="./MessageButton.html"}
+        </div>
+    </header>
+    <div id="pjax-container" class="ny-pjax">

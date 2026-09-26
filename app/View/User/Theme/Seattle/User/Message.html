@@ -1,0 +1,22 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-message-page" data-st-page="message" data-st-table="#message-table">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main st-main--wide">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("消息通知")}</span><h1>#{t("消息中心")}</h1><p>#{t("集中查看重要通知、服务进度与专属消息。")}</p></div>
+            <div class="st-page-header__actions"><span class="st-icon-button" aria-hidden="true"><span class="material-icons-outlined">notifications_active</span></span></div>
+        </header>
+        <section class="st-panel st-panel--flush st-message-board" aria-labelledby="st-message-title">
+            <div class="st-panel__header st-card__head">
+                <div class="st-message-board__heading"><strong id="st-message-title">#{t("全部消息")}</strong><small class="st-card__sub">#{t("打开消息后自动标记为已读")}</small></div>
+                <div class="st-message-actions st-page-header__actions">
+                    <button type="button" class="st-message-action st-message-action--delete st-button st-button--secondary" data-message-action="delete-selected" aria-label="#{t('删除选中的消息')}"><span class="material-icons-outlined">delete_sweep</span><span>#{t("删除选中")}</span></button>
+                    <button type="button" class="st-message-action st-message-action--clear st-button st-button--danger" data-message-action="clear" aria-label="#{t('清空全部消息')}"><span class="material-icons-outlined">cleaning_services</span><span>#{t("清空全部")}</span></button>
+                </div>
+            </div>
+            <div class="st-panel__body st-table-wrap st-card__body"><table id="message-table" aria-label="#{t('消息列表')}"></table></div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Message.js'))}
+#{include file="../Common/Footer.html"}

@@ -1,0 +1,49 @@
+#{include file="./Header.html"}
+<main class="st-auth-layout">
+    <aside class="st-auth-intro" aria-label="#{t('注册说明')}">
+        <span class="st-auth-mark">S</span>
+        <span class="st-kicker">Create account</span>
+        <h1>#{t("建立你的账号")}</h1>
+        <p>#{t("用一个账号保存订单、余额和店铺服务记录。")}</p>
+        <ul class="st-auth-points">
+            <li><span class="material-icons-outlined" aria-hidden="true">history</span><span>#{t("订单记录长期可查")}</span></li>
+            <li><span class="material-icons-outlined" aria-hidden="true">loyalty</span><span>#{t("享受对应会员权益")}</span></li>
+            <li><span class="material-icons-outlined" aria-hidden="true">support_agent</span><span>#{t("工单沟通更方便")}</span></li>
+        </ul>
+    </aside>
+
+    <section class="st-auth-panel" aria-labelledby="st-register-title">
+        <header><span class="st-kicker">Join</span><h2 id="st-register-title">#{t("创建账号")}</h2><p>#{t("填写以下信息完成注册")}</p></header>
+        <form method="post" class="needs-validation st-auth-form" data-st-auth="register" novalidate>
+            <p class="st-auth-error" data-st-auth-error role="alert" hidden></p>
+            <label class="st-field"><span>#{t("用户名")}</span><input type="text" class="form-control" name="username" placeholder="#{t('支持中文')}" autocomplete="username" required></label>
+            <div class="st-field"><label for="st-register-password">#{t("登录密码")}</label><div class="st-input-with-action"><input id="st-register-password" type="password" class="form-control" name="password" placeholder="#{t('至少 6 位')}" autocomplete="new-password" minlength="6" required><button type="button" class="st-password-toggle" aria-label="#{t('显示密码')}" aria-pressed="false" title="#{t('显示密码')}"><span class="material-icons-outlined" aria-hidden="true">visibility</span></button></div></div>
+
+            #{if $config.registered_type == 2}
+                <label class="st-field"><span>#{t("邮箱")}</span><input type="email" class="form-control" name="email" placeholder="#{t('请输入常用邮箱')}" autocomplete="email" maxlength="254" required></label>
+                #{if $config.registered_email_verification == 1}
+                    <div class="st-code-field"><label class="st-field"><span>#{t("邮箱验证码")}</span><input type="text" class="form-control" id="email_captcha" name="email_captcha" placeholder="#{t('请输入验证码')}" autocomplete="one-time-code" inputmode="numeric" maxlength="16" required></label><button type="button" class="st-button st-button-quiet send-email-code">#{t("获取验证码")}</button></div>
+                #{/if}
+            #{/if}
+
+            #{if $config.registered_type == 1}
+                <label class="st-field"><span>#{t("手机号")}</span><input type="tel" class="form-control" name="phone" placeholder="#{t('请输入手机号')}" autocomplete="tel" inputmode="numeric" maxlength="11" required></label>
+                #{if $config.registered_phone_verification == 1}
+                    <div class="st-code-field"><label class="st-field"><span>#{t("短信验证码")}</span><input type="text" class="form-control" id="phone_captcha" name="phone_captcha" placeholder="#{t('请输入验证码')}" autocomplete="one-time-code" inputmode="numeric" maxlength="16" required></label><button type="button" class="st-button st-button-quiet send-phone-captcha">#{t("获取验证码")}</button></div>
+                #{/if}
+            #{/if}
+
+            #{if $config.registered_verification == 1}
+                <div class="st-field st-captcha-field"><label for="image-captcha">#{t("图形验证码")}</label><span class="st-captcha-input"><input type="text" class="form-control" id="image-captcha" name="captcha" placeholder="#{t('输入图中字符')}" autocomplete="off" maxlength="16" required><button type="button" class="st-inline-captcha" data-st-captcha-action="register" aria-label="#{t('更换图形验证码')}"><img src="/user/captcha/image?action=register" class="image-code" alt="#{t('图形验证码')}"></button></span></div>
+            #{/if}
+            <button type="submit" class="st-button st-button-primary st-auth-submit" aria-busy="false"><span class="st-auth-button-spinner" data-st-auth-button-spinner aria-hidden="true" hidden></span><span data-st-auth-button-label>#{t("创建账号")}</span></button>
+        </form>
+
+        #{if getHookNum(\App\Consts\Hook::USER_VIEW_AUTH_REGISTER_BUTTON) > 0}<div class="st-divider"><span>#{t("其他注册方式")}</span></div>#{/if}
+        <div class="st-auth-hooks">#{hook(\App\Consts\Hook::USER_VIEW_AUTH_REGISTER_BUTTON)}</div>
+        <p class="st-auth-switch">#{t("已有账号？")}<a href="/user/authentication/login">#{t("前往登录")}</a></p>
+    </section>
+</main>
+<script src="#{\App\Util\Helper::themeUrl('Assets/Js/Page/Auth.js')}"></script>
+#{ready("/assets/user/controller/auth/register.js")}
+#{include file="./Footer.html"}

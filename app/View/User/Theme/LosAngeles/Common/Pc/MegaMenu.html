@@ -1,0 +1,37 @@
+#{*
+  洛杉矶 · 全部分类巨型菜单（电脑端）
+
+  服务端只渲染**前 40 个**一级分类的导轨。子级面板、以及第 40 个之后的
+  一级分类，全部由 Pc.Shell.js 从 /user/api/index/data 取回的整棵树按需构建。
+
+  为什么连一级都要截断：一个 300 个一级分类的站，光导轨就是 226KB HTML
+  （每个按钮带图标 SVG、名称、子级计数）。而人眼在 40 个之后已经不看了，
+  真要找特定分类靠的是过滤框 —— 过滤框搜的是**整棵树**（含二三级名称），
+  比翻一个 300 项的长列表有用得多。
+*}
+<div class="la-mega__panel" id="la-mega-panel" data-la-mega-panel hidden>
+    <div class="la-mega__side">
+        <label class="la-mega__filter">
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('search')}
+            <input type="search" autocomplete="off" placeholder="#{t('筛选分类')}" data-la-mega-filter aria-label="#{t('筛选分类')}">
+        </label>
+        <div class="la-mega__rail" role="tablist" aria-label="#{t('商品分类')}">
+            #{foreach $laCats as $c}
+                <button type="button" class="la-mega__cat#{if $c@first} is-on#{/if}" role="tab"
+                        aria-selected="#{if $c@first}true#{else}false#{/if}"
+                        data-id="#{$c.id}" data-kids="#{$c.kids}" data-name="#{$c.name|strip_tags|escape:'html'}">
+                    <span class="la-mega__cat-ico#{if !$c.icon} is-dot#{/if}">#{if $c.icon}<img src="#{$c.icon|escape:'html'}" alt="" width="18" height="18" loading="lazy" decoding="async">#{/if}</span>
+                    <span class="la-mega__cat-name la-ellipsis">#{$c.name}</span>
+                    #{if $c.kids > 0}<span class="la-mega__cat-go" aria-hidden="true"></span>#{/if}
+                </button>
+            #{/foreach}
+        </div>
+        #{if $laMegaAll > $laCats|@count}
+            #{assign var=laMegaRest value=$laMegaAll-$laCats|@count}
+            <div class="la-mega__rest">#{t("还有 N 个分类，用上面的搜索框找")|replace:"N":$laMegaRest}</div>
+        #{/if}
+    </div>
+
+    #{* 面板内容由 JS 填充，服务端不出任何子级节点 *}
+    <div class="la-mega__body" data-la-mega-body aria-live="polite"></div>
+</div>

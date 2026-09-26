@@ -1,6 +1,7 @@
 #{include file="../Header.html"}
 <textarea id="md-config-notice-source" hidden aria-hidden="true">#{$config.notice|escape:'html'}</textarea>
 <textarea id="md-config-themes-source" hidden aria-hidden="true">#{$themes_json|escape:'html'}</textarea>
+<input type="file" id="theme-install-input" accept=".zip" class="d-none" hidden/>
 <!--begin::Content-->
 <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
     <!--begin::Toolbar-->
@@ -89,6 +90,12 @@
 
                             <h2 class="admin-mobile-settings-section-title" id="mobile-setting-theme"
                                 data-admin-mobile-description="选择 PC、手机及会员中心模板，并配置 IP 获取方式和背景图片。">#{t("模板与网络")}</h2>
+                            <div class="d-flex justify-content-end mb-4">
+                                <button type="button" class="btn btn-sm btn-light-primary theme-install"><i
+                                            class="fa-duotone fa-regular fa-rectangle-history-circle-plus"></i>
+                                    #{t("本地上传模板")}
+                                </button>
+                            </div>
                             <!--begin::Input group-->
                             <div class="row mb-6">
                                 <!--begin::Label-->

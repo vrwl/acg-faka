@@ -1,0 +1,23 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-management-page" data-st-page="card" data-st-controller="/assets/user/controller/business/card.js" data-st-table="#user-card-table">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main st-main--wide">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("数字库存")}</span><h1>#{t("卡密管理")}</h1><p>#{t("安全维护库存卡密，批量完成锁定、出售与导出。")}</p></div>
+            <div class="st-page-header__actions"><button type="button" class="st-button st-button--primary button-add" aria-label="#{t('上传卡密')}"><span class="material-icons-outlined">upload</span><span>#{t("上传卡密")}</span></button></div>
+        </header>
+        <section class="st-panel st-panel--flush" aria-labelledby="st-card-title">
+            <div class="st-panel__header"><div><strong id="st-card-title">#{t("卡密库存")}</strong><small>#{t("批量操作只作用于当前选中项")}</small></div><span class="st-panel__icon material-icons-outlined">vpn_key</span></div>
+            <div class="st-toolbar" aria-label="#{t('批量操作')}">
+                <button type="button" class="st-tool-button st-button--danger button-del"><span class="material-icons-outlined">delete</span>#{t("移除选中")}</button>
+                <button type="button" class="st-tool-button button-lock"><span class="material-icons-outlined">lock</span>#{t("锁定选中")}</button>
+                <button type="button" class="st-tool-button button-unlock"><span class="material-icons-outlined">lock_open</span>#{t("解锁选中")}</button>
+                <button type="button" class="st-tool-button button-sell"><span class="material-icons-outlined">sell</span>#{t("标记已出售")}</button>
+                <button type="button" class="st-tool-button button-export"><span class="material-icons-outlined">download</span>#{t("导出筛选")}</button>
+            </div>
+            <div class="st-panel__body st-table-wrap"><table id="user-card-table" aria-label="#{t('卡密库存列表')}"></table></div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Management.js'))}
+#{include file="../Common/Footer.html"}

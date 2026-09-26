@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-management-page" data-st-page="order" data-st-controller="/assets/user/controller/business/order.js" data-st-table="#order-table">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main st-main--wide">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("订单运营")}</span><h1>#{t("商品订单")}</h1><p>#{t("聚合付款与交付状态，优先处理需要关注的订单。")}</p></div>
+            <div class="st-page-header__actions"><span class="st-icon-button" aria-hidden="true"><span class="material-icons-outlined">local_shipping</span></span></div>
+        </header>
+        <section class="st-panel st-panel--flush" aria-labelledby="st-order-title">
+            <div class="st-panel__header"><div><strong id="st-order-title">#{t("订单列表")}</strong><small>#{t("搜索订单并完成发货处理")}</small></div><span class="st-panel__icon material-icons-outlined">list_alt</span></div>
+            <div class="st-panel__body st-table-wrap"><table id="order-table" aria-label="#{t('商品订单列表')}"></table></div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Management.js'))}
+#{include file="../Common/Footer.html"}

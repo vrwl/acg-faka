@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell mf-page-shell-goods-admin" data-mf-controller="/assets/user/controller/business/commodity.js" data-mf-table="#commodity-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">PRODUCT STUDIO</span><h1>#{t("我的商品")}</h1><p>#{t("集中管理商品内容、售价、库存与销售状态。")}</p></div>
+            <button type="button" class="mf-button mf-button--primary button-add"><span class="material-icons-outlined">add</span>#{t("添加商品")}</button>
+        </section>
+        <section class="mf-panel">
+            <div class="mf-panel-heading"><div><span class="material-icons-outlined">inventory_2</span><div><strong>#{t("商品列表")}</strong><small>#{t("搜索、筛选并维护在售商品")}</small></div></div></div>
+            <div class="mf-panel-body mf-table-wrap"><table id="commodity-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/commodity.js")}
+#{include file="../Common/Footer.html"}

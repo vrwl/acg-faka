@@ -13,8 +13,6 @@
     var dialogOverlayIds = {appearance: '', search: ''};
     var overlayOpenHandler = null;
     var overlayCloseHandler = null;
-    var storeStatusObserver = null;
-    var storeStatusSource = null;
     var themeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
     var dialogControls = {
         appearance: {selector: '[data-admin-mobile-appearance]', targetId: 'admin-mobile-appearance-sheet'},
@@ -25,9 +23,9 @@
         return '<div id="admin-mobile-shell" class="admin-mobile-shell" aria-hidden="true">' +
             '<button class="admin-mobile-restore" type="button" data-admin-mobile-layout="auto">' + i18n('返回手机版') + '</button>' +
             '<header class="admin-mobile-appbar" data-admin-mobile-appbar>' +
-            '<div class="admin-mobile-appbar__top"><div class="admin-mobile-appbar__heading"><strong data-admin-mobile-title>' + i18n('后台管理') + '</strong><span class="admin-mobile-enterprise-badge" data-admin-mobile-enterprise hidden>' + i18n('企业版') + '</span></div>' +
+            '<div class="admin-mobile-appbar__top"><div class="admin-mobile-appbar__heading"><strong data-admin-mobile-title>' + i18n('后台管理') + '</strong></div>' +
             '<button type="button" class="admin-mobile-icon-button" data-admin-mobile-appearance aria-label="' + i18n('外观模式') + '" aria-haspopup="dialog" aria-expanded="false" aria-controls="admin-mobile-appearance-sheet"><span class="material-icons-outlined" aria-hidden="true">contrast</span></button>' +
-            '<a class="admin-mobile-icon-button admin-mobile-store-button" data-admin-mobile-store href="/admin/store/home" aria-label="' + i18n('应用商店') + '"><span class="material-icons-outlined" aria-hidden="true">storefront</span></a></div>' +
+            '</div>' +
             '<button type="button" class="admin-mobile-search" data-admin-mobile-search aria-haspopup="dialog" aria-expanded="false" aria-controls="admin-mobile-search-sheet" aria-label="' + i18n('搜索后台功能') + '">' +
             '<span class="material-icons-outlined admin-mobile-search__lead" aria-hidden="true">search</span>' +
             '<span class="admin-mobile-search__copy" data-admin-mobile-search-placeholder>' + i18n('搜索后台功能') + '</span>' +
@@ -131,33 +129,6 @@
         var title = document.querySelector('#kt_toolbar .md-page-title, #pjax-container h1, #pjax-container h2');
         if (title && title.textContent.trim()) return title.textContent.trim();
         return (document.title || i18n('后台管理')).split('-')[0].trim();
-    }
-
-    function syncStoreStatus() {
-        var shell = ensure();
-        var badge = shell.querySelector('[data-admin-mobile-enterprise]');
-        var storeLink = shell.querySelector('[data-admin-mobile-store]');
-        var enterprise = Boolean(storeStatusSource && /(?:企业版|企業版)/.test(storeStatusSource.textContent || ''));
-        if (badge) badge.hidden = !enterprise;
-        if (storeLink) {
-            var active = /^\/admin\/store(?:\/|$)/.test(window.location.pathname);
-            if (active) storeLink.setAttribute('aria-current', 'page');
-            else storeLink.removeAttribute('aria-current');
-        }
-    }
-
-    function observeStoreStatus() {
-        var source = document.querySelector('#kt_header .store-text');
-        if (source !== storeStatusSource) {
-            if (storeStatusObserver) storeStatusObserver.disconnect();
-            storeStatusSource = source;
-            storeStatusObserver = null;
-            if (source) {
-                storeStatusObserver = new MutationObserver(syncStoreStatus);
-                storeStatusObserver.observe(source, {childList: true, subtree: true, characterData: true});
-            }
-        }
-        syncStoreStatus();
     }
 
     function contextTabAllowed(link, boundary) {
@@ -278,7 +249,6 @@
             ensure();
             if (searchRoute !== routeKey()) resetSearch();
             api.shell.setTitle(currentTitle());
-            observeStoreStatus();
             refreshContextTabs();
             renderSearch();
             syncDialogControls();
@@ -300,9 +270,6 @@
             api.shell.refresh();
         },
         unmount: function () {
-            if (storeStatusObserver) storeStatusObserver.disconnect();
-            storeStatusObserver = null;
-            storeStatusSource = null;
             if (root) root.setAttribute('aria-hidden', api.isViewportEligible() && api.getLayoutMode() === 'desktop' ? 'false' : 'true');
         }
     };

@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 购买记录 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/PurchaseRecord.html"}#{else}#{include file="./Pc/PurchaseRecord.html"}#{/if}

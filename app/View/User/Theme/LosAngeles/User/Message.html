@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 站内消息 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/Message.html"}#{else}#{include file="./Pc/Message.html"}#{/if}

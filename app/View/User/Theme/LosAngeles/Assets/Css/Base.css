@@ -1,0 +1,708 @@
+/* ============================================================================
+   洛杉矶 · 基座
+   重置 / 排版 / 跨端共用的原子组件 / 关键帧。
+   PC 与手机两套外壳都建立在这一层之上。
+   ========================================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* hidden 属性必须真的隐藏。
+   浏览器默认样式表里的 [hidden]{display:none} 是 UA 样式，优先级低于**任何**
+   作者写的 .foo{display:flex}。于是所有"靠 hidden 控制显隐"的元素都会失效：
+   巨型菜单在首页一加载就是展开的、把整个首屏盖住，就是这么来的。
+   平台的共享控制器（工单列表/详情等）也大量用 hidden，这条一并兜住。 */
+[hidden] { display: none !important; }
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* 主题切换时整页平滑过渡，但不要让每个元素都参与（会掉帧） */
+    transition: background-color var(--la-d3) var(--la-e-smooth);
+}
+
+body {
+    margin: 0;
+    min-height: 100%;
+    font-family: var(--la-font);
+    font-size: var(--la-t-base);
+    line-height: var(--la-lh);
+    color: var(--la-ink);
+    background: var(--la-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-wrap: break-word;
+}
+
+h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+h1, h2, h3, h4 { line-height: var(--la-lh-tight); font-weight: 700; letter-spacing: -.01em; }
+
+img, svg, video, canvas { display: block; max-width: 100%; }
+img { height: auto; border: 0; }
+
+a { color: inherit; text-decoration: none; }
+a:hover { color: var(--la-c1); }
+
+button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+    margin: 0;
+}
+
+button { background: none; border: 0; padding: 0; cursor: pointer; }
+[disabled] { cursor: not-allowed; }
+
+hr { border: 0; border-top: 1px solid var(--la-line); margin: 0; }
+
+::selection { background: rgba(var(--la-c1-rgb), .22); color: var(--la-ink); }
+
+:focus { outline: none; }
+
+/* 键盘导航的焦点环：只给按钮、链接这类元素。 */
+:focus-visible {
+    outline: none;
+    box-shadow: var(--la-focus);
+    border-radius: var(--la-r-xs);
+}
+
+/* 文本输入类控件**豁免**这条全局环。
+   Chrome 对 input/textarea 的任何聚焦都算 :focus-visible，而它们几乎都嵌在
+   搜索胶囊、筛选框这类复合控件里 —— 聚焦态由外层的 :focus-within 负责，
+   再在 input 自己身上画一圈 3px 光晕 + 3px 圆角，就是那个"框里还有一个淡色小框"。
+   独立的 .la-input 有自己的 :focus 规则（写在后面，同特异性靠顺序覆盖回来）。
+   这里**只**收掉 box-shadow，不碰 border-radius：写成 inherit 会让独立输入框
+   在聚焦时继承父级的 0 圆角，一点就变直角。 */
+input:focus-visible, textarea:focus-visible, select:focus-visible { box-shadow: none; }
+
+/* 滚动条：细、暖、悬停才显形 */
+* { scrollbar-width: thin; scrollbar-color: var(--la-ink-4) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: var(--la-line-2);
+    border: 3px solid transparent;
+    border-radius: var(--la-r-pill);
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--la-ink-4); background-clip: content-box; }
+
+/* ---------------------------------------------------------------- 图标 */
+
+.la-i {
+    width: 1.15em;
+    height: 1.15em;
+    flex: none;
+    vertical-align: -.18em;
+    display: inline-block;
+}
+
+.la-i--lg { width: 1.5em; height: 1.5em; }
+.la-i--xl { width: 2em; height: 2em; }
+
+/* ---------------------------------------------------------------- 品牌标记
+   一轮落日压在海平线上，纯 CSS 画出来 —— 两端都要用，所以放在基座层，
+   不能留在 Pc.css（手机端根本不加载那个文件，会渲染成一个空 span）。 */
+
+/* 落日标记：一轮太阳压在三道海平线上，纯 CSS，无图片 */
+.la-logo { display: flex; align-items: center; gap: 10px; flex: none; }
+
+.la-logo__mark {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 11px;
+    background: var(--la-sunset);
+    box-shadow: var(--la-sh-brand);
+    transition: transform var(--la-d4) var(--la-e-spring);
+}
+
+.la-logo:hover .la-logo__mark { transform: rotate(-8deg) scale(1.06); }
+
+.la-logo__mark::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 12px;
+    width: 13px;
+    height: 13px;
+    margin-left: -6.5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .94);
+}
+
+.la-logo__mark::after {
+    content: "";
+    position: absolute;
+    left: 7px;
+    right: 7px;
+    bottom: 8px;
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, .88);
+    box-shadow: 0 -5px 0 rgba(255, 255, 255, .5);
+}
+
+/* 站点 LOGO。后台上传过 LOGO 的站，核心会把它拷成 /favicon.ico，$favicon 就是它
+   （分站是商家头像）。有图时把上面那套纯 CSS 图形整个收起来 —— 圆角框留着做统一形状，
+   底色去掉，站长的透明 PNG 才不会被垫一块渐变。图片加载失败时 Kit.js 会摘掉 has-img，
+   自动退回 CSS 标记，页头永远不会出现一个破图标。 */
+.la-logo__mark.has-img { background: var(--la-surface-2); box-shadow: none; overflow: hidden; }
+.la-logo__mark.has-img::before, .la-logo__mark.has-img::after { display: none; }
+.la-logo__img { display: block; width: 100%; height: 100%; object-fit: contain; }
+
+.la-logo__text { font-weight: 800; letter-spacing: -.02em; color: var(--la-ink); }
+
+
+/* ---------------------------------------------------------------- 排版工具 */
+
+.la-num {
+    font-family: var(--la-font-num);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -.02em;
+}
+
+.la-muted { color: var(--la-ink-2); }
+.la-faint { color: var(--la-ink-3); }
+
+.la-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.la-clamp-1, .la-clamp-2, .la-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.la-clamp-1 { -webkit-line-clamp: 1; line-clamp: 1; }
+.la-clamp-2 { -webkit-line-clamp: 2; line-clamp: 2; }
+.la-clamp-3 { -webkit-line-clamp: 3; line-clamp: 3; }
+
+/* 只给读屏器 */
+.la-sr {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* 品牌渐变文字（标题的点睛处，别滥用） */
+.la-grad-text {
+    background: var(--la-sunset);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ---------------------------------------------------------------- 按钮 */
+
+.la-btn {
+    --btn-h: 36px;
+    --btn-px: 16px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: var(--btn-h);
+    padding: 0 var(--btn-px);
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-base);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    color: var(--la-ink);
+    background: var(--la-surface-2);
+    transition: transform var(--la-d1) var(--la-e-out),
+    box-shadow var(--la-d2) var(--la-e-smooth),
+    background-color var(--la-d2) var(--la-e-smooth),
+    border-color var(--la-d2) var(--la-e-smooth),
+    color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-btn:hover { color: var(--la-ink); background: var(--la-surface-3); }
+.la-btn:active { transform: scale(.97); }
+.la-btn[disabled], .la-btn.is-disabled { opacity: .5; pointer-events: none; }
+
+.la-btn--sm { --btn-h: 28px; --btn-px: 11px; font-size: var(--la-t-sm); gap: 4px; }
+.la-btn--lg { --btn-h: 44px; --btn-px: 26px; font-size: var(--la-t-md); }
+.la-btn--xl { --btn-h: 48px; --btn-px: 32px; font-size: var(--la-t-lg); }
+.la-btn--block { display: flex; width: 100%; }
+.la-btn--square { --btn-px: 0; width: var(--btn-h); border-radius: var(--la-r-md); }
+
+/* 主行动：落日渐变 + 品牌辉光。全页只该有一个 */
+.la-btn--brand {
+    color: var(--la-on-brand);
+    background: var(--la-sunset);
+    background-size: 160% 100%;
+    background-position: 0 0;
+    box-shadow: var(--la-sh-brand);
+    transition: transform var(--la-d1) var(--la-e-out),
+    box-shadow var(--la-d3) var(--la-e-smooth),
+    background-position var(--la-d4) var(--la-e-out);
+}
+.la-btn--brand:hover {
+    color: var(--la-on-brand);
+    background-position: 100% 0;
+    box-shadow: var(--la-sh-brand-lg);
+    transform: translateY(-1px);
+}
+.la-btn--brand:active { transform: translateY(0) scale(.98); }
+
+.la-btn--solid { color: #fff; background: var(--la-ink); }
+.la-btn--solid:hover { color: #fff; background: var(--la-ink-2); }
+
+.la-btn--soft { color: var(--la-c1); background: rgba(var(--la-c1-rgb), .10); }
+.la-btn--soft:hover { color: var(--la-c1); background: rgba(var(--la-c1-rgb), .17); }
+
+.la-btn--line { background: transparent; border-color: var(--la-line-2); }
+.la-btn--line:hover { background: var(--la-hover); border-color: var(--la-c1); color: var(--la-c1); }
+
+.la-btn--ghost { background: transparent; color: var(--la-ink-2); }
+.la-btn--ghost:hover { background: var(--la-hover); color: var(--la-ink); }
+
+.la-btn--danger { color: #fff; background: var(--la-bad); }
+.la-btn--danger:hover { color: #fff; filter: brightness(1.06); }
+
+/* ---------------------------------------------------------------- 标签 / 徽章 */
+
+/* 站长自定义的商品标签，8 色与后台 Commodity::TAG_COLORS 一一对应。
+   电商口径：矮、方角、淡底深字，像价签上印的小票，不是彩色胶囊。 */
+.la-tag {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: var(--la-r-xs);
+    font-size: var(--la-t-2xs);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--tag-c, var(--la-ink-2));
+    background: var(--tag-bg, var(--la-surface-3));
+}
+
+.la-tag--red { --tag-c: #E22E1F; --tag-bg: #FFF0EE; }
+.la-tag--orange { --tag-c: #E06B00; --tag-bg: #FFF4E6; }
+.la-tag--green { --tag-c: #00915F; --tag-bg: #E9F8F2; }
+.la-tag--cyan { --tag-c: #0089A7; --tag-bg: #E6F6FA; }
+.la-tag--blue { --tag-c: #2354E6; --tag-bg: #EDF1FE; }
+.la-tag--purple { --tag-c: #6D28D9; --tag-bg: #F3EDFD; }
+.la-tag--pink { --tag-c: #D6006C; --tag-bg: #FDECF4; }
+.la-tag--gray { --tag-c: var(--la-ink-2); --tag-bg: var(--la-surface-3); }
+
+:root[data-theme="dark"] .la-tag { --tag-bg: var(--la-surface-3); }
+:root[data-theme="dark"] .la-tag--red { --tag-c: #FF7A6E; }
+:root[data-theme="dark"] .la-tag--orange { --tag-c: #FFAE52; }
+:root[data-theme="dark"] .la-tag--green { --tag-c: #45DBA5; }
+:root[data-theme="dark"] .la-tag--cyan { --tag-c: #3FCBE8; }
+:root[data-theme="dark"] .la-tag--blue { --tag-c: #7FA8FF; }
+:root[data-theme="dark"] .la-tag--purple { --tag-c: #B392FF; }
+:root[data-theme="dark"] .la-tag--pink { --tag-c: #FF7BB4; }
+
+/* 系统徽章：批发 / 发货方式。样式和 .la-tag 一致，只是语义不同 */
+.la-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: var(--la-r-xs);
+    font-size: var(--la-t-2xs);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--la-ink-2);
+    background: var(--la-surface-3);
+}
+
+.la-badge .la-i { width: 11px; height: 11px; }
+
+.la-badge--seckill { color: #fff; background: var(--la-blaze); font-weight: 700; }
+.la-badge--recommend { color: var(--la-c1); background: var(--la-tint); }
+.la-badge--wholesale { color: #E06B00; background: #FFF4E6; }
+.la-badge--auto { color: #00915F; background: #E9F8F2; }
+.la-badge--manual { color: var(--la-warn); background: var(--la-warn-bg); }
+.la-badge--soldout { color: var(--la-ink-3); background: var(--la-surface-3); }
+
+:root[data-theme="dark"] .la-badge--wholesale { color: #FFAE52; background: var(--la-surface-3); }
+:root[data-theme="dark"] .la-badge--auto { color: #45DBA5; background: var(--la-surface-3); }
+
+/* 胶囊筛选项 */
+.la-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-sm);
+    font-weight: 600;
+    color: var(--la-ink-2);
+    background: var(--la-surface-2);
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color var(--la-d2) var(--la-e-smooth),
+    background-color var(--la-d2) var(--la-e-smooth),
+    border-color var(--la-d2) var(--la-e-smooth),
+    transform var(--la-d1) var(--la-e-out);
+}
+.la-chip:hover { color: var(--la-ink); background: var(--la-surface-3); }
+.la-chip:active { transform: scale(.96); }
+.la-chip.is-on {
+    color: var(--la-on-brand);
+    background: var(--la-sunset);
+    border-color: transparent;
+    box-shadow: 0 3px 10px rgba(var(--la-c1-rgb), .28);
+}
+
+/* ---------------------------------------------------------------- 价格
+
+   货源站上价格是最重要的一个数。三条规则：
+     · ¥ 符号缩到 0.6em —— 它只是单位，不该和数字抢地方
+     · 整数部分给足字号和字重，小数部分缩到 0.62em（拼多多、淘宝都这么排）
+     · 用等宽数位，翻页/刷新时价格不会左右横跳                  */
+
+.la-price {
+    display: inline-flex;
+    align-items: baseline;
+    color: var(--la-c1);
+    font-family: var(--la-font-num);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.la-price__sym { font-size: .6em; font-weight: 700; margin-inline-end: 1px; }
+.la-price__int { font-size: 1em; }
+.la-price__dec { font-size: .62em; font-weight: 700; }
+
+.la-price--xl { font-size: var(--la-t-4xl); }
+.la-price--lg { font-size: var(--la-t-2xl); }
+.la-price--md { font-size: var(--la-t-xl); }
+.la-price--sm { font-size: var(--la-t-md); }
+
+/* 划线原价 */
+.la-price-was {
+    font-family: var(--la-font-num);
+    font-variant-numeric: tabular-nums;
+    color: var(--la-ink-4);
+    text-decoration: line-through;
+    font-size: var(--la-t-xs);
+    font-weight: 400;
+}
+
+/* ---------------------------------------------------------------- 容器 */
+
+/* 白卡不描边、不投影 —— 灰底已经把它分出来了。
+   会员中心一屏七八张卡，每张再加一圈线就是一张表格纸。 */
+.la-card {
+    background: var(--la-surface);
+    border-radius: var(--la-r-lg);
+}
+
+.la-surface { background: var(--la-surface); border-radius: var(--la-r-lg); }
+
+.la-divider { height: 1px; background: var(--la-line); }
+
+/* 横向滑轨：秒杀商品、金刚区翻页都用它 */
+.la-rail {
+    display: flex;
+    gap: var(--la-card-gap);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.la-rail::-webkit-scrollbar { display: none; }
+.la-rail > * { scroll-snap-align: start; flex: none; }
+
+/* ---------------------------------------------------------------- 空态 / 骨架 */
+
+.la-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--la-s2);
+    padding: var(--la-s8) var(--la-s5);
+    color: var(--la-ink-3);
+    text-align: center;
+}
+.la-empty .la-i { width: 44px; height: 44px; color: var(--la-ink-4); stroke-width: 1.1; }
+.la-empty__title { font-size: var(--la-t-md); font-weight: 600; color: var(--la-ink-2); }
+.la-empty__desc { font-size: var(--la-t-sm); max-width: 30ch; }
+
+.la-skeleton {
+    background: var(--la-surface-2);
+    background-image: var(--la-skeleton);
+    background-size: 240% 100%;
+    border-radius: var(--la-r-sm);
+    animation: la-shimmer 1.35s linear infinite;
+}
+
+.la-spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(var(--la-c1-rgb), .22);
+    border-top-color: var(--la-c1);
+    animation: la-spin .68s linear infinite;
+}
+
+/* ---------------------------------------------------------------- 表单原语
+   widget_render() 输出的是 Bootstrap 类名（.form-label/.form-control/.form-check*），
+   而本主题不加载 bootstrap.min.css —— 这几条就是它们的替代实现，
+   顺手让插件注入的自定义控件长得像主题原生控件。 */
+
+.form-label,
+.la-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: var(--la-t-sm);
+    font-weight: 600;
+    color: var(--la-ink-2);
+}
+
+.form-control,
+.la-input,
+.la-textarea,
+select.form-control {
+    display: block;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    font-size: var(--la-t-base);
+    color: var(--la-ink);
+    background: var(--la-surface-2);
+    border: 1px solid var(--la-line);
+    border-radius: var(--la-r-md);
+    appearance: none;
+    transition: border-color var(--la-d2) var(--la-e-smooth),
+    background-color var(--la-d2) var(--la-e-smooth),
+    box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+textarea.form-control, .la-textarea { height: auto; min-height: 88px; padding: 10px 12px; line-height: var(--la-lh); resize: vertical; }
+
+select.form-control {
+    padding-right: 36px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23909090' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.4 9.4 6.6 6.6 6.6-6.6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    cursor: pointer;
+}
+
+.form-control::placeholder, .la-input::placeholder, .la-textarea::placeholder { color: var(--la-ink-4); }
+
+.form-control:hover, .la-input:hover, .la-textarea:hover { border-color: var(--la-line-2); }
+
+.form-control:focus,
+.la-input:focus,
+.la-textarea:focus,
+select.form-control:focus {
+    outline: none;
+    background: var(--la-surface);
+    border-color: var(--la-c1);
+    box-shadow: var(--la-focus);
+}
+
+.form-check { display: inline-flex; align-items: center; gap: 6px; margin-right: 14px; margin-bottom: 6px; }
+.form-check-inline { display: inline-flex; }
+
+.form-check-input {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    margin: 0;
+    border: 1.5px solid var(--la-line-strong);
+    border-radius: 5px;
+    background: var(--la-surface);
+    cursor: pointer;
+    transition: border-color var(--la-d1) var(--la-e-smooth), background-color var(--la-d1) var(--la-e-smooth);
+}
+.form-check-input[type="radio"] { border-radius: 50%; }
+.form-check-input:checked {
+    border-color: var(--la-c1);
+    background: var(--la-c1);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.8 12.6 4.8 4.8 9.6-10.8'/%3E%3C/svg%3E");
+    background-size: 12px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.form-check-input[type="radio"]:checked {
+    background-image: none;
+    box-shadow: inset 0 0 0 4px var(--la-surface);
+}
+.form-check-label { font-size: var(--la-t-base); cursor: pointer; user-select: none; }
+
+/* 插件注入的自定义控件容器（widget type=custom） */
+.acg-widget-custom:not(:empty) { margin-top: var(--la-s3); }
+
+/* ---------------------------------------------------------------- 关键帧
+   全部只动 transform / opacity / background-position —— 不触发布局与重绘。
+   注意：容器上的 transform 会形成包含块，把 layer 弹层和固定定位元素
+   困在局部坐标系里，所以入场动画一律只给内容元素，不给外壳。 */
+
+@keyframes la-shimmer { from { background-position: 140% 0; } to { background-position: -40% 0; } }
+@keyframes la-spin { to { transform: rotate(360deg); } }
+@keyframes la-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes la-fade-up { from { opacity: 0; transform: translate3d(0, 14px, 0); } to { opacity: 1; transform: none; } }
+@keyframes la-fade-down { from { opacity: 0; transform: translate3d(0, -12px, 0); } to { opacity: 1; transform: none; } }
+@keyframes la-pop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes la-slide-in { from { transform: translate3d(100%, 0, 0); } to { transform: none; } }
+@keyframes la-sheet-up { from { transform: translate3d(0, 100%, 0); } to { transform: none; } }
+@keyframes la-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes la-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes la-sunset-drift { 0% { background-position: 0 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+.la-in { animation: la-fade-up var(--la-d4) var(--la-e-out) both; }
+.la-in-fade { animation: la-fade var(--la-d3) var(--la-e-smooth) both; }
+.la-in-pop { animation: la-pop var(--la-d3) var(--la-e-spring) both; }
+
+/* 楼层依次入场：只用 6 档，再多就会让页面显得拖沓 */
+.la-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.la-stagger > *:nth-child(2) { animation-delay: 45ms; }
+.la-stagger > *:nth-child(3) { animation-delay: 90ms; }
+.la-stagger > *:nth-child(4) { animation-delay: 135ms; }
+.la-stagger > *:nth-child(5) { animation-delay: 180ms; }
+.la-stagger > *:nth-child(n+6) { animation-delay: 225ms; }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
+/* ================================================================ 分页
+   大站列表页的地基：页码 + 上下页 + 每页数量 + 跳页。
+   接口没有排序参数，但有 page/limit —— 所以「翻到第 200 页」是唯一
+   能真正抵达一万个商品深处的路径，这个组件必须两端都有。       */
+
+.la-pagebar { margin-top: var(--la-s7); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+.la-page { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+
+.la-page__step,
+.la-page__no {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--la-line-2);
+    border-radius: var(--la-r-md);
+    background: var(--la-surface);
+    color: var(--la-ink-2);
+    font-size: var(--la-t-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: color var(--la-d2) var(--la-e-smooth),
+                border-color var(--la-d2) var(--la-e-smooth),
+                background-color var(--la-d2) var(--la-e-smooth),
+                transform var(--la-d2) var(--la-e-spring);
+}
+
+.la-page__no { padding: 0 6px; }
+
+.la-page__step:hover:not(:disabled),
+.la-page__no:hover:not(.is-on) { color: var(--la-c1); border-color: rgba(var(--la-c1-rgb), .45); background: rgba(var(--la-c1-rgb), .06); }
+
+.la-page__step:active:not(:disabled),
+.la-page__no:active { transform: scale(.96); }
+
+.la-page__step:disabled { opacity: .4; cursor: not-allowed; }
+
+.la-page__no.is-on {
+    color: #fff;
+    border-color: transparent;
+    background: var(--la-sunset);
+    box-shadow: var(--la-sh-brand);
+    cursor: default;
+}
+
+.la-page__gap { min-width: 26px; text-align: center; color: var(--la-ink-4); user-select: none; }
+.la-page__nums { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.la-page .la-i { width: 16px; height: 16px; }
+
+.la-page__aside {
+    display: flex;
+    align-items: center;
+    gap: var(--la-s5);
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: var(--la-t-sm);
+    color: var(--la-ink-3);
+}
+
+.la-page__meta { font-variant-numeric: tabular-nums; }
+
+.la-page__size,
+.la-page__jump { display: inline-flex; align-items: center; gap: 6px; }
+
+.la-page__size select,
+.la-page__jump input {
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--la-line-2);
+    border-radius: var(--la-r-sm);
+    background: var(--la-surface);
+    color: var(--la-ink);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+}
+
+.la-page__jump input { width: 62px; text-align: center; -moz-appearance: textfield; }
+.la-page__jump input::-webkit-outer-spin-button,
+.la-page__jump input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.la-page__size select:focus-visible,
+.la-page__jump input:focus-visible { outline: none; border-color: var(--la-c1); box-shadow: 0 0 0 3px rgba(var(--la-c1-rgb), .16); }
+
+.la-page__jump button {
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--la-r-sm);
+    background: rgba(var(--la-c1-rgb), .12);
+    color: var(--la-c1);
+    font-weight: 700;
+    font-size: var(--la-t-sm);
+    cursor: pointer;
+    transition: background-color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-page__jump button:hover { background: rgba(var(--la-c1-rgb), .2); }
+
+/* 手机端：一行装不下就把辅助区收成两行，按钮加大到可点 */
+.la-pagebar--app { padding: var(--la-s5) 0 var(--la-s8); }
+.la-pagebar--app .la-page__step { min-width: 44px; height: 42px; }
+.la-pagebar--app .la-page__no { min-width: 42px; height: 42px; }
+.la-pagebar--app .la-page__aside { font-size: var(--la-t-xs); gap: 12px; }
+
+/* 「更多」型标签：视觉上比普通标签轻，避免被误当成一个分类 */
+.la-chip--more { color: var(--la-c1); border-style: dashed !important; }
+.la-chip--more .la-i { width: 14px; height: 14px; }

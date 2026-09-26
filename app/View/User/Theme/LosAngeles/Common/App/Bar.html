@@ -1,0 +1,31 @@
+#{*
+  洛杉矶 · 手机端顶部导航栏（APP 形态）
+
+  参数：
+    laTitle    标题（默认取 $title）
+    laBack     1 = 显示返回键
+    laTrans    1 = 透明起步、随滚动渐显（商品详情这类大图页用）
+    laAction   右侧动作区 HTML（可空）
+
+  高度固定 --la-bar-h，顶部再撑开安全区，刘海屏下内容不会被吃掉。
+*}
+#{assign var=laBack value=$laBack|default:0}#{assign var=laTrans value=$laTrans|default:0}#{assign var=laAction value=$laAction|default:''}#{assign var=laTitle value=$laTitle|default:$title}
+<header class="la-bar#{if $laTrans} la-bar--trans#{/if}" data-la-bar#{if $laTrans} data-la-bar-trans#{/if}>
+    <div class="la-bar__in">
+        <div class="la-bar__side la-bar__side--l">
+            #{if $laBack}
+                <button type="button" class="la-bar__btn" data-la-back aria-label="#{t('返回')}">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('left')}
+                </button>
+            #{/if}
+        </div>
+        <h1 class="la-bar__title la-ellipsis">#{$laTitle|default:$title|escape:'html'}</h1>
+        <div class="la-bar__side la-bar__side--r">
+            #{if $laAction}#{$laAction}#{else}
+                <button type="button" class="la-bar__btn" data-la-pop-trigger data-la-appmenu aria-label="#{t('更多')}">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('more')}
+                </button>
+            #{/if}
+        </div>
+    </div>
+</header>

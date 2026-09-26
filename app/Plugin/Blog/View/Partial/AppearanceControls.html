@@ -1,0 +1,35 @@
+<!--外观控制组（PC 弹出层与移动端 Sheet 复用；交互在 theme.js）-->
+<div class="blog-appearance">
+    <div class="blog-appearance__label">#{t("风格")}</div>
+    <div class="blog-appearance__styles" role="radiogroup" aria-label="#{t('主题风格')}">
+        <button type="button" class="blog-swatch" data-blog-set-style="glass" role="radio">
+            <span class="blog-swatch__art blog-swatch__art--glass"><i></i><b></b></span>
+            <span class="blog-swatch__name">#{t("流光")}</span>
+        </button>
+        <button type="button" class="blog-swatch" data-blog-set-style="paper" role="radio">
+            <span class="blog-swatch__art blog-swatch__art--paper"><i></i><b></b></span>
+            <span class="blog-swatch__name">#{t("素笺")}</span>
+        </button>
+        <button type="button" class="blog-swatch" data-blog-set-style="mag" role="radio">
+            <span class="blog-swatch__art blog-swatch__art--mag"><i></i><b></b></span>
+            <span class="blog-swatch__name">#{t("刊集")}</span>
+        </button>
+        <button type="button" class="blog-swatch" data-blog-set-style="neon" role="radio">
+            <span class="blog-swatch__art blog-swatch__art--neon"><i></i><b></b></span>
+            <span class="blog-swatch__name">#{t("霓虹")}</span>
+        </button>
+    </div>
+    <div class="blog-appearance__label">#{t("明暗")}</div>
+    <div class="blog-seg2" role="radiogroup" aria-label="#{t('明暗模式')}">
+        <button type="button" data-blog-set-dark="light" role="radio">#{t("白天")}</button>
+        <button type="button" data-blog-set-dark="auto" role="radio">#{t("自动")}</button>
+        <button type="button" data-blog-set-dark="dark" role="radio">#{t("黑夜")}</button>
+    </div>
+    <div class="blog-appearance__label">#{t("语言")}</div>
+    <div class="blog-seg2 blog-seg2--lang" role="radiogroup" aria-label="#{t('语言')}">
+        <button type="button" data-lang-value="zh-cn">简体</button>
+        <button type="button" data-lang-value="zh-tw">繁體</button>
+        <button type="button" data-lang-value="en">EN</button>
+        <button type="button" data-lang-value="ja">日本語</button>
+    </div>
+</div>

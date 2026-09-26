@@ -1,0 +1,16 @@
+<nav class="ny-bottom-nav" aria-label="#{t('主要导航')}">
+    #{if !$user}
+        <a href="/" class="#{active('/user/index/index','is-active')}"><span class="material-icons-outlined">storefront</span><span>#{t("商城")}</span></a>
+        <a href="/#categories"><span class="material-icons-outlined">category</span><span>#{t("分类")}</span></a>
+        <a href="/user/index/query" class="#{active('/user/index/query','is-active')}"><span class="material-icons-outlined">search</span><span>#{t("查单")}</span></a>
+        <a href="/user/authentication/login" class="#{active('/user/authentication/login','is-active')}"><span class="material-icons-outlined">person</span><span>#{t("登录")}</span></a>
+    #{else}
+        <a href="/" class="#{active('/user/index/index','is-active')}"><span class="material-icons-outlined">storefront</span><span>#{t("商城")}</span></a>
+        <a href="/user/personal/purchaseRecord" class="#{active('/user/personal/purchaseRecord','is-active')}"><span class="material-icons-outlined">receipt_long</span><span>#{t("订单")}</span></a>
+        #{if $user.businessLevel}
+            <button type="button" data-ny-sheet-open="workbench" class="#{active(['/user/business','/user/category','/user/commodity','/user/card','/user/coupon','/user/order'],'is-active')}"><span class="material-icons-outlined">space_dashboard</span><span>#{t("经营")}</span></button>
+        #{/if}
+        <a href="/user/recharge/index" class="#{active(['/user/recharge','/user/bill','/user/cash'],'is-active')}"><span class="material-icons-outlined">account_balance_wallet</span><span>#{t("钱包")}</span></a>
+        <a href="/user/dashboard/index" class="#{active(['/user/dashboard','/user/security','/user/message','/user/ticket','/user/agent'],'is-active')}"><span class="material-icons-outlined">person</span><span>#{t("我的")}</span></a>
+    #{/if}
+</nav>

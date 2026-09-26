@@ -1,0 +1,53 @@
+#{*
+  洛杉矶 · 电脑端页脚
+  多栏链接（站长可配） + 品牌区 + 版权。
+*}
+#{assign var=laFootGroups value=\App\View\User\Theme\LosAngeles\Support::footerGroups($setting)}
+#{assign var=laFootNote value=$setting.footer_note|default:''}
+
+<footer class="la-footer">
+    <div class="la-footer__in">
+        <div class="la-footer__brand">
+            <a class="la-logo la-logo--foot" href="/">
+                <span class="la-logo__mark has-img" aria-hidden="true"><img class="la-logo__img" src="#{$favicon|escape:'html'}?v=#{$app.version|escape:'html'}" alt="" width="34" height="34" decoding="async"></span>
+                <span class="la-logo__text">#{$config.shop_name|escape:'html'}</span>
+            </a>
+            #{if $config.description}
+                <p class="la-footer__desc la-clamp-3">#{$config.description|escape:'html'}</p>
+            #{/if}
+            <div class="la-footer__acts">
+                <a class="la-btn la-btn--soft la-btn--sm" href="/user/index/query">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}<span>#{t("订单查询")}</span>
+                </a>
+                #{if $config.service_url}
+                    <a class="la-btn la-btn--line la-btn--sm" href="#{$config.service_url}" target="_blank" rel="noopener nofollow">
+                        #{\App\View\User\Theme\LosAngeles\Icons::svg('headset')}<span>#{t("联系客服")}</span>
+                    </a>
+                #{/if}
+            </div>
+        </div>
+
+        #{if $laFootGroups}
+            <nav class="la-footer__cols" aria-label="#{t('页脚导航')}">
+                #{foreach $laFootGroups as $g}
+                    <div class="la-footer__col">
+                        #{if $g.title}<h4>#{$g.title|escape:'html'}</h4>#{/if}
+                        <ul>
+                            #{foreach $g.links as $link}
+                                <li><a href="#{$link.url|escape:'html'}"#{if $link.blank} target="_blank" rel="noopener nofollow"#{/if}>#{$link.name|escape:'html'}</a></li>
+                            #{/foreach}
+                        </ul>
+                    </div>
+                #{/foreach}
+            </nav>
+        #{/if}
+    </div>
+
+    <div class="la-footer__bar">
+        <span>© #{$smarty.now|date_format:"%Y"} #{$config.shop_name|escape:'html'}</span>
+        #{if $laFootNote}<span class="la-footer__note">#{$laFootNote|strip_tags|escape:'html'}</span>#{/if}
+        <button type="button" class="la-footer__top" data-la-top aria-label="#{t('回到顶部')}">
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('up')}<span>#{t("回到顶部")}</span>
+        </button>
+    </div>
+</footer>

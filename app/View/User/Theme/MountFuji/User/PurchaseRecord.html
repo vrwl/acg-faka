@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell mf-page-shell-record" data-mf-controller="/assets/user/controller/user/purchase.record.js" data-mf-table="#bill-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">PURCHASE HISTORY</span><h1>#{t("购买记录")}</h1><p>#{t("查看历史订单、付款状态与已交付的卡密内容。")}</p></div>
+            <a class="mf-button mf-button--primary" href="/" target="_blank"><span class="material-icons-outlined">shopping_cart</span>#{t("继续购物")}</a>
+        </section>
+        <section class="mf-panel">
+            <div class="mf-panel-heading"><div><span class="material-icons-outlined">shopping_bag</span><div><strong>#{t("我的订单")}</strong><small>#{t("支持按订单号与下单时间查询")}</small></div></div></div>
+            <div class="mf-panel-body mf-table-wrap"><table id="bill-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/purchase.record.js")}
+#{include file="../Common/Footer.html"}

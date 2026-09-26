@@ -1,0 +1,47 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<link rel="stylesheet" href="#{Plugin('Blog','View/Css/admin.css')}">
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <div id="kt_content_container" class="container-fluid">
+            <div class="blog-admin">
+
+                <header class="ba-hero">
+                    <div class="ba-hero__inner">
+                        <span class="ba-hero__icon"><i class="blogi blogi-article"></i></span>
+                        <div class="ba-hero__text">
+                            <h1 class="ba-hero__title">#{t("独立页面")}</h1>
+                            <p class="ba-hero__desc">#{t("「关于」这类不进文章流的固定页面，slug 为 about 的页面会自动出现在导航里")}</p>
+                        </div>
+                        <div class="ba-hero__actions">
+                            <button class="ba-btn ba-btn--primary btn-app-create">
+                                <i class="blogi blogi-page-add"></i> #{t("新建页面")}
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="card mb-5 mb-xl-8">
+                    <div class="card-header border-0">
+                        <div class="card-toolbar">
+                            <button class="btn btn-sm btn-light-primary btn-app-create me-3">
+                                <i class="blogi blogi-page-add"></i>
+                                #{t("新建页面")}
+                            </button>
+                            <button class="btn btn-sm btn-light-danger btn-app-del me-3">
+                                <i class="blogi blogi-delete"></i>
+                                #{t("删除选中")}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body py-3">
+                        <table id="blog-pages-table"></table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+#{ready("/app/Plugin/Blog/View/Js/pages.js")}
+#{include file=$manage_view_path|cat:"Footer.html"}

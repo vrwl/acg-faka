@@ -1,0 +1,22 @@
+#{foreach $nodes as $cate}
+    #{if $cate.children}
+        <div class="ny-cat-node ny-cat-node--parent">
+            <button type="button" class="ny-cat-parent" data-ny-cat-toggle aria-expanded="false">
+                #{if $cate.icon}<span class="ny-drawer-item-icon" style="background-image:url('#{$cate.icon}')"></span>#{else}<span class="ny-drawer-item-mark material-icons-outlined">folder</span>#{/if}
+                <span class="ny-drawer-item-name">#{$cate.name}</span>
+                <span class="ny-drawer-item-count" data-ny-category-count data-ny-category-direct="#{$cate.commodity_count}" aria-label="#{$cate.commodity_count} #{t('件商品')}" title="#{$cate.commodity_count} #{t('件商品')}">#{$cate.commodity_count}</span>
+                <span class="material-icons-outlined ny-cat-chevron" aria-hidden="true">expand_more</span>
+            </button>
+            <div class="ny-cat-children" hidden>
+                #{include file="./CategoryTree.html" nodes=$cate.children}
+            </div>
+        </div>
+    #{else}
+        <a data-id="#{$cate.id}" class="switch-category #{if $cate.id == $categoryId}is-primary#{/if}" href="javascript:void(0);">
+            #{if $cate.id != 'recommend'}<span class="ny-drawer-item-icon" style="background-image:url('#{$cate.icon}')"></span>#{else}<span class="material-icons-outlined ny-drawer-item-mark">recommend</span>#{/if}
+            <span class="ny-drawer-item-name">#{$cate.name}</span>
+            <span class="ny-drawer-item-count" data-ny-category-count data-ny-category-direct="#{$cate.commodity_count}" aria-label="#{$cate.commodity_count} #{t('件商品')}" title="#{$cate.commodity_count} #{t('件商品')}">#{$cate.commodity_count}</span>
+            <span class="material-icons-outlined ny-drawer-item-check" aria-hidden="true">check</span>
+        </a>
+    #{/if}
+#{/foreach}

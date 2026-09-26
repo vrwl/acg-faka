@@ -1,0 +1,92 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-page-shell-cash">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <div class="uc-cash ny-cash" data-coin="#{$user.coin}" data-min="#{$config.cash_min}" data-fee="#{$config.cash_cost}">
+            <section class="ny-panel ny-cash-hero">
+                <div class="ny-subtabs">
+                    <a href="/user/cash/index" class="is-active"><span class="material-icons-outlined">currency_exchange</span>#{t("硬币兑现")}</a>
+                    <a href="/user/cash/record"><span class="material-icons-outlined">history</span>#{t("兑现记录")}#{if $processing > 0}<em>#{$processing}</em>#{/if}</a>
+                </div>
+                <div class="ny-cash-hero__content">
+                    <div class="ny-cash-balance">
+                        <span class="ny-cash-balance__icon material-icons-outlined">toll</span>
+                        <div><small>#{t("当前可用硬币")}</small><strong>#{$user.coin}<em>#{t("硬币")}</em></strong><p>#{t("1 硬币按 1 元结算，可转入站内钱包或已绑定的收款账户。")}</p></div>
+                    </div>
+                    <div class="ny-cash-facts">
+                        <div><span class="material-icons-outlined">south_east</span><small>#{t("最低兑现")}</small><strong>#{$config.cash_min}<em>#{t("硬币")}</em></strong></div>
+                        <div><span class="material-icons-outlined">receipt_long</span><small>#{t("服务费用")}</small><strong>#{$config.cash_cost}<em>#{t("元")}</em></strong></div>
+                        <a href="/user/cash/record"><span class="material-icons-outlined">schedule</span><small>#{t("处理中")}</small><strong>#{$processing}<em>#{t("笔")}</em></strong></a>
+                    </div>
+                </div>
+            </section>
+
+            <div class="ny-cash-grid">
+                <section class="ny-panel ny-cash-form">
+                    <div class="ny-panel-heading"><div><span class="material-icons-outlined">payments</span><div><strong>#{t("发起兑现")}</strong><small>#{t("填写金额并选择到账方式")}</small></div></div></div>
+                    <div class="ny-panel-body">
+                        <form class="layui-form">
+                            <section class="ny-form-step">
+                                <div class="ny-form-step__head"><span>01</span><div><strong>#{t("兑现多少硬币")}</strong><small>#{t("手续费将从预计到账金额中扣除")}</small></div></div>
+                                <label class="ny-amount-field">
+                                    <span class="material-icons-outlined">toll</span>
+                                    <input type="text" name="amount" required lay-verify="required" value="#{$config.cash_min}" inputmode="decimal" autocomplete="off" aria-label="#{t('兑现硬币数量')}" class="layui-input">
+                                    <em>#{t("硬币")}</em>
+                                </label>
+                                <div class="ny-amount-meta"><span>#{t("可用")} <strong>#{$user.coin}</strong> #{t("硬币")}</span><button type="button" class="uc-cash-all"#{if $user.coin <= 0} disabled#{/if}>#{t("全部兑现")}</button></div>
+                            </section>
+
+                            <section class="ny-form-step">
+                                <div class="ny-form-step__head"><span>02</span><div><strong>#{t("选择到账方式")}</strong><small>#{t("站内钱包即时到账，外部账户需要人工审核")}</small></div></div>
+                                <div class="pay-list ny-payment-methods">
+                                    #{if $config.cash_type_alipay == 1}
+                                    <button type="button" class="button-click cash-wallet-btn uc-cash-method ny-payment-method#{if $user.alipay == ''} is-unbound#{/if}" data-id="0" data-name="#{t('支付宝')}" data-speed="manual" data-ready="#{if $user.alipay == ''}0#{else}1#{/if}">
+                                        <span><img src="/assets/user/images/cash/alipay.png" class="pay-icon" alt=""></span><div><strong>#{t("支付宝")}</strong><small>#{if $user.alipay == ''}#{t("尚未绑定收款账号")}#{else}#{t("转入已绑定支付宝")}#{/if}</small></div><i class="material-icons-outlined">check</i>
+                                    </button>
+                                    #{/if}
+                                    #{if $config.cash_type_wechat == 1}
+                                    <button type="button" class="button-click cash-wallet-btn uc-cash-method ny-payment-method#{if $user.wechat == ''} is-unbound#{/if}" data-id="1" data-name="#{t('微信')}" data-speed="manual" data-ready="#{if $user.wechat == ''}0#{else}1#{/if}">
+                                        <span><img src="/assets/user/images/cash/wechat.png" class="pay-icon" alt=""></span><div><strong>#{t("微信")}</strong><small>#{if $user.wechat == ''}#{t("尚未绑定收款二维码")}#{else}#{t("转入已绑定微信")}#{/if}</small></div><i class="material-icons-outlined">check</i>
+                                    </button>
+                                    #{/if}
+                                    #{if $config.cash_type_usdt == 1}
+                                    <button type="button" class="button-click cash-wallet-btn uc-cash-method ny-payment-method#{if $user.wallet_address == ''} is-unbound#{/if}" data-id="3" data-name="USDT (TRC20)" data-speed="manual" data-ready="#{if $user.wallet_address == ''}0#{else}1#{/if}">
+                                        <span><img src="/assets/user/images/cash/usdt.png" class="pay-icon" alt=""></span><div><strong>USDT (TRC20)</strong><small>#{if $user.wallet_address == ''}#{t("尚未绑定钱包地址")}#{else}#{t("转入已绑定 TRC20 地址")}#{/if}</small></div><i class="material-icons-outlined">check</i>
+                                    </button>
+                                    #{/if}
+                                    #{if $config.cash_type_balance == 1}
+                                    <button type="button" class="button-click cash-wallet-btn uc-cash-method ny-payment-method checked" data-id="2" data-name="#{t('钱包余额')}" data-speed="instant" data-ready="1">
+                                        <span><img src="/assets/static/images/wallet.png" class="pay-icon" alt=""></span><div><strong>#{t("钱包余额")}</strong><small>#{t("即时到账，可直接消费")}</small></div><i class="material-icons-outlined">check</i>
+                                    </button>
+                                    #{/if}
+                                </div>
+                                <p class="ny-payment-help"><span class="material-icons-outlined">manage_accounts</span>#{assign var="_payoutLink" value='<a href="/user/security/personal">'|cat:t("个人资料")|cat:'</a>'}#{t("外部收款信息可在 {link} 中维护。")|replace:"{link}":$_payoutLink}</p>
+                            </section>
+
+                            <button type="button" class="ny-button ny-button--primary ny-submit-button payButton" disabled aria-disabled="true">
+                                <span class="material-icons-outlined">arrow_outward</span><span class="uc-cash-submit__label">#{t("暂不可兑现")}</span>
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <aside class="ny-panel ny-cash-receipt">
+                    <div class="ny-panel-heading"><div><span class="material-icons-outlined">request_quote</span><div><strong>#{t("本次结算")}</strong><small>#{t("金额变化会即时更新")}</small></div></div></div>
+                    <div class="ny-panel-body">
+                        <div class="ny-receipt-total"><span>#{t("预计到账")}</span><strong><small>#{$config.currency_symbol}</small><span class="uc-cash-net">0</span></strong><em>#{t("实际到账以审核结果为准")}</em></div>
+                        <div class="ny-receipt-rows">
+                            <div><span>#{t("兑现硬币")}</span><strong><span class="uc-cash-gross">0</span> #{t("硬币")}</strong></div>
+                            <div><span>#{t("服务手续费")}</span><strong class="uc-cash-fee">-#{$config.cash_cost} #{t("元")}</strong></div>
+                            <div><span>#{t("到账方式")}</span><strong class="uc-cash-method-name">#{t("钱包余额")}</strong></div>
+                        </div>
+                        <div class="uc-cash-receipt__status ny-receipt-status is-error"><span class="material-icons-outlined">info</span><span class="uc-cash-status-text">#{t("正在检查可兑现额度")}</span></div>
+                        <div class="ny-receipt-note"><span class="material-icons-outlined">bolt</span><div><strong>#{t("到账说明")}</strong><span class="uc-cash-method-note">#{t("站内钱包即时到账，可直接用于购买商品。")}</span></div></div>
+                        <div class="ny-safe-note"><span class="material-icons-outlined">verified_user</span><span>#{t("提交前请确认收款信息准确；外部账户申请将进入人工审核。")}</span></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/cash.js")}
+#{include file="../Common/Footer.html"}

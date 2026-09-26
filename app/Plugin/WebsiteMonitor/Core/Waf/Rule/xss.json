@@ -1,0 +1,42 @@
+{
+  "group": "xss",
+  "name": "跨站脚本",
+  "note": "BODY 面默认不扫：内核在 Request 构造时已经用 HTMLPurifier 洗过一遍入库内容，后台又天天提交含 <script> 的模板与公告，在这面上拦只会制造误报。这里只守 QUERY 与 COOKIE。",
+  "rules": [
+    {
+      "id": "xss.script",
+      "name": "XSS · script 标签",
+      "surface": ["query", "cookie"],
+      "re": "<\\s*script[\\s/>]|<\\s*/\\s*script\\s*>",
+      "action": "block", "level": "warn", "score": 8, "fp": "low"
+    },
+    {
+      "id": "xss.event",
+      "name": "XSS · 事件属性",
+      "surface": ["query", "cookie"],
+      "re": "<[a-z][^>]*\\son(?:error|load|click|mouseover|focus|animationstart|toggle)\\s*=",
+      "action": "block", "level": "warn", "score": 8, "fp": "low"
+    },
+    {
+      "id": "xss.jsuri",
+      "name": "XSS · javascript 伪协议",
+      "surface": ["query", "cookie"],
+      "re": "(?:javascript|vbscript)\\s*:[^\\s]",
+      "action": "score", "level": "warn", "score": 6, "fp": "medium"
+    },
+    {
+      "id": "xss.svg",
+      "name": "XSS · 可执行标签",
+      "surface": ["query", "cookie"],
+      "re": "<\\s*(?:svg|iframe|object|embed|applet|meta|base|form)[\\s/>]",
+      "action": "score", "level": "warn", "score": 6, "fp": "medium"
+    },
+    {
+      "id": "xss.dom",
+      "name": "XSS · 窃取会话",
+      "surface": ["query", "cookie"],
+      "re": "(?:document\\.cookie|document\\.domain|window\\.location\\s*=|String\\.fromCharCode\\s*\\(|atob\\s*\\()",
+      "action": "score", "level": "warn", "score": 6, "fp": "medium"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "group": "scanner",
+  "name": "扫描器与敏感文件探测",
+  "note": "needles 是纯字面量前缀/子串，热路径用 strpos 循环比对，比正则快得多。命中一次只计分，同一 IP 短时间命中多个不同敏感路径才升级为封禁（见 Scanner::onNotFound）。",
+  "needles": [
+    ".env", ".git/", ".svn/", ".hg/", ".ds_store", ".idea/", ".vscode/",
+    "wp-login", "wp-admin", "wp-content", "wp-includes", "xmlrpc.php",
+    "phpmyadmin", "/pma/", "/adminer", "adminer.php", "/pmd/", "/dbadmin",
+    ".sql", ".sql.gz", ".bak", ".swp", ".old", ".save", ".orig",
+    ".zip", ".tar.gz", ".tar.bz2", ".rar", ".7z",
+    "composer.json", "composer.lock", "package.json", "yarn.lock",
+    "/vendor/", "/node_modules/", "phpinfo", "info.php", "test.php",
+    "eval-stdin", "shell.php", "cmd.php", "webshell", "/.well-known/acme",
+    "config.php.bak", "web.config", ".htpasswd", "id_rsa", ".ssh/",
+    "/actuator/", "/druid/", "/solr/", "/jenkins/", "/manager/html",
+    "/console", "/swagger", "/graphql", "/.aws/", "/.docker",
+    "backup.sql", "database.sql", "dump.sql", "/install.php", "/setup.php"
+  ],
+  "rules": [
+    {
+      "id": "scan.sensitive",
+      "name": "敏感文件探测",
+      "surface": ["path"],
+      "action": "score", "level": "warn", "score": 8, "fp": "low"
+    },
+    {
+      "id": "scan.probe_burst",
+      "name": "扫描器 · 连续探测",
+      "surface": ["path"],
+      "action": "ban", "level": "critical", "score": 12, "fp": "low",
+      "threshold": 3, "window": 300
+    },
+    {
+      "id": "scan.notfound_burst",
+      "name": "404 洪水",
+      "surface": ["path"],
+      "action": "ban", "level": "warn", "score": 8, "fp": "low",
+      "threshold": 40, "window": 300
+    }
+  ]
+}

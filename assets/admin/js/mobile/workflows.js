@@ -42,8 +42,6 @@
         'file-management': profile('file-operations', {table: true, longTask: true}),
         'manager-management': profile('manager-operations', {table: true}),
         'application-store': profile('store-connection-operations', {table: true, longTask: true}),
-        'owned-applications': profile('owned-application-operations', {table: true, longTask: true}),
-        'developer-applications': profile('developer-application-operations', {table: true, longTask: true}),
         'supply-market': profile('supply-market-operations', {table: true, longTask: true}),
         'supply-market-form': profile('supply-market-publishing', {pageActions: true, forms: true, longTask: true}),
         'third-dock-site': profile('third-dock-site-operations', {table: true, longTask: true}),

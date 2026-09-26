@@ -1,0 +1,83 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-ticket-page" data-st-page="ticket">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main st-main--wide">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("服务支持")}</span><h1>#{t("我的工单")}</h1><p>#{t("从购买前咨询到售后处理，每一次沟通都会清晰留存。")}</p></div>
+            <div class="st-page-header__actions"><a class="st-button st-button--primary" href="/user/ticket/create" aria-label="#{t('创建工单')}"><span class="material-icons-outlined">add_comment</span><span>#{t("创建工单")}</span></a></div>
+        </header>
+
+        <section class="st-ticket-stats" aria-label="#{t('工单状态概览')}">
+            <button type="button" class="st-ticket-stat is-active" data-status="" aria-pressed="true">
+                <span class="st-ticket-stat__icon"><span class="material-icons-outlined">inbox</span></span>
+                <span class="st-ticket-stat__copy"><small>#{t("全部工单")}</small><strong data-stat="all">0</strong></span>
+            </button>
+            <button type="button" class="st-ticket-stat" data-status="0" aria-pressed="false">
+                <span class="st-ticket-stat__icon st-ticket-stat__icon--waiting"><span class="material-icons-outlined">support_agent</span></span>
+                <span class="st-ticket-stat__copy"><small>#{t("待客服回复")}</small><strong data-stat="pending_admin">0</strong></span>
+            </button>
+            <button type="button" class="st-ticket-stat" data-status="1" aria-pressed="false">
+                <span class="st-ticket-stat__icon st-ticket-stat__icon--reply"><span class="material-icons-outlined">mark_chat_unread</span></span>
+                <span class="st-ticket-stat__copy"><small>#{t("待我回复")}</small><strong data-stat="pending_user">0</strong></span>
+            </button>
+            <button type="button" class="st-ticket-stat" data-status="2" aria-pressed="false">
+                <span class="st-ticket-stat__icon st-ticket-stat__icon--done"><span class="material-icons-outlined">task_alt</span></span>
+                <span class="st-ticket-stat__copy"><small>#{t("已经解决")}</small><strong data-stat="resolved">0</strong></span>
+            </button>
+            <button type="button" class="st-ticket-stat" data-status="3" aria-pressed="false">
+                <span class="st-ticket-stat__icon st-ticket-stat__icon--closed"><span class="material-icons-outlined">lock</span></span>
+                <span class="st-ticket-stat__copy"><small>#{t("已经关闭")}</small><strong data-stat="closed">0</strong></span>
+            </button>
+        </section>
+
+        <section class="st-panel st-ticket-board">
+            <div class="st-ticket-toolbar st-toolbar">
+                <div class="st-ticket-toolbar__title">
+                    <span class="material-icons-outlined">forum</span>
+                    <div><strong>#{t("工单记录")}</strong><small>#{t("选择任意工单，查看完整沟通记录")}</small></div>
+                </div>
+                <div class="st-ticket-tools">
+                    <div class="st-ticket-search" role="search">
+                        <span class="material-icons-outlined">search</span>
+                        <input type="search" name="ticket-keyword" placeholder="#{t('搜索工单号或标题')}" autocomplete="off" aria-label="#{t('搜索工单号或标题')}">
+                        <button type="button" class="st-ticket-search__clear" aria-label="#{t('清空搜索')}"><span class="material-icons-outlined">close</span></button>
+                    </div>
+                    <label class="st-ticket-select">
+                        <span class="st-ticket-select__label">#{t("类型")}</span>
+                        <select name="ticket-type" aria-label="#{t('按工单类型筛选')}">
+                            <option value="">#{t("全部类型")}</option>
+                            <option value="0">#{t("售前咨询")}</option>
+                            <option value="1">#{t("售后支持")}</option>
+                        </select>
+                        <span class="material-icons-outlined">expand_more</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="st-ticket-loading" aria-live="polite">
+                <div class="st-ticket-skeleton"></div>
+                <div class="st-ticket-skeleton"></div>
+                <div class="st-ticket-skeleton"></div>
+            </div>
+            <div class="st-ticket-list" aria-live="polite"></div>
+            <div class="st-ticket-empty" hidden>
+                <span class="st-ticket-empty__art"><span class="material-icons-outlined">mark_chat_read</span></span>
+                <strong>#{t("这里还没有工单")}</strong>
+                <p>#{t("遇到疑问时，创建一张工单就能持续跟进。")}</p>
+                <a href="/user/ticket/create"><span class="material-icons-outlined">add</span>#{t("创建第一张工单")}</a>
+            </div>
+            <div class="st-ticket-error" hidden>
+                <span class="material-icons-outlined">cloud_off</span>
+                <div><strong>#{t("暂时无法读取工单")}</strong><small>#{t("请检查网络后再试一次")}</small></div>
+                <button type="button">#{t("重新加载")}</button>
+            </div>
+            <div class="st-ticket-pagination" hidden>
+                <button type="button" data-page-action="prev"><span class="material-icons-outlined">chevron_left</span>#{t("上一页")}</button>
+                <span class="st-ticket-pagination__meta"></span>
+                <button type="button" data-page-action="next">#{t("下一页")}<span class="material-icons-outlined">chevron_right</span></button>
+            </div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Ticket.js'))}
+#{include file="../Common/Footer.html"}

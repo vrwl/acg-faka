@@ -27,10 +27,11 @@
                 <!--begin::Header-->
                 <div class="card-header border-0">
                     <div class="card-toolbar">
-                        <a href="/admin/store/home" class="btn btn-sm btn-light-primary btn-app-create me-3"><i
+                        <input type="file" id="plugin-install-input" accept=".zip" class="d-none" hidden/>
+                        <button type="button" class="btn btn-sm btn-light-primary plugin-install me-3"><i
                                     class="fa-duotone fa-regular fa-rectangle-history-circle-plus"></i>
-                            #{t("安装更多插件")}
-                        </a>
+                            #{t("本地上传插件")}
+                        </button>
                         <button class="btn btn-sm btn-light-success plugin-start me-3"><i
                                     class="fa-duotone fa-regular fa-circle-play"></i>
                             <span>#{t("启动插件")}</span>
@@ -42,9 +43,6 @@
                         <button class="btn btn-sm btn-light-warning plugin-restart me-3"><i
                                     class="fa-duotone fa-regular fa-arrows-rotate"></i>
                             <span>#{t("重启插件")}</span>
-                        </button>
-                        <button class="btn btn-sm btn-light-success plugin-update-all me-3"><i class="fa-duotone fa-regular fa-sparkles"></i>
-                            <span>#{t("一键更新全部插件")}</span>
                         </button>
                     </div>
                 </div>

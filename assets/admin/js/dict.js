@@ -159,57 +159,6 @@ const _Dict = new class _Dict extends _DictUtil {
                     name: `<span class="a-badge  a-badge-primary"><i class="fa-duotone fa-regular fa-comment text-primary"></i> ${i18n('微信')}</span>`
                 },
             ],
-            "_store_plugin_type": [
-                {
-                    id: 0,
-                    name: `<span class='a-badge a-badge-primary'><i class="fa-duotone fa-regular fa-puzzle-piece-simple"></i> ${i18n('通用扩展')}</span>`
-                },
-                {
-                    id: 1,
-                    name: `<span class='a-badge a-badge-success'><i class="fa-duotone fa-regular fa-envelope-open-dollar"></i> ${i18n('支付扩展')}</span>`
-                },
-                {
-                    id: 2,
-                    name: `<span class='a-badge a-badge-info'><i class="fa-duotone fa-regular fa-browser"></i> ${i18n('网站模版')}</span>`
-                },
-            ],
-            "_store_plugin_owner": [
-                {id: 8, name: `${i18n('已购买')}`},
-                {id: 7, name: `${i18n('企业版应用')}`},
-                {id: 1, name: `${i18n('官方应用')}`},
-                {id: 2, name: `${i18n('第三方应用')}`},
-                {id: 4, name: `${i18n('通用插件')}`},
-                {id: 5, name: `${i18n('支付接口')}`},
-                {id: 6, name: `${i18n('主题')}/${i18n('模版')}`},
-                {id: 3, name: `${i18n('免费应用')}`},
-                {id: 9, name: `${i18n('最新发布')}`},
-                {id: 10, name: `${i18n('最受欢迎')}`}
-            ],
-            "_developer_plugin_status": [
-                {
-                    id: 0,
-                    name: `<span class="a-badge a-badge-warning"><i class="fa-duotone fa-regular fa-clock-one-thirty"></i> ${i18n('开发中')}</span>`
-                },
-                {
-                    id: 1,
-                    name: `<span class="a-badge a-badge-success"><i class="fa-duotone fa-regular fa-badge-check"></i> ${i18n('已上架')}</span>`
-                },
-                {
-                    id: 2,
-                    name: `<span class="a-badge a-badge-dark"><i class="fa-duotone fa-regular fa-badge-check"></i> ${i18n('审核不通过')}</span>`
-                },
-                {
-                    id: 3,
-                    name: `<span class="a-badge a-badge-danger"><i class="fa-duotone fa-regular fa-badge-check"></i> ${i18n('审核中')}</span>`
-                }
-            ],
-            //更新包审核状态：已上架插件提交更新后的审核进度（开发者中心搜索用）
-            "_developer_plugin_audit_review_status": [
-                {id: 0, name: `${i18n('暂未提交')}`},
-                {id: 1, name: `${i18n('审核中')}`},
-                {id: 2, name: `${i18n('审核通过')}`},
-                {id: 3, name: `${i18n('驳回申请')}`}
-            ]
         };
     }
 }

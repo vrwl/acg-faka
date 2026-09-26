@@ -1,0 +1,100 @@
+#{include file="./Header.html"}
+#{item_var($item)}
+<main class="ny-page ny-item-page">
+    <section class="ny-item-cover-card">
+        <img src="#{$item.cover}" class="item-cover" alt="#{$item.name|strip_tags|strip|escape:'html'}">
+        <a class="ny-cover-back" href="/" aria-label="#{t('返回商城')}"><span class="material-icons-outlined">arrow_back</span></a>
+        <button type="button" class="shared-button ny-cover-share" aria-label="#{t('复制分享链接')}"><span class="material-icons-outlined">ios_share</span></button>
+    </section>
+
+    <section class="ny-item-summary">
+        <div class="ny-item-badges">
+            #{if $item.seckill_status == 1}<span class="badge-soft snap-up" style="display:none;"></span>#{/if}
+            <span class="badge-soft badge-soft-success">#{if $item.delivery_way == 0}#{t("自动发货")}#{else}#{t("在线发货")}#{/if}</span>
+            #{if ($setting.show_sold|default:'1') != '0'}<span class="badge-soft badge-soft-primary">#{t("已售")} #{$item.order_sold}</span>#{/if}
+            <span class="badge-soft badge-soft-success item-stock">#{t("库存")} #{$item.stock}</span>
+        </div>
+        <h1>#{$item.name}</h1>
+    </section>
+
+    <form method="post" class="vstack ny-purchase-form">
+        #{if !empty($item.config.category)}
+        <section class="ny-purchase-section">
+            <div class="ny-field-heading"><strong>#{t("商品类型")}</strong><small>#{t("选择一个类型")}</small></div>
+            <div class="sku-list">
+                #{foreach $item.config.category as $race => $price}
+                    <a class="switch-race sku #{if $price@first}is-primary#{/if}" data-sku="#{$race|escape:'html'}" data-price="#{$price}" href="javascript:void(0);"><span>#{$race|escape:'html'}</span><em>#{$config.currency_symbol}#{$price}</em></a>
+                #{/foreach}
+            </div>
+        </section>
+        #{/if}
+
+        #{if !empty($item.config.sku)}
+            #{foreach $item.config.sku as $name => $sku}
+            <section class="ny-purchase-section">
+                <div class="ny-field-heading"><strong>#{$name|escape:'html'}</strong><small>#{t("选择一个选项")}</small></div>
+                <div class="sku-list">
+                    #{foreach $sku as $key => $price}
+                        <a class="switch-sku sku #{if $price@first}is-primary#{/if}" data-sku="#{$name|escape:'html'}" data-value="#{$key|escape:'html'}" data-price="#{$price}" href="javascript:void(0);"><span>#{$key|escape:'html'}</span>#{if $price > 0}<em>+#{$config.currency_symbol}#{$price}</em>#{/if}</a>
+                    #{/foreach}
+                </div>
+            </section>
+            #{/foreach}
+        #{/if}
+
+        #{if $item.draft_status == 1}
+        <section class="ny-purchase-section">
+            <input type="hidden" name="card_id" class="form-control">
+            <div class="ny-field-heading"><strong>#{t("自选账号")}</strong><small>#{t("不选择时随机发货")}</small></div>
+            <button type="button" class="optional-card ny-select-card"><span class="material-icons-outlined">touch_app</span>#{t("未自选，将随机发货")}</button>
+        </section>
+        #{/if}
+
+        <section class="ny-purchase-section ny-item-fields">
+            #{if !$user}
+                <label class="ny-outlined-field"><span>#{contact_type_msg($item.contact_type)}</span><input type="text" name="contact" class="form-control" placeholder="#{t('请输入')}#{contact_type_msg($item.contact_type)}" autocomplete="off"></label>
+            #{/if}
+            #{if $item.coupon == 1}
+                <label class="ny-outlined-field"><span>#{t("优惠券")}</span><input type="text" class="form-control" name="coupon" placeholder="#{t('没有则不填')}" autocomplete="off"></label>
+            #{/if}
+            #{widget_render($item.widget)}
+            #{if $item.password_status == 1}
+                <label class="ny-outlined-field"><span>#{t("查询密码")}</span><input type="password" class="form-control" name="password" placeholder="#{t('设置订单查询密码')}" autocomplete="new-password"></label>
+            #{/if}
+        </section>
+
+        <section class="ny-purchase-section">
+            <div class="ny-field-heading"><strong>#{t("购买数量")}</strong><small>#{t("按需调整数量")}</small></div>
+            <div class="input-group qty-group ny-quantity">
+                <button type="button" class="change-num-sub" aria-label="#{t('减少数量')}"><span class="material-icons-outlined">remove</span></button>
+                <input type="number" class="form-control text-center" name="num" value="#{if $item.minimum > 0}#{$item.minimum}#{else}1#{/if}" inputmode="numeric" aria-label="#{t('购买数量')}">
+                <button type="button" class="change-num-add" aria-label="#{t('增加数量')}"><span class="material-icons-outlined">add</span></button>
+            </div>
+        </section>
+
+        #{if $item.trade_captcha == 1}
+        <section class="ny-purchase-section">
+            <div class="ny-field-heading"><strong>#{t("人机验证")}</strong><small>#{t("点击图片可更换")}</small></div>
+            <div class="ny-captcha-field"><input type="text" class="form-control captcha-input" placeholder="#{t('输入图中字符')}" name="captcha" autocomplete="off"><img class="captcha-img" src="/user/captcha/image?action=trade" alt="#{t('验证码')}"></div>
+        </section>
+        #{/if}
+    </form>
+
+    <section class="ny-item-detail">
+        <div class="ny-section-title"><div><h2>#{t("商品详情")}</h2><p>#{t("购买前请阅读完整说明")}</p></div></div>
+        <div class="ny-rich-content">#{$item.description}</div>
+    </section>
+
+    <div class="ny-buy-dock">
+        <div class="abacus"><small>#{t("合计")}</small><div class="price"><span class="material-icons-outlined ny-spin">progress_activity</span></div></div>
+        <button type="button" class="ny-primary-button" data-ny-sheet-open="payment"><span>#{t("选择支付方式")}</span><span class="material-icons-outlined">arrow_upward</span></button>
+    </div>
+
+    <section class="ny-sheet ny-payment-sheet" data-ny-sheet="payment" aria-hidden="true" aria-label="#{t('选择支付方式')}">
+        <div class="ny-sheet-handle" aria-hidden="true"></div>
+        <div class="ny-sheet-head"><div><strong>#{t("选择支付方式")}</strong><span>#{t("确认商品和金额后继续")}</span></div><button type="button" data-ny-sheet-close aria-label="#{t('关闭')}"><span class="material-icons-outlined">close</span></button></div>
+        <div class="cash-pay" style="display:none;"><div class="pay-list"></div><p class="ny-payment-note"><span class="material-icons-outlined">lock</span>#{t("支付过程由对应支付方式安全处理")}</p></div>
+    </section>
+</main>
+#{ready("/assets/user/controller/index/item.js")}
+#{include file="./Footer.html"}

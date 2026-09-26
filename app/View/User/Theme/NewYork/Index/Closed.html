@@ -1,0 +1,11 @@
+#{include file="./Header.html"}
+<main class="ny-page ny-closed-page">
+    <section class="ny-state-card ny-state-card--large">
+        <span class="ny-route-mark">NY</span>
+        <span class="material-icons-outlined">construction</span>
+        <h1>#{t("店铺暂时休息")}</h1>
+        <p>#{$config.closed_message}</p>
+        <a class="ny-secondary-button" href="/user/index/query"><span class="material-icons-outlined">receipt_long</span>#{t("查询已有订单")}</a>
+    </section>
+</main>
+#{include file="./Footer.html"}

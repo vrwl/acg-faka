@@ -1,0 +1,15 @@
+#{include file="../../Common/App/MemberTop.html" laPage="message-table" laTitle=t("站内消息")}
+
+#{* 平台控制器 user/message.js 只在 .uc-message-page 包着 #message-table 时才启动（否则整页静默空白）。
+   手机端表格由 Center.js 卡片化，卡片没有勾选，所以这里只出「清空全部」，单条删除在卡片操作里 *}
+<div class="uc-message-page">
+    <div class="la-actbar la-actbar--app">
+        <button type="button" class="la-btn la-btn--danger la-btn--sm" data-message-action="clear">#{\App\View\User\Theme\LosAngeles\Icons::svg('close')}<span>#{t("清空全部")}</span></button>
+        <span class="la-actbar__note uc-card__sub">#{t("打开消息后自动标记为已读")}</span>
+    </div>
+    <div class="la-tablecard la-tablecard--app">
+        <table id="message-table"></table>
+    </div>
+</div>
+
+#{include file="../../Common/App/MemberBottom.html" laCtrl="/assets/user/controller/user/message.js"}

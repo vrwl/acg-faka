@@ -1,0 +1,38 @@
+#{include file="./Header.html"}
+<main class="ny-page ny-store-home">
+    <div class="ny-store-topbar">
+        <form class="ny-store-search" data-acg-prevent role="search">
+            <span class="material-icons-outlined">search</span>
+            <input class="item-search-input" type="search" placeholder="#{t('搜索商品')}" aria-label="#{t('搜索商品')}" enterkeyhint="search">
+            <button type="button" class="ny-search-submit" aria-label="#{t('开始搜索')}"><span class="material-icons-outlined">arrow_forward</span></button>
+        </form>
+        <button type="button" class="ny-store-filter-trigger" data-ny-drawer-open="store-filter" aria-label="#{t('按分类筛选')}" aria-haspopup="dialog">
+            <span class="material-icons-outlined">tune</span><span class="ny-store-filter-trigger__label">#{t("筛选")}</span>
+        </button>
+    </div>
+
+    <section class="ny-store-section ny-products-section" aria-label="#{t('商品列表')}">
+        <div class="row item-list ny-product-grid" aria-live="polite">
+            <div class="ny-product-skeleton" aria-hidden="true"><span class="ny-product-skeleton__media"></span><span class="ny-product-skeleton__title"></span><span class="ny-product-skeleton__meta"></span></div>
+            <div class="ny-product-skeleton" aria-hidden="true"><span class="ny-product-skeleton__media"></span><span class="ny-product-skeleton__title"></span><span class="ny-product-skeleton__meta"></span></div>
+            <div class="ny-product-skeleton" aria-hidden="true"><span class="ny-product-skeleton__media"></span><span class="ny-product-skeleton__title"></span><span class="ny-product-skeleton__meta"></span></div>
+            <div class="ny-product-skeleton" aria-hidden="true"><span class="ny-product-skeleton__media"></span><span class="ny-product-skeleton__title"></span><span class="ny-product-skeleton__meta"></span></div>
+            <div class="ny-product-skeleton" aria-hidden="true"><span class="ny-product-skeleton__media"></span><span class="ny-product-skeleton__title"></span><span class="ny-product-skeleton__meta"></span></div>
+            <div class="ny-product-skeleton" aria-hidden="true"><span class="ny-product-skeleton__media"></span><span class="ny-product-skeleton__title"></span><span class="ny-product-skeleton__meta"></span></div>
+            <span class="visually-hidden">#{t("正在加载商品")}</span>
+        </div>
+    </section>
+</main>
+
+<aside class="ny-drawer ny-store-drawer" id="categories" data-ny-drawer="store-filter" aria-hidden="true" aria-label="#{t('商品分类筛选')}">
+    <div class="ny-drawer-head">
+        <div><strong>#{t("商品分类")}</strong><span>#{t("选择分类筛选商品")}</span></div>
+        <button type="button" data-ny-drawer-close aria-label="#{t('关闭筛选')}"><span class="material-icons-outlined">close</span></button>
+    </div>
+    <div class="ny-drawer-body" role="group" aria-label="#{t('分类列表')}">
+        #{include file="./CategoryTree.html" nodes=$category}
+    </div>
+</aside>
+
+#{ready("/assets/user/controller/index/index.js")}
+#{include file="./Footer.html"}

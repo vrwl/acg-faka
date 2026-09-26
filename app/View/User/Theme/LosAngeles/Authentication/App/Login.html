@@ -1,0 +1,39 @@
+#{include file="../../Common/App/AuthTop.html" laPage="auth-login" laTitle=t("登录") laSub=t("欢迎回来，继续你的采购")}
+
+            <form class="needs-validation la-form">
+                <div class="la-field">
+                    <label class="la-label">#{t("账号")}</label>
+                    <input class="la-input" type="text" name="username" autocomplete="off" placeholder="#{t('用户名 / 邮箱 / 手机号')}">
+                </div>
+                <div class="la-field">
+                    <label class="la-label">#{t("密码")}</label>
+                    <input class="la-input" type="password" name="password" autocomplete="off" placeholder="#{t('登录密码')}">
+                </div>
+                #{if $config.login_verification == 1}
+                    <div class="la-field">
+                        <label class="la-label">#{t("验证码")}</label>
+                        <div class="la-captcha">
+                            <input class="la-input" type="text" name="captcha" autocomplete="off" inputmode="numeric" placeholder="#{t('请输入右侧验证码')}">
+                            <img class="la-captcha__img captcha-img" src="/user/captcha/image?action=login" alt="#{t('验证码')}"
+                                 title="#{t('点击刷新')}" data-la-captcha data-action="login">
+                        </div>
+                    </div>
+                #{/if}
+                <label class="la-check">
+                    <input type="checkbox" name="remember" value="1" class="form-check-input">
+                    <span>#{t("记住我，下次免登录")}</span>
+                </label>
+
+                <button type="submit" class="la-btn la-btn--brand la-btn--lg la-btn--block">#{t("登录")}</button>
+            </form>
+
+            <div class="la-auth__alt">
+                #{if $config.registered_state == 1}<a href="/user/authentication/register">#{t("还没有账号？免费注册")}</a>#{/if}
+                <a href="#{if $config.forget_type == 0}/user/authentication/emailForget#{else}/user/authentication/phoneForget#{/if}">#{t("忘记密码")}</a>
+            </div>
+            #{if getHookNum(\App\Consts\Hook::USER_VIEW_AUTH_LOGIN_BUTTON) > 0}
+                <div class="la-auth__divider"><span>#{t("其他方式")}</span></div>
+                <div class="la-auth__hooks">#{hook(\App\Consts\Hook::USER_VIEW_AUTH_LOGIN_BUTTON)}</div>
+            #{/if}
+
+#{include file="../../Common/App/AuthBottom.html" laCtrl="/assets/user/controller/auth/login.js"}

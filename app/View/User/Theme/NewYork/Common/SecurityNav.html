@@ -1,0 +1,10 @@
+<nav class="ny-security-nav" aria-label="#{t('安全中心')}">
+    <a href="/user/security/personal" #{if active('/user/security/personal')}class="is-active"#{/if}><span class="material-icons-outlined">badge</span><span>#{t("资料")}</span></a>
+    <a href="/user/security/password" #{if active('/user/security/password')}class="is-active"#{/if}><span class="material-icons-outlined">password</span><span>#{t("密码")}</span></a>
+    #{if $user.registered_type == 2}
+        <a href="/user/security/email" #{if active('/user/security/email')}class="is-active"#{/if}><span class="material-icons-outlined">alternate_email</span><span>#{t("邮箱")}</span></a>
+    #{/if}
+    #{if $user.registered_type == 1}
+        <a href="/user/security/phone" #{if active('/user/security/phone')}class="is-active"#{/if}><span class="material-icons-outlined">smartphone</span><span>#{t("手机")}</span></a>
+    #{/if}
+</nav>

@@ -1,0 +1,28 @@
+#{include file="../../Common/Pc/AuthTop.html" laPage="auth-forgetphone" laTitle=t("找回密码") laSub=t("通过绑定手机号重置登录密码")}
+
+            <form class="needs-validation la-form">
+                <div class="la-field">
+                    <label class="la-label">#{t("注册手机号")}</label>
+                    <input class="la-input" type="tel" name="username" autocomplete="off" placeholder="#{t('账号绑定的手机号')}">
+                </div>
+                <div class="la-field">
+                    <label class="la-label">#{t("短信验证码")}</label>
+                    <div class="la-sendrow">
+                        <input class="la-input" type="text" name="captcha" autocomplete="off" placeholder="#{t('查收短信中的验证码')}">
+                        <button type="button" class="la-btn la-btn--line send-phone-captcha">#{t("获取验证码")}</button>
+                    </div>
+                </div>
+                <div class="la-field">
+                    <label class="la-label">#{t("新密码")}</label>
+                    <input class="la-input" type="password" name="password" autocomplete="off" placeholder="#{t('设置新的登录密码')}">
+                </div>
+
+                <button type="submit" class="la-btn la-btn--brand la-btn--lg la-btn--block">#{t("重置密码")}</button>
+            </form>
+
+            <div class="la-auth__alt">
+                <a href="/user/authentication/login">#{t("想起来了，去登录")}</a>
+                <a href="/user/authentication/emailForget">#{t("改用邮箱找回")}</a>
+            </div>
+
+#{include file="../../Common/Pc/AuthBottom.html" laCtrl="/assets/user/controller/auth/forget.phone.js"}

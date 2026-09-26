@@ -1,0 +1,38 @@
+#{*
+  洛杉矶 · 主题引导
+
+  必须内联，且必须排在任何 <link rel=stylesheet> 之前：
+  样式表一旦先解析，浅色底就会先画一帧，深色用户会看到刺眼的白闪。
+
+  CSP 强制模式下 script-src 没有 'unsafe-inline'，但 Csp::injectNonce()
+  会在渲染出口给所有内联 <script> 补 nonce，所以这个块是安全放行的；
+  内联事件处理器（onclick=）才是被拦的那类，全主题一律不用。
+
+  三层优先级：localStorage（用户手动选过） > 后台设置 > auto。
+*}
+<script>
+    (function () {
+        var root = document.documentElement;
+        var KEY = 'la.theme';
+        var MODES = ['auto', 'light', 'dark'];
+
+        var configured = '#{\App\View\User\Theme\LosAngeles\Support::themeMode($setting)|escape:'javascript'}';
+        if (MODES.indexOf(configured) === -1) { configured = 'auto'; }
+
+        var stored = null;
+        try { stored = window.localStorage.getItem(KEY); } catch (e) { stored = null; }
+        if (MODES.indexOf(stored) === -1) { stored = null; }
+
+        var preference = stored || configured;
+        var dark = preference === 'dark' || (preference === 'auto'
+            && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+        root.setAttribute('data-theme', dark ? 'dark' : 'light');
+        root.setAttribute('data-theme-preference', preference);
+        root.setAttribute('data-la-key', KEY);
+        root.setAttribute('data-la-default', configured);
+        root.setAttribute('data-la-accent', '#{\App\View\User\Theme\LosAngeles\Support::accent($setting)|escape:'javascript'}');
+        root.setAttribute('data-la-density', '#{\App\View\User\Theme\LosAngeles\Support::density($setting)|escape:'javascript'}');
+        root.style.colorScheme = dark ? 'dark' : 'light';
+    })();
+</script>

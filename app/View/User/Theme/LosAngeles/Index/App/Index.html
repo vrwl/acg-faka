@@ -1,0 +1,207 @@
+#{include file="../../Common/App/Head.html" laArea="shop" laPage="home"}
+
+#{assign var=laBanners value=\App\View\User\Theme\LosAngeles\Support::banners($setting)}
+#{assign var=laQuick value=\App\View\User\Theme\LosAngeles\Support::shortcuts($setting, $user)}
+#{assign var=laFloors value=\App\View\User\Theme\LosAngeles\Support::floors($setting)}
+#{assign var=laFloorCats value=\App\View\User\Theme\LosAngeles\Support::floorCategoryList($setting, $category, 6)}
+#{assign var=laTopAll value=\App\View\User\Theme\LosAngeles\Support::topCount($category)}
+#{assign var=laTops value=\App\View\User\Theme\LosAngeles\Support::topCategories($category, 80)}
+#{* 猜你喜欢的标签：站长在后台挑（任意层级、可含「推荐」），没挑就取前 10 个一级 *}
+#{assign var=laTabs value=\App\View\User\Theme\LosAngeles\Support::feedCategoryList($setting, $category, 10)}
+#{assign var=laTabsCurated value=\App\View\User\Theme\LosAngeles\Support::list($setting, 'feed_cats')|@count}
+
+#{if \App\View\User\Theme\LosAngeles\Support::isCatalog()}
+    #{include file="./Catalog.html" laCatId=$categoryId}
+#{else}
+
+<main class="la-app" data-la-app data-la-page-in>
+
+    #{* ------------------------------------------------------ APP 顶栏（搜索胶囊） *}
+    <header class="la-apphead" data-la-apphead>
+        <div class="la-apphead__in">
+            <span class="la-logo__mark la-apphead__mark has-img" aria-hidden="true"><img class="la-logo__img" src="#{$favicon|escape:'html'}?v=#{$app.version|escape:'html'}" alt="" width="26" height="26" decoding="async"></span>
+            <button type="button" class="la-searchpill" data-la-searchpill>
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('search')}
+                <span data-la-searchpill-text>#{t("搜索商品名称、关键词")}</span>
+                <span class="la-searchpill__go" aria-hidden="true">#{\App\View\User\Theme\LosAngeles\Icons::svg('search')}</span>
+            </button>
+            <button type="button" class="la-apphead__btn" data-la-pop-trigger data-la-appmenu aria-label="#{t('更多')}">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('more')}
+            </button>
+        </div>
+    </header>
+
+    <div class="la-app__scroll" data-la-scroll>
+        <div class="la-refresh" data-la-refresh aria-hidden="true">
+            <span class="la-refresh__spin">#{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}</span>
+            <span class="la-refresh__txt" data-la-refresh-txt>#{t("下拉刷新")}</span>
+        </div>
+
+        #{* ================================================== 视图：首页 *}
+        <section class="la-view" data-la-view-pane="home">
+
+            #{if $laBanners}
+                <div class="la-appslider" data-la-slider>
+                    <div class="la-appslider__track" data-la-slider-track>
+                        #{foreach $laBanners as $b}
+                            <div class="la-appslider__slide">
+                                #{if $b.url}<a href="#{$b.url|escape:'html'}">#{/if}
+                                <img src="#{$b.image|escape:'html'}" alt="#{$b.title|escape:'html'}" loading="#{if $b@first}eager#{else}lazy#{/if}" decoding="async">
+                                #{if $b.title}<span class="la-appslider__cap">#{$b.title|escape:'html'}</span>#{/if}
+                                #{if $b.url}</a>#{/if}
+                            </div>
+                        #{/foreach}
+                    </div>
+                    #{if $laBanners|@count > 1}<div class="la-appslider__dots" data-la-slider-dots></div>#{/if}
+                </div>
+            #{else}
+                <div class="la-appposter">
+                    <span class="la-appposter__sun" aria-hidden="true"></span>
+                    <div class="la-appposter__copy">
+                        <span class="la-appposter__eyebrow">#{\App\View\User\Theme\LosAngeles\Icons::svg('sparkle')}#{t("自动发货 · 7×24 小时")}</span>
+                        <strong>#{$config.shop_name|escape:'html'}</strong>
+                        <p>#{if $config.description}#{$config.description|escape:'html'}#{else}#{t("海量优质货源，下单即刻发货。")}#{/if}</p>
+                    </div>
+                </div>
+            #{/if}
+
+            #{if $laQuick}
+                #{* 恒定 5 列。以前这里按数量自适应到 3/4 列"避免末行落单"，
+                   结果 6 个入口就摊成 3 列两行 —— 图标又大又空，正是货源站最不该有的样子。
+                   电商金刚区的惯例就是 5 列，末行不满是正常的，不需要迁就。 *}
+                #{assign var=laQuickPages value=$laQuick|@count}
+                <nav class="la-kingkong" aria-label="#{t('快捷入口')}">
+                    <div class="la-kingkong__pager" data-la-kingkong data-cols="5">
+                        <div class="la-kingkong__page">
+                            #{foreach $laQuick as $q}
+                                #{if $q@index > 0 && $q@index % 10 == 0}</div><div class="la-kingkong__page">#{/if}
+                                <a class="la-kingkong__item" href="#{$q.url|escape:'html'}"#{if $q.blank} target="_blank" rel="noopener nofollow"#{/if}>
+                                    <span class="la-kingkong__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg($q.icon)}</span>
+                                    <span class="la-kingkong__name la-ellipsis">#{$q.name|escape:'html'}</span>
+                                </a>
+                            #{/foreach}
+                        </div>
+                    </div>
+                    #{if $laQuickPages > 10}<div class="la-kingkong__dots" data-la-kingkong-dots></div>#{/if}
+                </nav>
+            #{/if}
+
+            #{if $config.notice}
+                <button type="button" class="la-appnotice" data-la-notice>
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('megaphone')}
+                    <span class="la-appnotice__text la-ellipsis">#{$config.notice|strip_tags|escape:'html'}</span>
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('right')}
+                </button>
+                <template data-la-notice-html>#{$config.notice}</template>
+            #{/if}
+
+            #{foreach $laFloors as $f}
+                #{if $f.type == 'seckill'}
+                    <section class="la-appfloor la-appfloor--seckill" data-la-floor="seckill" hidden>
+                        <div class="la-appfloor__band">
+                            <div class="la-appfloor__title">
+                                #{\App\View\User\Theme\LosAngeles\Icons::svg('flash')}
+                                <span>#{if $f.title}#{$f.title|escape:'html'}#{else}#{t("限时秒杀")}#{/if}</span>
+                            </div>
+                            <span class="la-live"><i class="la-live__dot"></i>#{t("抢购中")}</span>
+                        </div>
+                        <div class="la-rail la-rail--app" data-la-slot="seckill"></div>
+                    </section>
+
+                #{elseif $f.type == 'recommend'}
+                    <section class="la-appfloor" data-la-floor="recommend" hidden>
+                        <div class="la-appfloor__head">
+                            <h2>#{\App\View\User\Theme\LosAngeles\Icons::svg('star')}<span>#{if $f.title}#{$f.title|escape:'html'}#{else}#{t("店长推荐")}#{/if}</span></h2>
+                            <a href="/cat/recommend">#{t("更多")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                        </div>
+                        <div class="la-rail la-rail--app" data-la-slot="recommend"></div>
+                    </section>
+
+                #{elseif $f.type == 'category'}
+                    #{foreach $laFloorCats as $fc}
+                        <section class="la-appfloor" data-la-floor="category" data-cat="#{$fc.id}" hidden>
+                            <div class="la-appfloor__head">
+                                <h2>#{\App\View\User\Theme\LosAngeles\Icons::svg('box')}<span>#{$fc.name}</span></h2>
+                                <a href="/cat/#{$fc.id}">#{t("全部")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                            </div>
+                            <div class="la-rail la-rail--app" data-la-slot="cat-#{$fc.id}"></div>
+                        </section>
+                    #{/foreach}
+
+                #{elseif $f.type == 'waterfall'}
+                    <section class="la-appfloor la-appfloor--fall" data-la-floor="waterfall">
+                        <div class="la-appfloor__head la-appfloor__head--sticky">
+                            <h2>#{\App\View\User\Theme\LosAngeles\Icons::svg('sparkle')}<span>#{if $f.title}#{$f.title|escape:'html'}#{else}#{t("猜你喜欢")}#{/if}</span></h2>
+                        </div>
+                        <div class="la-chiprow" data-la-fall-tabs>
+                            <button type="button" class="la-chip is-on" data-cat="0">#{t("全部")}</button>
+                            #{foreach $laTabs as $c}
+                                <button type="button" class="la-chip" data-cat="#{$c.id}">#{$c.name}</button>
+                            #{/foreach}
+                            #{if !$laTabsCurated && $laTopAll > $laTabs|@count}
+                                <button type="button" class="la-chip la-chip--more" data-la-goto="category">#{t("更多")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</button>
+                            #{/if}
+                        </div>
+                        <div class="la-grid2" data-la-slot="waterfall" aria-live="polite"></div>
+                        <div class="la-fall__foot">
+                            <div class="la-fall__sentinel" data-la-fall-more></div>
+                            <div class="la-fall__end" hidden>#{t("已经到底啦")}</div>
+                        </div>
+                    </section>
+                #{/if}
+            #{/foreach}
+        </section>
+
+        #{* ================================================== 视图：分类 *}
+        <section class="la-view la-catview" data-la-view-pane="category" hidden>
+            #{* 一级分类是这个视图的主体，全出；子级网格由 App.Shop.js 按需建 ——
+               几百个一级分类各带几十个二级，全渲染就是几 MB *}
+            #{* 筛选框只给大站：一级分类十来个的站一眼就能看完，多一条输入框只是占掉首屏 *}
+            #{if $laTopAll > 12}
+            <label class="la-catview__find">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('search')}
+                <input type="search" data-la-catview-filter placeholder="#{t('筛选分类')}" aria-label="#{t('筛选分类')}" autocomplete="off">
+            </label>
+            #{/if}
+            <div class="la-catview__wrap">
+                <div class="la-catview__rail" data-la-catview-rail role="tablist">
+                    #{foreach $laTops as $c}
+                        <button type="button" class="la-catview__tab#{if $c@first} is-on#{/if}" role="tab"
+                                data-id="#{$c.id}" data-kids="#{$c.kids}"
+                                data-name="#{$c.name|strip_tags|escape:'html'}"
+                                aria-selected="#{if $c@first}true#{else}false#{/if}">
+                            <span class="la-catview__tabname">#{$c.name}</span>
+                        </button>
+                    #{/foreach}
+                    #{if $laTopAll > $laTops|@count}
+                        #{assign var=laTopRest value=$laTopAll-$laTops|@count}
+                        <div class="la-catview__rest">#{t("还有 N 个分类，用上面的搜索框找")|replace:"N":$laTopRest}</div>
+                    #{/if}
+                </div>
+                <div class="la-catview__body" data-la-catview-body aria-live="polite"></div>
+            </div>
+        </section>
+
+        #{* ================================================== 视图：秒杀
+           站长在「首页运营 → 秒杀专区」关掉后整块不渲染：底部导航那一格同时消失（Support::tabbar），
+           带着 #seckill 进来的旧链接落不到面板，App.Shell.js 会回落到首页视图。 *}
+        #{if \App\View\User\Theme\LosAngeles\Support::on($setting, 'seckill_on')}
+        <section class="la-view" data-la-view-pane="seckill" hidden>
+            <div class="la-seckillhead">
+                <div class="la-seckillhead__glow" aria-hidden="true"></div>
+                <div class="la-seckillhead__copy">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('flash','la-i--xl')}
+                    <strong>#{t("限时秒杀")}</strong>
+                    <span>#{t("手慢无，抢完即止")}</span>
+                </div>
+            </div>
+            <div class="la-grid2" data-la-slot="seckill-all"></div>
+            <div class="la-fall__foot"><div class="la-fall__end" hidden>#{t("已经到底啦")}</div></div>
+        </section>
+        #{/if}
+    </div>
+</main>
+
+#{/if}
+
+#{include file="../../Common/App/Foot.html" laArea="shop" laJs="App.Shop.js"}

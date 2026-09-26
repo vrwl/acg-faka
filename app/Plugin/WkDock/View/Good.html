@@ -1,0 +1,463 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Toolbar-->
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <!--end::Toolbar-->
+    <!--begin::Post-->
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="container-fluid">
+            <!--begin::Tables Widget 9-->
+            <div class="card mb-5 mb-xl-8">
+                <!--begin::Header-->
+                <div class="card-header border-0">
+                    <div class="card-toolbar">
+                        <select id="wk-sync-site" class="form-select form-select-sm w-200px me-3"></select>
+                        <button class="btn btn-sm btn-light-primary btn-app-sync me-3"><i class="fa-duotone fa-regular fa-refresh"></i>
+                            立即同步(上次同步时间：#{$last_sync_time})
+                        </button>
+                        <button class="btn btn-sm btn-light-success btn-app-batch me-3"><i class="fa-duotone fa-regular fa-exchange"></i>
+                            批量生成商品
+                        </button>
+                        <button class="btn btn-sm btn-light-warning btn-app-check me-3"><i class="fa-duotone fa-regular fa-magnifying-glass"></i>
+                            检查商品更新
+                        </button>
+                    </div>
+                </div>
+                <!--end::Header-->
+
+                <div class="card-body py-3">
+                    <table id="wk-goods-table"></table>
+                </div>
+            </div>
+
+            <!--end::Tables Widget 9-->
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Post-->
+</div>
+<!--end::Content-->
+
+#{set_script_var(["_wk_good_sites" => $sites, "_wk_active_sites" => $active_sites])}
+<script>
+    documentReady(() => {
+        !function () {
+            const sitesRaw = getVar('_wk_good_sites') || '[]';
+            let siteOptions = [];
+            try {
+                siteOptions = JSON.parse(sitesRaw) || [];
+            } catch (e) {
+                console.error('Parse _wk_good_sites failed', e);
+            }
+
+            //同步用站点下拉（仅启用站点）
+            const activeSitesRaw = getVar('_wk_active_sites') || '[]';
+            let activeSites = [];
+            try {
+                activeSites = JSON.parse(activeSitesRaw) || [];
+            } catch (e) {
+                console.error('Parse _wk_active_sites failed', e);
+            }
+            const $syncSite = $('#wk-sync-site');
+            activeSites.forEach(s => {
+                $syncSite.append(`<option value="${s.id}">${s.name}</option>`);
+            });
+            if (activeSites.length === 0) {
+                $syncSite.prop('disabled', true);
+            }
+
+            const table = new Table('/plugin/WkDock/api/good/data', '#wk-goods-table');
+            table.setPagination(15, [15, 25, 50, 100]);
+
+            table.setColumns([
+                {
+                    field: 'checked',
+                    checkbox: true,
+                    formatter: function (val, item) {
+                        if (item.has_data === 1) {
+                            return {disabled: true}
+                        }
+                    }
+                },
+                {field: 'id', title: 'ID'},
+                {field: 'site_name', title: '站点'},
+                {field: 'cid', title: '平台商品ID'},
+                {field: 'name', title: '平台名称'},
+                {field: 'fenlei', title: '分类'},
+                {field: 'price', title: '成本价'},
+                {field: 'sale_price', title: '预览售价(成本x倍率)'},
+                {
+                    field: 'status',
+                    title: '平台状态',
+                    formatter: function (val, item) {
+                        if (item.status === 1) {
+                            return '<span class="btn-badge badge-light-success owner">上架中</span>'
+                        }
+                        return '<span class="btn-badge badge-light-danger owner">已下架</span>'
+                    }
+                },
+                {
+                    field: 'has_data',
+                    title: '商城商品',
+                    formatter: function (val, item) {
+                        if (item.has_data === 1) {
+                            return '<span class="btn-badge badge-light-success owner">已生成</span>'
+                        }
+                        return '<span class="btn-badge badge-light-warning owner">未生成</span>'
+                    }
+                },
+                {
+                    field: 'operate',
+                    title: '操作',
+                    type: 'button',
+                    buttons: [
+                        {
+                            icon: 'fa-duotone fa-regular fa-check',
+                            class: 'text-primary',
+                            title: '生成商品',
+                            click: (event, value, row) => {
+                                if (row.has_data === 1) {
+                                    message.alert('该商品已生成过，请勿重复生成', 'error');
+                                    return;
+                                }
+                                modal(util.icon('fa-duotone fa-regular fa-pen-to-square me-1') + ' 生成商品', {ids: row.id});
+                            }
+                        }
+                    ],
+                }
+            ]);
+
+            table.setSearch([
+                {title: "名称", name: "search-name", type: "input"},
+                {title: "分类", name: "search-fenlei", type: "input"},
+                {title: "状态", name: "equal-status", type: "select", dict: [
+                    {id: 1, name: "上架"},
+                    {id: 0, name: "下架"},
+                ], default: -1},
+                {title: "站点", name: "equal-site_id", type: "select", dict: siteOptions, default: 0},
+            ]);
+
+            table.render();
+
+            const modal = (title, assign = {}) => {
+                component.popup({
+                    submit: (data, index) => {
+                        const post = () => {
+                            util.post('/plugin/WkDock/api/good/generate', data, res => {
+                                layer.close(index);
+                                message.success(res.msg || '生成成功');
+                                table.refresh();
+                            }, error => {
+                                message.error(error.msg || '生成失败');
+                            });
+                        };
+                        //加价为负数时二次确认（售价会低于「成本价 × 站点倍率」）
+                        const premium = parseFloat(data.premium || 0);
+                        if (premium < 0) {
+                            message.ask(`加价值为负数（${premium}），生成的售价将低于「成本价 × 站点倍率」，是否继续生成？`, post);
+                            return;
+                        }
+                        post();
+                    },
+                    tab: [
+                        {
+                            name: title,
+                            form: [
+                                {
+                                    title: "商品图片",
+                                    name: "cover",
+                                    type: "image",
+                                    placeholder: "请选择商品图片",
+                                    uploadUrl: "/admin/api/upload/send",
+                                    photoAlbumUrl: "/admin/api/upload/get",
+                                    required: true
+                                },
+                                {
+                                    title: "商品分类",
+                                    name: "category_id",
+                                    type: "select",
+                                    dict: "category->owner=0,id,name",
+                                    placeholder: "请选择分类",
+                                    required: true,
+                                    search: true
+                                },
+                                {
+                                    title: "加价模式",
+                                    name: "premium_type",
+                                    type: "radio",
+                                    dict: [
+                                        {id: 0, name: "固定金额"},
+                                        {id: 1, name: "百分比"}
+                                    ],
+                                    default: 0,
+                                    required: true
+                                },
+                                {
+                                    title: "加价值",
+                                    name: "premium",
+                                    type: "number",
+                                    default: 0,
+                                    placeholder: "0",
+                                    tips: "在「成本价 × 站点倍率」的基础上加价：固定金额时为元，百分比时为 %"
+                                },
+                                {
+                                    title: "添加后上架",
+                                    name: "shelves",
+                                    type: "switch",
+                                    placeholder: "上架|下架",
+                                    default: 1,
+                                    tips: "开：直接上架；关：以「下架」状态入库"
+                                },
+                                {
+                                    title: "选中商品ID",
+                                    name: "ids",
+                                    type: "input",
+                                    hide: true
+                                },
+                            ],
+                        },
+                    ],
+                    assign,
+                    autoPosition: true,
+                    height: "auto",
+                    width: "520px"
+                });
+            };
+
+            $('.btn-app-batch').click(function () {
+                let data = table.getSelectionIds();
+                //过滤已生成的
+                const rows = table.getSelections().filter(r => r.has_data !== 1).map(r => r.id);
+                if (rows.length === 0) {
+                    message.alert("请至少勾选1个未生成的商品进行操作", "error");
+                    return;
+                }
+                modal("批量生成商品", {ids: rows.join(',')});
+            });
+
+            const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+            const diffLabels = {name: '名称', description: '描述', price: '成本价'};
+
+            const openUpdateLayer = list => {
+                const rows = list.map(item => {
+                    const tags = item.diff.map(f => `<span class="wku-tag">${esc(diffLabels[f] || f)}</span>`).join('');
+                    const showCost = item.diff.indexOf('price') > -1;
+                    const cost = showCost
+                        ? `<span class="wku-cost-old">${item.cost_old}</span><span class="wku-arrow">→</span><span class="wku-cost-new">${item.cost_new}</span>`
+                        : `<span class="wku-cost-new">${item.cost_new}</span>`;
+                    const name = esc(item.name);
+                    return `<tr>
+                        <td class="wku-cb"><input type="checkbox" class="form-check-input wk-update-item" value="${item.g_id}" checked></td>
+                        <td class="wku-site">${esc(item.site_name)}</td>
+                        <td class="wku-name" title="${name}">${name}</td>
+                        <td>${tags}</td>
+                        <td>${cost}</td>
+                        <td><span class="wk-update-sale" data-rate="${item.rate}" data-cost="${item.cost_new}">-</span></td>
+                    </tr>`;
+                }).join('');
+
+                const html = `<style>
+    .wku{padding:16px 20px 18px;font-size:13px}
+    .wku-top{margin-bottom:12px;color:var(--bs-secondary-color,#7e899b)}
+    .wku-top b{color:var(--bs-danger,#f1416c);margin:0 2px}
+    .wku-box{border:1px solid var(--bs-border-color,rgba(127,138,155,.35));border-radius:10px;overflow:hidden}
+    .wku-scroll{max-height:min(46vh,380px);overflow:auto}
+    .wku table{width:100%;border-collapse:collapse;font-size:13px}
+    .wku thead th{position:sticky;top:0;z-index:1;background:rgba(127,138,155,.10);padding:9px 12px;text-align:left;font-weight:600;color:var(--bs-secondary-color,#7e899b);white-space:nowrap;border-bottom:1px solid var(--bs-border-color,rgba(127,138,155,.35))}
+    .wku tbody td{padding:10px 12px;border-bottom:1px solid var(--bs-border-color,rgba(135,141,154,.16));vertical-align:middle}
+    .wku tbody tr:last-child td{border-bottom:none}
+    .wku tbody tr:hover td{background:rgba(127,138,155,.10)}
+    .wku-cb{width:40px;text-align:center}
+    .wku-site{white-space:nowrap;color:var(--bs-secondary-color,#7e899b)}
+    .wku-name{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+    .wku-tag{display:inline-block;padding:2px 8px;margin:1px 4px 1px 0;border-radius:999px;font-size:12px;color:var(--bs-warning,#f1b52c);background:rgba(241,181,52,.12);border:1px solid rgba(241,181,52,.35)}
+    .wku-cost-old{text-decoration:line-through;opacity:.55}
+    .wku-arrow{opacity:.5;margin:0 5px}
+    .wk-update-sale,.wku-cost-new{font-weight:600}
+    .wku-premium{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--bs-border-color,rgba(135,141,154,.3))}
+    .wku-premium>label{margin:0;color:var(--bs-secondary-color,#7e899b)}
+    .wku-premium .form-select{width:120px}
+    .wku-premium .form-control{width:110px}
+    .wku-formula{color:var(--bs-secondary-color,#7e899b);font-size:12px}
+    .wku-foot{display:flex;align-items:center;margin-top:16px}
+    .wku-foot-count{color:var(--bs-secondary-color,#7e899b)}
+    .wku-foot-count b{color:var(--bs-primary,#009ef7)}
+    .wku-foot-btns{margin-left:auto;display:flex;gap:8px}
+</style>
+<div class="wku">
+    <div class="wku-top">共 <b>${list.length}</b> 个商品与上游不一致，请核对后选择需要更新的商品</div>
+    <div class="wku-box"><div class="wku-scroll">
+        <table>
+            <thead>
+                <tr>
+                    <th class="wku-cb"><input type="checkbox" class="form-check-input" id="wk-update-all" checked></th>
+                    <th>站点</th>
+                    <th>商品名称（上游）</th>
+                    <th>变更项</th>
+                    <th>成本价</th>
+                    <th>新售价预览</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+    </div></div>
+    <div class="wku-premium">
+        <label>加价模式</label>
+        <select id="wk-update-premium-type" class="form-select form-select-sm">
+            <option value="0">固定金额</option>
+            <option value="1">百分比</option>
+        </select>
+        <label>加价值</label>
+        <input id="wk-update-premium" type="number" value="0" class="form-control form-control-sm">
+        <span class="wku-formula">新售价 = 上游最新成本价 × 站点倍率 + 加价</span>
+    </div>
+    <div class="wku-foot">
+        <span class="wku-foot-count">已选 <b id="wk-update-count">${list.length}</b> / ${list.length} 个商品</span>
+        <div class="wku-foot-btns">
+            <button type="button" class="btn btn-sm btn-light" id="wk-update-cancel">取消</button>
+            <button type="button" class="btn btn-sm btn-primary" id="wk-update-submit">${util.icon('fa-duotone fa-regular fa-rotate me-1')}批量更新选中商品</button>
+        </div>
+    </div>
+</div>`;
+
+                const index = layer.open({
+                    type: 1,
+                    title: util.icon('fa-duotone fa-regular fa-rotate me-1') + ' 商品更新检查结果',
+                    area: [Math.min(920, window.innerWidth - 40) + 'px', 'auto'],
+                    shadeClose: false,
+                    content: html
+                });
+
+                const syncCount = () => {
+                    $('#wk-update-count').text($('.wk-update-item:checked').length);
+                };
+                const refreshSale = () => {
+                    const type = parseInt($('#wk-update-premium-type').val() || '0', 10);
+                    const premium = parseFloat($('#wk-update-premium').val() || 0) || 0;
+                    $('.wk-update-sale').each(function () {
+                        const rate = parseFloat($(this).data('rate'));
+                        const cost = parseFloat($(this).data('cost'));
+                        const base = (isNaN(cost) ? 0 : cost) * (isNaN(rate) ? 1 : rate);
+                        const sale = type === 1 ? base * (1 + premium / 100) : base + premium;
+                        $(this).text(sale.toFixed(2));
+                    });
+                };
+
+                $('#wk-update-all').on('change', function () {
+                    $('.wk-update-item').prop('checked', this.checked);
+                    syncCount();
+                });
+                $('.wku').on('change', '.wk-update-item', syncCount);
+                $('#wk-update-premium-type, #wk-update-premium').on('change input', refreshSale);
+                $('#wk-update-cancel').on('click', () => layer.close(index));
+                refreshSale();
+
+                $('#wk-update-submit').on('click', () => {
+                    const ids = $('.wk-update-item:checked').map(function () {
+                        return this.value;
+                    }).get();
+                    if (ids.length === 0) {
+                        message.error('请至少选择1个商品');
+                        return;
+                    }
+                    const premiumType = parseInt($('#wk-update-premium-type').val() || '0', 10);
+                    const premium = parseFloat($('#wk-update-premium').val() || 0) || 0;
+                    const post = () => util.post({
+                        url: '/plugin/WkDock/api/good/update',
+                        data: {ids: ids.join(','), premium_type: premiumType, premium: premium},
+                        done: res => {
+                            layer.close(index);
+                            message.success(res.msg || '更新完成');
+                            table.refresh();
+                        },
+                        error: res => {
+                            message.error(res.msg || '更新失败');
+                        },
+                        fail: () => {
+                            message.error('更新失败，请稍后重试');
+                        }
+                    });
+                    //加价为负数时二次确认（售价会低于「成本价 × 站点倍率」）
+                    if (premium < 0) {
+                        message.ask(`加价值为负数（${premium}），更新后的售价将低于「成本价 × 站点倍率」，是否继续更新？`, post);
+                        return;
+                    }
+                    post();
+                });
+            };
+
+                        $('.btn-app-check').click(function () {
+                const $btn = $(this);
+                $btn.prop('disabled', true);
+                util.post({
+                    url: '/plugin/WkDock/api/good/check',
+                    done: res => {
+                        $btn.prop('disabled', false);
+                        const data = res.data || {};
+                        const list = data.list || [];
+                        if (list.length === 0) {
+                            message.success(`已检查 ${data.checked || 0} 个已生成商品，信息均与上游一致`);
+                            return;
+                        }
+                        openUpdateLayer(list);
+                    },
+                    error: res => {
+                        $btn.prop('disabled', false);
+                        message.error(res.msg || '检查失败');
+                    },
+                    fail: () => {
+                        $btn.prop('disabled', false);
+                        message.error('检查失败，请稍后重试');
+                    }
+                });
+            });
+
+            const $syncBtn = $('.btn-app-sync');
+            let lastSyncTime = '#{$last_sync_time}';
+            let syncing = false;
+            const syncBtnLabel = time => util.icon('fa-duotone fa-regular fa-refresh') + ' 立即同步(上次同步时间：' + time + ')';
+            const resetSyncBtn = () => {
+                syncing = false;
+                $syncBtn.prop('disabled', false).html(syncBtnLabel(lastSyncTime));
+            };
+
+            $syncBtn.click(function () {
+                if (syncing) {
+                    return;
+                }
+                const siteId = parseInt($syncSite.val() || '0', 10);
+                if (!(siteId > 0)) {
+                    message.error('请先选择要同步的站点');
+                    return;
+                }
+                syncing = true;
+                const siteName = $syncSite.find('option:selected').text() || '';
+                $syncBtn.prop('disabled', true).html(util.icon('fa-duotone fa-regular fa-refresh fa-spin') + '正在同步[' + siteName + ']...');
+                util.post({
+                    url: '/plugin/WkDock/api/good/sync',
+                    data: {site_id: siteId},
+                    loader: false,
+                    done: res => {
+                        lastSyncTime = (res.data && res.data.time) || lastSyncTime;
+                        resetSyncBtn();
+                        message.success(res.msg || '同步成功');
+                        table.refresh();
+                    },
+                    error: res => {
+                        resetSyncBtn();
+                        message.error(res.msg || '同步失败');
+                    },
+                    fail: () => {
+                        resetSyncBtn();
+                        message.error('同步失败，请稍后重试');
+                    }
+                });
+            });
+        }();
+    });
+</script>
+#{include file=$manage_view_path|cat:"Footer.html"}

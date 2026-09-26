@@ -1,0 +1,23 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell mf-page-shell-goods-admin" data-mf-controller="/assets/user/controller/business/card.js" data-mf-table="#user-card-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">DIGITAL INVENTORY</span><h1>#{t("卡密管理")}</h1><p>#{t("安全维护库存卡密，批量完成锁定、出售与导出。")}</p></div>
+            <button type="button" class="mf-button mf-button--primary button-add"><span class="material-icons-outlined">upload</span>#{t("上传卡密")}</button>
+        </section>
+        <section class="mf-panel">
+            <div class="mf-panel-heading"><div><span class="material-icons-outlined">vpn_key</span><div><strong>#{t("卡密库存")}</strong><small>#{t("重要操作只作用于当前选中项")}</small></div></div></div>
+            <div class="mf-toolbar" aria-label="#{t('批量操作')}">
+                <button type="button" class="mf-tool-button mf-tool-button--danger button-del"><span class="material-icons-outlined">delete</span>#{t("移除选中")}</button>
+                <button type="button" class="mf-tool-button button-lock"><span class="material-icons-outlined">lock</span>#{t("锁定选中")}</button>
+                <button type="button" class="mf-tool-button button-unlock"><span class="material-icons-outlined">lock_open</span>#{t("解锁选中")}</button>
+                <button type="button" class="mf-tool-button button-sell"><span class="material-icons-outlined">sell</span>#{t("标记已出售")}</button>
+                <button type="button" class="mf-tool-button button-export"><span class="material-icons-outlined">download</span>#{t("导出筛选")}</button>
+            </div>
+            <div class="mf-panel-body mf-table-wrap"><table id="user-card-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/card.js")}
+#{include file="../Common/Footer.html"}

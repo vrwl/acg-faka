@@ -1,0 +1,52 @@
+#{include file="./Layout/Header.html"}
+
+<div class="blog-container">
+    <header class="blog-hero">
+        <h1 class="blog-largetitle">#{t("分类")}</h1>
+    </header>
+
+    <div class="blog-cats">
+        #{if $tree}
+            #{foreach $tree as $node}
+                <div class="blog-catgroup">
+                    <a class="blog-catcard" href="#{$node.url}">
+                        <div class="blog-catcard__body">
+                            <b>#{$node.name|escape:'html'}</b>
+                            #{if $node.description}<p>#{$node.description|escape:'html'}</p>#{/if}
+                        </div>
+                        <span class="blog-catcard__count">#{$node.post_count}</span>
+                    </a>
+                    #{if $node.children}
+                        <div class="blog-catgroup__children">
+                            #{foreach $node.children as $child}
+                                <a class="blog-subcat" href="#{$child.url}">#{$child.name|escape:'html'}<i>#{$child.post_count}</i></a>
+                                #{if $child.children}
+                                    #{foreach $child.children as $grand}
+                                        <a class="blog-subcat blog-subcat--deep" href="#{$grand.url}">#{$grand.name|escape:'html'}<i>#{$grand.post_count}</i></a>
+                                    #{/foreach}
+                                #{/if}
+                            #{/foreach}
+                        </div>
+                    #{/if}
+                </div>
+            #{/foreach}
+        #{else}
+            <div class="blog-empty"><div class="blog-empty__icon">🗂</div><p>#{t("暂无分类")}</p></div>
+        #{/if}
+    </div>
+
+    <div class="blog-entrances">
+        <a class="blog-entrance" href="#{$blog.urls.tag}">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12.5v-8a1 1 0 0 1 1-1h8L21 12l-8.5 8.5z"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/></svg>
+            <b>#{t("标签云")}</b>
+            <span>→</span>
+        </a>
+        <a class="blog-entrance" href="#{$blog.urls.archive}">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="4.5" rx="1.5"/><path d="M5.5 8.5V19a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5V8.5"/><path d="M10 12.5h4"/></svg>
+            <b>#{t("时间归档")}</b>
+            <span>→</span>
+        </a>
+    </div>
+</div>
+
+#{include file="./Layout/Footer.html"}

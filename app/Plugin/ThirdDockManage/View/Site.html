@@ -1,0 +1,219 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Toolbar-->
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <!--end::Toolbar-->
+    <!--begin::Post-->
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="container-fluid">
+            <!--begin::Tables Widget 9-->
+            <div class="card mb-5 mb-xl-8">
+                <!--begin::Header-->
+                <div class="card-header border-0">
+                    <div class="card-toolbar">
+                        <button class="btn btn-sm btn-light-primary btn-app-create me-3"><i class="fa-duotone fa-regular fa-circle-plus"></i>
+                            新增站点
+                        </button>
+                        <button class="btn btn-sm btn-light-danger btn-app-del me-3"><i class="fa-duotone fa-regular fa-trash-can"></i>
+                            移除选中的站点
+                        </button>
+                    </div>
+                </div>
+                <!--end::Header-->
+
+                <div class="card-body py-3">
+                    <table id="site-table"></table>
+                </div>
+            </div>
+
+            <!--end::Tables Widget 9-->
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Post-->
+</div>
+<!--end::Content-->
+
+#{set_script_var(["_dock_site_select" => $select])}
+<script>
+    documentReady(() => {
+        !function () {
+            const typeSelectRaw = getVar('_dock_site_select') || '[]';
+            let siteTypeOptions = [];
+            try {
+                siteTypeOptions = JSON.parse(typeSelectRaw) || [];
+            } catch (e) {
+                console.error('Parse _dock_site_select failed', e);
+            }
+
+            const table = new Table('/plugin/ThirdDockManage/api/site/data', '#site-table');
+            table.setPagination(15, [15, 25, 50, 100]);
+
+            table.setColumns([
+                {checkbox: true},
+                {field: 'id', title: 'ID'},
+                {
+                    field: 'type_name',
+                    title: '类型',
+                    formatter: (_, item) => format.badge(item?.type_name || '-', 'a-badge-light')
+                },
+                {
+                    field: 'name',
+                    title: '店铺名称',
+                    formatter: (_, item) => format.badge(item?.name || '-', 'a-badge-light')
+                },
+                {
+                    field: 'domain',
+                    title: '店铺地址',
+                    formatter: (_, item) => {
+                        if (!item?.domain) {
+                            return '-';
+                        }
+                        const safeUrl = item.domain;
+                        return `<a class="text-primary" href="${safeUrl}" target="_blank">${safeUrl}</a>`;
+                    }
+                },
+                {
+                    field: 'account',
+                    title: '账号',
+                    formatter: (_, item) => format.badge(item?.account || '-', 'a-badge-light')
+                },
+                {
+                    field: 'balance',
+                    title: '余额(缓存)',
+                    formatter: (_, item) => format.badge(item?.balance ?? 0, 'a-badge-primary')
+                },
+                {
+                    field: 'connect_status',
+                    title: '连接状态',
+                    formatter: (_, item) => `<span class="connect-${item?.id}">${format.badge('测试中..', 'a-badge-primary')}</span>`
+                },
+                {
+                    field: 'remark',
+                    title: '备注',
+                    formatter: (_, item) => item?.remark || '-'
+                },
+                {
+                    field: 'operation',
+                    title: '操作',
+                    type: 'button',
+                    buttons: [
+                        {
+                            icon: 'fa-duotone fa-regular fa-pen-to-square',
+                            class: 'text-primary',
+                            click: (event, value, row) => {
+                                modal(util.icon('fa-duotone fa-regular fa-pen-to-square me-1') + ' 修改站点', row);
+                            }
+                        },
+                        {
+                            icon: 'fa-duotone fa-regular fa-trash-can text-danger',
+                            click: (event, value, row) => {
+                                message.ask('您正在移除该店铺，是否要继续？', () => {
+                                    util.post('/plugin/ThirdDockManage/api/site/del', {list: [row.id]}, res => {
+                                        message.success(res.msg || '删除成功');
+                                        table.refresh();
+                                    });
+                                });
+                            }
+                        },
+                        {
+                            title: '拉取分类',
+                            class: 'text-primary',
+                            click: (event, value, row) => {
+                                window.location.href = route(`site/class?id=${row.id}`);
+                            }
+                        }
+                    ]
+                }
+            ]);
+
+            table.setSearch([
+                {title: '名称', name: 'search-name', type: 'input'},
+                {title: '类型', name: 'equal-type', type: 'select', dict: siteTypeOptions},
+                {title: '地址', name: 'equal-domain', type: 'input'}
+            ]);
+
+            table.onComplete((tableElement, unique, response) => {
+                const list = Array.isArray(response?.data) ? response.data : (response?.data?.list ?? []);
+                list.forEach(item => {
+                    const target = tableElement.find(`.connect-${item.id}`);
+                    target.html(format.badge('测试中..', 'a-badge-warning'));
+                    $.post('/plugin/ThirdDockManage/api/site/connect', {id: item.id}, run => {
+                        if (run.code === 200) {
+                            target.html(format.badge('正常', 'a-badge-success'));
+                        } else {
+                            target.html(format.badge(run.msg || '异常', 'a-badge-danger'));
+                        }
+                    });
+                });
+            });
+
+            const modal = (title, assign = {}) => {
+                component.popup({
+                    submit: '/plugin/ThirdDockManage/api/site/save',
+                    tab: [
+                        {
+                            name: title,
+                            form: [
+                                {
+                                    title: '类型',
+                                    name: 'type',
+                                    type: 'select',
+                                    placeholder: '请选择类型',
+                                    dict: siteTypeOptions,
+                                    required: true
+                                },
+                                {title: '名称', name: 'name', type: 'input', placeholder: '请输入店铺名称', required: true},
+                                {
+                                    title: '地址',
+                                    name: 'domain',
+                                    type: 'input',
+                                    placeholder: '需要带http://或者https://(推荐,如果支持)',
+                                    required: true
+                                },
+                                {title: '账号/商户ID', name: 'account', type: 'input', placeholder: '请输入账号/商户ID', required: true},
+                                {title: '密码/秘钥', name: 'password', type: 'input', placeholder: '请输入密码/秘钥', required: true},
+                                {
+                                    title: '支付方式',
+                                    name: 'pay_way',
+                                    type: 'radio',
+                                    dict: [
+                                        {id: 1, name: '余额'},
+                                        {id: 2, name: '点数'}
+                                    ],
+                                    default: 1
+                                },
+                                {title: '备注', name: 'remark', type: 'textarea', placeholder: '新购卡的支付密码填写到这里'}
+                            ]
+                        }
+                    ],
+                    assign,
+                    autoPosition: true,
+                    height: 'auto',
+                    width: '680px',
+                    done: () => {
+                        table.refresh();
+                    }
+                });
+            };
+
+            table.setDeleteSelector('.btn-app-del', ids => {
+                message.ask('您确定要删除已经选中的店铺吗？这是不可恢复的操作！', () => {
+                    util.post('/plugin/ThirdDockManage/api/site/del', {list: ids}, res => {
+                        message.success(res.msg || '删除成功');
+                        table.refresh();
+                    });
+                });
+            });
+
+            table.render();
+
+            $('.btn-app-create').click(() => {
+                modal(`${util.icon('fa-duotone fa-regular fa-circle-plus me-1')} 新增站点`);
+            });
+        }();
+    });
+</script>
+#{include file=$manage_view_path|cat:"Footer.html"}

@@ -1,0 +1,15 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page" data-ny-page="category">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("商品分类")}</h1><p>#{t("整理售卖目录的层级")}</p></div>
+            <button type="button" class="ny-button ny-button--primary button-add"><span class="material-icons-outlined">add</span>#{t("新建")}</button>
+        </section>
+        <section class="ny-panel">
+            <div class="ny-panel-body ny-table-wrap"><table id="category-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/category.js")}
+#{include file="../Common/Footer.html"}

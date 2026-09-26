@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 注册 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/Register.html"}#{else}#{include file="./Pc/Register.html"}#{/if}

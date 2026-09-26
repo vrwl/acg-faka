@@ -1,0 +1,375 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<link rel="stylesheet" href="#{Plugin('Blog','View/Css/admin.css')}">
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <div id="kt_content_container" class="container-fluid">
+            <div class="blog-admin" data-admin-mobile-settings-page>
+
+                <header class="ba-hero">
+                    <div class="ba-hero__inner">
+                        <span class="ba-hero__icon"><i class="blogi blogi-settings"></i></span>
+                        <div class="ba-hero__text">
+                            <h1 class="ba-hero__title">#{t("博客设置")}</h1>
+                            <p class="ba-hero__desc">#{t("这里决定博客前台的呈现方式与互动规则，改动即时生效")}</p>
+                        </div>
+                        <div class="ba-hero__actions">
+                            <a class="ba-btn ba-btn--ghost" href="/blog" target="_blank">
+                                <i class="blogi blogi-open"></i> #{t("访问前台")}
+                            </a>
+                            <a class="ba-btn ba-btn--soft" href="/plugin/Blog/panel/posts">
+                                <i class="blogi blogi-write"></i> #{t("文章管理")}
+                            </a>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="ba-settings">
+                    <nav class="ba-sidenav" data-blog-sidenav>
+                        <a href="#s-basic" class="is-active"><i class="blogi blogi-signature"></i>#{t("基础信息")}</a>
+                        <a href="#s-read"><i class="blogi blogi-book"></i>#{t("阅读")}</a>
+                        <a href="#s-comment"><i class="blogi blogi-comment"></i>#{t("评论与点赞")}</a>
+                        <a href="#s-feed"><i class="blogi blogi-rss"></i>#{t("RSS 与短链")}</a>
+                        <a href="#s-safe"><i class="blogi blogi-shield"></i>#{t("内容与安全")}</a>
+                        <a href="#s-look"><i class="blogi blogi-palette"></i>#{t("外观与融合")}</a>
+                        <a href="#s-maintain"><i class="blogi blogi-tools"></i>#{t("维护")}</a>
+                    </nav>
+
+                    <div class="ba-sections">
+
+                        <!--基础信息-->
+                        <section class="ba-card" id="s-basic">
+                            <div class="ba-card__head">
+                                <span class="ba-card__ico"><i class="blogi blogi-signature"></i></span>
+                                <div>
+                                    <h3 class="ba-card__title">#{t("基础信息")}</h3>
+                                    <p class="ba-card__desc">#{t("博客的名字与搜索引擎摘要")}</p>
+                                </div>
+                            </div>
+                            <div class="ba-card__body">
+                                <div class="ba-grid">
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-nav_label">#{t("入口名称")}</label>
+                                        <div class="ba-field__hint">#{t("商城顶栏与会员中心的入口文字，可改成「知识库」「教程中心」等；留空 = 博客")}</div>
+                                        <input class="ba-input" id="bs-nav_label" name="nav_label" data-blog-setting
+                                               maxlength="16" placeholder="#{t('博客')}">
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-blog_name">#{t("博客名称")}</label>
+                                        <div class="ba-field__hint">#{t("博客的站点标题，留空 = 直接用店铺名")}</div>
+                                        <input class="ba-input" id="bs-blog_name" name="blog_name" data-blog-setting>
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-blog_subtitle">#{t("副标题")}</label>
+                                        <div class="ba-field__hint">#{t("一句话介绍，显示在首页大标题下")}</div>
+                                        <input class="ba-input" id="bs-blog_subtitle" name="blog_subtitle" data-blog-setting>
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-blog_description">#{t("博客简介(SEO description)")}</label>
+                                        <div class="ba-field__hint">#{t("出现在搜索结果与社交分享卡片里")}</div>
+                                        <textarea class="ba-textarea" id="bs-blog_description" name="blog_description" data-blog-setting rows="2"></textarea>
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-blog_keywords">#{t("关键词(SEO keywords)")}</label>
+                                        <div class="ba-field__hint">#{t("逗号分隔")}</div>
+                                        <textarea class="ba-textarea" id="bs-blog_keywords" name="blog_keywords" data-blog-setting rows="2"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!--阅读-->
+                        <section class="ba-card" id="s-read">
+                            <div class="ba-card__head">
+                                <span class="ba-card__ico"><i class="blogi blogi-book"></i></span>
+                                <div>
+                                    <h3 class="ba-card__title">#{t("阅读")}</h3>
+                                    <p class="ba-card__desc">#{t("文章流的分页、摘要与浏览量统计口径")}</p>
+                                </div>
+                            </div>
+                            <div class="ba-card__body">
+                                <div class="ba-grid">
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-posts_per_page">#{t("每页文章数")}</label>
+                                        <div class="ba-field__hint">#{t("首页与列表页每次加载的篇数（1 ~ 50）")}</div>
+                                        <input type="number" class="ba-input ba-input--num" id="bs-posts_per_page" name="posts_per_page" data-blog-setting min="1" max="50">
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-summary_auto_len">#{t("自动摘要长度")}</label>
+                                        <div class="ba-field__hint">#{t("文章没写摘要时，从正文截取的字数")}</div>
+                                        <input type="number" class="ba-input ba-input--num" id="bs-summary_auto_len" name="summary_auto_len" data-blog-setting min="50" max="500">
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-view_dedupe_minutes">#{t("浏览量去重(分钟)")}</label>
+                                        <div class="ba-field__hint">#{t("同一访客在此时间内重复访问只计 1 次；0 = 不去重")}</div>
+                                        <div class="ba-inputwrap">
+                                            <input type="number" class="ba-input ba-input--num" id="bs-view_dedupe_minutes" name="view_dedupe_minutes" data-blog-setting min="0" max="1440">
+                                            <span class="ba-inputwrap__suffix">#{t("分钟")}</span>
+                                        </div>
+                                    </div>
+                                    <div class="ba-field ba-field--full">
+                                        <label class="ba-switchrow">
+                                            <span class="ba-switchrow__text">
+                                                <span class="ba-switchrow__title">#{t("游客可访问")}</span>
+                                                <span class="ba-switchrow__hint">#{t("关闭后未登录访客会被引导到登录页")}</span>
+                                            </span>
+                                            <span class="ba-switch"><input type="checkbox" name="guest_visible" data-blog-setting><i></i></span>
+                                        </label>
+                                        <label class="ba-switchrow">
+                                            <span class="ba-switchrow__text">
+                                                <span class="ba-switchrow__title">#{t("图片懒加载")}</span>
+                                                <span class="ba-switchrow__hint">#{t("正文图片滚动到视口才加载，长教程更快打开")}</span>
+                                            </span>
+                                            <span class="ba-switch"><input type="checkbox" name="lazyload_img" data-blog-setting><i></i></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!--评论与点赞-->
+                        <section class="ba-card" id="s-comment">
+                            <div class="ba-card__head">
+                                <span class="ba-card__ico"><i class="blogi blogi-comment"></i></span>
+                                <div>
+                                    <h3 class="ba-card__title">#{t("评论与点赞")}</h3>
+                                    <p class="ba-card__desc">#{t("谁能发言、要不要审核、发言频率限制")}</p>
+                                </div>
+                            </div>
+                            <div class="ba-card__body">
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text">
+                                        <span class="ba-switchrow__title">#{t("开启评论")}</span>
+                                        <span class="ba-switchrow__hint">#{t("总开关；单篇文章还可以单独关闭")}</span>
+                                    </span>
+                                    <span class="ba-switch"><input type="checkbox" name="comment_enabled" data-blog-setting><i></i></span>
+                                </label>
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text">
+                                        <span class="ba-switchrow__title">#{t("先审后发")}</span>
+                                        <span class="ba-switchrow__hint">#{t("新评论进入待审队列，通过后才对所有人可见")}</span>
+                                    </span>
+                                    <span class="ba-switch"><input type="checkbox" name="comment_audit" data-blog-setting><i></i></span>
+                                </label>
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text">
+                                        <span class="ba-switchrow__title">#{t("开启点赞")}</span>
+                                        <span class="ba-switchrow__hint">#{t("登录用户可给文章点赞")}</span>
+                                    </span>
+                                    <span class="ba-switch"><input type="checkbox" name="like_enabled" data-blog-setting><i></i></span>
+                                </label>
+
+                                <div class="ba-grid" style="margin-top:8px">
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-comment_max_depth">#{t("嵌套显示层数")}</label>
+                                        <div class="ba-field__hint">#{t("超出层数的回复会以 @对方 的形式平铺")}</div>
+                                        <input type="number" class="ba-input ba-input--num" id="bs-comment_max_depth" name="comment_max_depth" data-blog-setting min="1" max="6">
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-comment_interval">#{t("发言间隔(秒)")}</label>
+                                        <div class="ba-field__hint">#{t("同一用户两次发言的最短间隔；0 = 不限制")}</div>
+                                        <div class="ba-inputwrap">
+                                            <input type="number" class="ba-input ba-input--num" id="bs-comment_interval" name="comment_interval" data-blog-setting min="0" max="3600">
+                                            <span class="ba-inputwrap__suffix">#{t("秒")}</span>
+                                        </div>
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-comment_maxlen">#{t("单条最大字数")}</label>
+                                        <div class="ba-field__hint">#{t("超出会在前台直接拦下")}</div>
+                                        <input type="number" class="ba-input ba-input--num" id="bs-comment_maxlen" name="comment_maxlen" data-blog-setting min="50" max="5000">
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-author_uids">#{t("作者徽标 UID")}</label>
+                                        <div class="ba-field__hint">#{t("这些用户的评论显示「作者」徽标，逗号分隔")}</div>
+                                        <input class="ba-input" id="bs-author_uids" name="author_uids" data-blog-setting placeholder="1,2,3">
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!--RSS 与短链-->
+                        <section class="ba-card" id="s-feed">
+                            <div class="ba-card__head">
+                                <span class="ba-card__ico"><i class="blogi blogi-rss"></i></span>
+                                <div>
+                                    <h3 class="ba-card__title">#{t("RSS 与短链")}</h3>
+                                    <p class="ba-card__desc">#{t("订阅输出与前台地址形态")}</p>
+                                </div>
+                            </div>
+                            <div class="ba-card__body">
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text">
+                                        <span class="ba-switchrow__title">#{t("开启 RSS")}</span>
+                                        <span class="ba-switchrow__hint">/blog/feed · #{t("同时提供 sitemap.xml")}</span>
+                                    </span>
+                                    <span class="ba-switch"><input type="checkbox" name="feed_enabled" data-blog-setting><i></i></span>
+                                </label>
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text">
+                                        <span class="ba-switchrow__title">#{t("RSS 全文输出")}</span>
+                                        <span class="ba-switchrow__hint">#{t("关闭时只输出摘要，读者需回站阅读全文")}</span>
+                                    </span>
+                                    <span class="ba-switch"><input type="checkbox" name="feed_fulltext" data-blog-setting><i></i></span>
+                                </label>
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text">
+                                        <span class="ba-switchrow__title">#{t("/blog 优雅短链")}</span>
+                                        <span class="ba-switchrow__hint">#{t("开启后前台地址为 /blog、/blog/post/别名；关闭后使用 /plugin/Blog 原生路径（永远可用）")}</span>
+                                    </span>
+                                    <span class="ba-switch"><input type="checkbox" name="pretty_links" data-blog-setting><i></i></span>
+                                </label>
+                                <div class="ba-grid" style="margin-top:8px">
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-feed_items">#{t("RSS 条数")}</label>
+                                        <div class="ba-field__hint">#{t("输出最新的多少篇文章")}</div>
+                                        <input type="number" class="ba-input ba-input--num" id="bs-feed_items" name="feed_items" data-blog-setting min="1" max="100">
+                                    </div>
+                                    <div class="ba-field ba-field--full">
+                                        <label class="ba-field__label" for="bs-standalone_domain">#{t("独立域名绑定")}</label>
+                                        <div class="ba-field__hint">#{t("把域名解析到本站后填在这里，该域名下只有博客：根地址即博客首页，商城的任何页面都打不开，站内也不会出现商城地址。可填多个，一行一个（或用逗号分隔）。留空 = 不启用")}</div>
+                                        <textarea class="ba-textarea" id="bs-standalone_domain" name="standalone_domain" data-blog-setting rows="3" spellcheck="false" placeholder="docs.example.com&#10;help.example.com"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!--内容与安全-->
+                        <section class="ba-card" id="s-safe">
+                            <div class="ba-card__head">
+                                <span class="ba-card__ico"><i class="blogi blogi-shield"></i></span>
+                                <div>
+                                    <h3 class="ba-card__title">#{t("内容与安全")}</h3>
+                                    <p class="ba-card__desc">#{t("正文渲染时的白名单策略")}</p>
+                                </div>
+                            </div>
+                            <div class="ba-card__body">
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text">
+                                        <span class="ba-switchrow__title">#{t("允许视频 iframe")}</span>
+                                        <span class="ba-switchrow__hint">#{t("仅放行 youtube-nocookie 与 bilibili 播放器")}</span>
+                                    </span>
+                                    <span class="ba-switch"><input type="checkbox" name="allow_iframe" data-blog-setting><i></i></span>
+                                </label>
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text">
+                                        <span class="ba-switchrow__title">#{t("外链 nofollow")}</span>
+                                        <span class="ba-switchrow__hint">#{t("正文里的站外链接自动加 rel=nofollow，不传递权重")}</span>
+                                    </span>
+                                    <span class="ba-switch"><input type="checkbox" name="external_nofollow" data-blog-setting><i></i></span>
+                                </label>
+                            </div>
+                        </section>
+
+                        <!--外观与融合-->
+                        <section class="ba-card" id="s-look">
+                            <div class="ba-card__head">
+                                <span class="ba-card__ico"><i class="blogi blogi-palette"></i></span>
+                                <div>
+                                    <h3 class="ba-card__title">#{t("外观与商城融合")}</h3>
+                                    <p class="ba-card__desc">#{t("前台默认风格，以及博客入口出现在哪里")}</p>
+                                </div>
+                            </div>
+                            <div class="ba-card__body">
+                                <div class="ba-grid">
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-default_style">#{t("默认主题风格")}</label>
+                                        <div class="ba-field__hint">#{t("访客可在前台自行切换，这里设的是首次访问的默认值")}</div>
+                                        <select class="ba-select" id="bs-default_style" name="default_style" data-blog-setting>
+                                            <option value="glass">#{t("流光 · 液态玻璃")}</option>
+                                            <option value="paper">#{t("素笺 · 纸质极简")}</option>
+                                            <option value="mag">#{t("刊集 · 杂志编辑部")}</option>
+                                            <option value="neon">#{t("霓虹 · 暗夜赛博")}</option>
+                                        </select>
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-dark_mode">#{t("默认明暗模式")}</label>
+                                        <div class="ba-field__hint">#{t("跟随系统会读取访客设备的深色偏好")}</div>
+                                        <select class="ba-select" id="bs-dark_mode" name="dark_mode" data-blog-setting>
+                                            <option value="auto">#{t("跟随系统")}</option>
+                                            <option value="light">#{t("白天")}</option>
+                                            <option value="dark">#{t("黑夜")}</option>
+                                        </select>
+                                    </div>
+                                    <div class="ba-field">
+                                        <label class="ba-field__label" for="bs-back_to_shop_url">#{t("返回商城地址")}</label>
+                                        <div class="ba-field__hint">#{t("博客页脚与「我的」抽屉里的返回入口")}</div>
+                                        <input class="ba-input" id="bs-back_to_shop_url" name="back_to_shop_url" data-blog-setting placeholder="/">
+                                    </div>
+                                    <div class="ba-field ba-field--full">
+                                        <label class="ba-switchrow">
+                                            <span class="ba-switchrow__text">
+                                                <span class="ba-switchrow__title">#{t("商城顶栏")}</span>
+                                                <span class="ba-switchrow__hint">#{t("在商城前台的「购物 / 订单查询」旁边加一个博客入口")}</span>
+                                            </span>
+                                            <span class="ba-switch"><input type="checkbox" name="nav_inject_shop" data-blog-setting><i></i></span>
+                                        </label>
+                                        <label class="ba-switchrow">
+                                            <span class="ba-switchrow__text">
+                                                <span class="ba-switchrow__title">#{t("会员中心导航")}</span>
+                                                <span class="ba-switchrow__hint">#{t("在会员中心顶部导航里加一个博客入口")}</span>
+                                            </span>
+                                            <span class="ba-switch"><input type="checkbox" name="nav_inject_uc" data-blog-setting><i></i></span>
+                                        </label>
+                                        <label class="ba-switchrow">
+                                            <span class="ba-switchrow__text">
+                                                <span class="ba-switchrow__title">#{t("商品页展示相关文档")}</span>
+                                                <span class="ba-switchrow__hint">#{t("绑定了商品的文章，会出现在该商品「商品介绍」的最上方")}</span>
+                                            </span>
+                                            <span class="ba-switch"><input type="checkbox" name="item_inject" data-blog-setting><i></i></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!--维护-->
+                        <section class="ba-card" id="s-maintain">
+                            <div class="ba-card__head">
+                                <span class="ba-card__ico"><i class="blogi blogi-tools"></i></span>
+                                <div>
+                                    <h3 class="ba-card__title">#{t("维护")}</h3>
+                                    <p class="ba-card__desc">#{t("数据异常时的修复工具，平时用不到")}</p>
+                                </div>
+                            </div>
+                            <div class="ba-card__body" data-admin-mobile-local-actions>
+                                <div class="ba-action">
+                                    <div class="ba-action__text">
+                                        <div class="ba-action__title">#{t("重建全部渲染缓存")}</div>
+                                        <div class="ba-action__hint">#{t("升级插件或改了安全策略后，重新渲染所有文章的正文")}</div>
+                                    </div>
+                                    <span class="ba-action__status" data-blog-maintain-status></span>
+                                    <button class="ba-btn ba-btn--ghost blog-rebuild-render">
+                                        <i class="blogi blogi-refresh"></i> #{t("开始")}
+                                    </button>
+                                </div>
+                                <div class="ba-action">
+                                    <div class="ba-action__text">
+                                        <div class="ba-action__title">#{t("重算全部计数")}</div>
+                                        <div class="ba-action__hint">#{t("修正分类文章数、标签文章数与评论数的显示偏差")}</div>
+                                    </div>
+                                    <button class="ba-btn ba-btn--warn blog-recalc-counts">
+                                        <i class="blogi blogi-calc"></i> #{t("开始")}
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="ba-savebar">
+                            <span class="ba-savebar__state" data-blog-save-state>#{t("所有更改已保存")}</span>
+                            <div class="ba-savebar__actions">
+                                <button class="ba-btn ba-btn--ghost blog-reset-settings">#{t("撤销更改")}</button>
+                                <button class="ba-btn ba-btn--primary blog-save-settings">
+                                    <i class="blogi blogi-save"></i> #{t("保存设置")}
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+#{ready("/app/Plugin/Blog/View/Js/settings.js")}
+#{include file=$manage_view_path|cat:"Footer.html"}

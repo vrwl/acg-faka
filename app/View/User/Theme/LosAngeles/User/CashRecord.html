@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 提现记录 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/CashRecord.html"}#{else}#{include file="./Pc/CashRecord.html"}#{/if}

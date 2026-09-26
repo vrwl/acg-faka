@@ -1,0 +1,87 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell" data-mf-controller="/assets/user/controller/user/promote.js" data-mf-table="#promote-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">GROWTH</span><h1>#{t("推广中心")}</h1><p>#{t("分享专属链接，好友成交即可获得分成。")}</p></div>
+            <span class="mf-page-intro__icon material-icons-outlined">campaign</span>
+        </section>
+
+        <section class="mf-panel">
+            <div class="mf-panel-heading">
+                <div><span class="material-icons-outlined">share</span><div><strong>#{t("我的推广链接")}</strong><small>#{t("复制或扫码分享给好友")}</small></div></div>
+            </div>
+            <div class="mf-panel-body">
+                <div class="mf-promote-share">
+                    <div class="mf-promote-share__main">
+                        <div class="mf-promote-share__link">#{$share_url}</div>
+                        <button type="button" class="mf-button mf-button--primary clipboard" data-text="#{$share_url}"><span class="material-icons-outlined">content_copy</span>#{t("复制链接")}</button>
+                    </div>
+                    <div class="mf-promote-share__qr">
+                        <div id="share-qrcode" data-url="#{$share_url}"></div>
+                        <small>#{t("扫码直达")}</small>
+                    </div>
+                </div>
+                <p class="mf-promote-rule">
+                    <span class="material-icons-outlined">info</span>
+                    <span>#{t("好友通过链接注册成为下级后，其每笔订单按「成交价 − 拿货价」结算分成，以硬币入账。")}#{if $group}#{assign var="_promoteLevel" value='<b>'|cat:$group.name|cat:'</b>'}#{t("当前等级 {level} 的拿货价见下方列表。")|replace:"{level}":$_promoteLevel}#{/if}</span>
+                </p>
+            </div>
+        </section>
+
+        <section class="mf-section">
+            <div class="mf-section-heading">
+                <div><span class="mf-section-kicker">OVERVIEW</span><h2>#{t("推广概览")}</h2></div>
+                <span class="mf-section-note">#{t("收益口径与下单结算一致")}</span>
+            </div>
+            <div class="mf-kpi-grid">
+                <article class="mf-kpi-card mf-kpi-card--blue">
+                    <span class="mf-kpi-card__icon material-icons-outlined">groups</span>
+                    <div><span>#{t("推广人数")}</span><strong>#{$children}</strong><em>#{t("已成为我的下级")}</em></div>
+                </article>
+                <article class="mf-kpi-card mf-kpi-card--cyan">
+                    <span class="mf-kpi-card__icon material-icons-outlined">receipt_long</span>
+                    <div><span>#{t("推广订单")}</span><strong>#{$promote_orders}</strong><em>#{t("下级已付款订单")}</em></div>
+                </article>
+                <article class="mf-kpi-card mf-kpi-card--sunrise">
+                    <span class="mf-kpi-card__icon material-icons-outlined">calendar_month</span>
+                    <div><span>#{t("本月收益")}</span><strong><small>#{$config.currency_symbol}</small>#{$promote_month}</strong><em>#{t("当月累计分成")}</em></div>
+                </article>
+                <article class="mf-kpi-card mf-kpi-card--green">
+                    <span class="mf-kpi-card__icon material-icons-outlined">savings</span>
+                    <div><span>#{t("累计收益")}</span><strong><small>#{$config.currency_symbol}</small>#{$promote_total}</strong><em>#{t("历史全部分成")}</em></div>
+                </article>
+            </div>
+        </section>
+
+        <section class="mf-panel">
+            <div class="mf-panel-heading">
+                <div><span class="material-icons-outlined">insights</span><div><strong>#{t("商品预计收益")}</strong><small>#{t("按游客价估算，实际以成交价为准")}</small></div></div>
+            </div>
+            <div class="mf-panel-body mf-table-wrap"><table id="promote-table"></table></div>
+        </section>
+
+        <section class="mf-panel">
+            <div class="mf-panel-heading">
+                <div><span class="material-icons-outlined">history</span><div><strong>#{t("最近推广订单")}</strong><small>#{t("最新 8 笔已付款订单")}</small></div></div>
+            </div>
+            <div class="mf-panel-body">
+                #{if count($recent) > 0}
+                <div class="mf-activity-list">
+                    #{foreach $recent as $o}
+                    <div class="mf-activity-item">
+                        <img src="#{$o.commodity.cover}" alt="">
+                        <div><strong>#{$o.commodity.name}</strong><span>#{$o.create_time}</span></div>
+                        <div class="mf-activity-item__amount"><strong>#{$config.currency_symbol}#{$o.amount}</strong>#{if $o.divide_amount > 0}<span>#{t("分成")} #{$config.currency_symbol}#{$o.divide_amount}</span>#{/if}</div>
+                    </div>
+                    #{/foreach}
+                </div>
+                #{else}
+                <div class="mf-empty"><span class="material-icons-outlined">share</span><strong>#{t("还没有推广订单")}</strong><p>#{t("把链接分享给好友，第一笔分成就会出现在这里。")}</p></div>
+                #{/if}
+            </div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/promote.js")}
+#{include file="../Common/Footer.html"}

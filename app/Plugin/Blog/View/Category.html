@@ -1,0 +1,38 @@
+#{include file="./Layout/Header.html"}
+
+<div class="blog-container">
+    <header class="blog-hero blog-hero--section">
+        <div class="blog-hero__kicker">#{t("分类")}</div>
+        <h1 class="blog-largetitle">#{$category.name|escape:'html'}</h1>
+        #{if $category.description}<p class="blog-hero__subtitle">#{$category.description|escape:'html'}</p>#{/if}
+        <div class="blog-hero__count">#{$pagination.total} #{t("篇文章")}</div>
+        #{if $children}
+            <div class="blog-chiprow">
+                #{foreach $children as $child}
+                    <a class="blog-chip" href="#{$child.url}">#{$child.name|escape:'html'} <em>#{$child.post_count}</em></a>
+                #{/foreach}
+            </div>
+        #{/if}
+    </header>
+
+    <div class="blog-layout">
+        <section class="blog-flow" data-blog-list data-blog-infinite='{"category":"#{$category.slug}"}'>
+            #{if $posts}
+                #{foreach $posts as $post}
+                    #{include file="./Partial/PostCard.html" post=$post}
+                #{/foreach}
+            #{else}
+                <div class="blog-empty"><div class="blog-empty__icon">🌱</div><p>#{t("这个分类还没有文章")}</p></div>
+            #{/if}
+            <div class="blog-flow__skeletons" data-blog-skeletons hidden>
+                <div class="blog-skeleton"></div><div class="blog-skeleton"></div>
+            </div>
+            <div class="blog-flow__end" data-blog-end hidden>—— #{t("已经到底啦")} ——</div>
+            <div data-blog-sentinel></div>
+        </section>
+    </div>
+
+    #{include file="./Partial/Pagination.html"}
+</div>
+
+#{include file="./Layout/Footer.html"}

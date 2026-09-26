@@ -1,0 +1,18 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-list-page" data-st-page="purchase-record">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("购物记录")}</span><h1>#{t("购买记录")}</h1><p>#{t("查询付款状态、发货进度与已交付卡密。")}</p></div>
+            <a class="st-button st-button--primary" href="/"><span class="material-icons-outlined">storefront</span>#{t("继续购物")}</a>
+        </header>
+        <section class="st-panel" aria-labelledby="st-purchase-title">
+            <div class="st-panel__header">
+                <div><span class="st-panel__icon material-icons-outlined">shopping_bag</span><div><h2 id="st-purchase-title">#{t("我的订单")}</h2><p>#{t("支持按订单号与下单时间查询")}</p></div></div>
+            </div>
+            <div class="st-panel__body st-table-wrap"><table id="bill-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/PurchaseTable.js'))}
+#{include file="../Common/Footer.html"}

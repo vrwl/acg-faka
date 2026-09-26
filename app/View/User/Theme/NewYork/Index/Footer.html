@@ -1,0 +1,64 @@
+    </div>
+    #{include file="../Common/Sheets.html"}
+    #{* 店铺公告面板：原来只写在首页 Index.html 里，商品页顶栏也有「公告」按钮却没有面板，点了没反应。
+        挪到公共页脚，出现条件和 Header.html 的按钮保持一致（查单页不显示）。
+        data-ny-notice-auto：模板设置「默认弹窗公告」，Theme.js 据此在打开网站时自动弹出；用户点面板 ❌ 关闭后 30 分钟内不再自动弹 *}
+    #{if $config.notice && !active('/user/index/query')}
+    <section class="ny-sheet ny-notice-sheet" data-ny-sheet="notice" aria-hidden="true" aria-label="#{t('店铺公告')}"#{if ($setting.notice_popup|default:'0') == '1'} data-ny-notice-auto="1"#{/if}>
+        <div class="ny-sheet-handle" aria-hidden="true"></div>
+        <div class="ny-sheet-head"><div><strong>#{t("店铺公告")}</strong><span>#{t("最新通知")}</span></div><button type="button" data-ny-sheet-close aria-label="#{t('关闭')}"><span class="material-icons-outlined">close</span></button></div>
+        <div class="ny-sheet-body ny-notice-body ny-rich-content">#{$config.notice}</div>
+    </section>
+    #{/if}
+</div>
+#{include file="../Common/BottomNav.html"}
+#{js(
+[
+"/assets/common/js/_.js",
+"/assets/user/js/_index.js",
+"/app/View/User/Theme/NewYork/Assets/Js/Theme.js",
+"/app/View/User/Theme/NewYork/Assets/Js/Message.js"
+],
+[
+"/assets/common/js/util/dict.js",
+"/assets/common/js/jquery.min.js",
+"/assets/common/js/toastr.min.js",
+"/assets/common/js/component/loading.js",
+"/assets/common/js/util.js",
+"/assets/common/js/layer/layer.js",
+"/assets/common/js/jquery.pjax.min.js",
+"/assets/common/js/jquery.qrcode.min.js",
+"/assets/common/js/format.js",
+"/assets/common/js/message.js",
+"/assets/common/js/component.js",
+"/assets/common/js/layui/layui.js",
+"/assets/common/js/jquery.treegrid.min.js",
+"/assets/common/js/bootstrap/bootstrap.bundle.min.js",
+"/assets/common/js/table/bootstrap-table.min.js",
+"/assets/common/js/table/bootstrap-table-treegrid.min.js",
+"/assets/common/js/component/form.js",
+"/assets/common/js/component/search.js",
+"/assets/common/js/component/xm-select.js",
+"/assets/common/js/component/tree.select.js",
+"/assets/common/js/component/authtree.js",
+"/assets/common/js/component/table.js",
+"/assets/common/js/component/select2.min.js",
+"/assets/common/js/cache.js",
+"/assets/common/js/editor/editor.js",
+"/assets/common/js/editor/code/code.js",
+"/assets/common/js/component/decimal.js",
+"/assets/user/js/trade.js",
+"/assets/user/js/treasure.js",
+"/app/View/User/Theme/NewYork/Assets/Js/Theme.js",
+"/app/View/User/Theme/NewYork/Assets/Js/Message.js"
+])}
+<!--start::HOOK-->
+#{hook(\App\Consts\Hook::USER_GLOBAL_VIEW_BODY)}
+#{hook(\App\Consts\Hook::USER_VIEW_INDEX_BODY)}
+<!--end::HOOK-->
+</body>
+<!--start::HOOK-->
+#{hook(\App\Consts\Hook::USER_GLOBAL_VIEW_FOOTER)}
+#{hook(\App\Consts\Hook::USER_VIEW_INDEX_FOOTER)}
+<!--end::HOOK-->
+</html>

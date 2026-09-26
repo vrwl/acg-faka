@@ -1,0 +1,21 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page" data-ny-page="coupon">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("代券管理")}</h1><p>#{t("生成并追踪代券的使用状态")}</p></div>
+            <button type="button" class="ny-button ny-button--primary button-add"><span class="material-icons-outlined">add</span>#{t("生成")}</button>
+        </section>
+        <section class="ny-panel">
+            <div class="ny-toolbar" aria-hidden="true">
+                <button type="button" class="ny-tool-button ny-tool-button--danger button-del"><span class="material-icons-outlined">delete</span>#{t("删除选中")}</button>
+                <button type="button" class="ny-tool-button button-lock"><span class="material-icons-outlined">lock</span>#{t("锁定选中")}</button>
+                <button type="button" class="ny-tool-button button-unlock"><span class="material-icons-outlined">lock_open</span>#{t("解锁选中")}</button>
+                <button type="button" class="ny-tool-button button-export"><span class="material-icons-outlined">download</span>#{t("按筛选导出")}</button>
+            </div>
+            <div class="ny-panel-body ny-table-wrap"><table id="coupon-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/coupon.js")}
+#{include file="../Common/Footer.html"}

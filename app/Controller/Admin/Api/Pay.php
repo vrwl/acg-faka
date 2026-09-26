@@ -554,17 +554,6 @@ class Pay extends Manage
     public function getPlugins(): array
     {
         $plugins = $this->pay->getPlugins();
-        $appStore = (array)json_decode((string)file_get_contents(BASE_PATH . "/runtime/plugin/store.cache"), true);
-        foreach ($plugins as $index => $plugin) {
-            if (!array_key_exists($plugin["id"], $appStore)) {
-                $plugins[$index]['icon'] = "/favicon.ico";
-            } else {
-                $plugins[$index]['icon'] = \App\Service\App::APP_URL . $appStore[$plugin["id"]]['icon'];
-                if ($plugin['info']['version'] !== $appStore[$plugin['id']]["version"]) {
-                    $plugins[$index]['have_update'] = true;
-                }
-            }
-        }
 
         $plugins = array_values($plugins);
 
@@ -574,14 +563,26 @@ class Pay extends Manage
             return $bTop <=> $aTop;
         });
 
-        usort($plugins, function ($a, $b) {
-            return ($b['have_update'] ?? false) <=> ($a['have_update'] ?? false);
-        });
-
         //支付插件的名称/简介/功能项来自各插件 Config/Info.php，属插件元数据（scene=meta，不参与废词条回收）
         $plugins = \Kernel\Util\Lang::transList($plugins, [
             'info.name', 'info.description', 'info.options',
         ], 'meta');
+
+        //插件图标由插件包自带：Config/Info.php 里写 'icon'（站内绝对路径或 HTTP(S) 地址）
+        //即可，缺失或格式不合规就退回默认图标，避免拼出空的 <img src=""> 变裂图。
+        foreach ($plugins as $index => $plugin) {
+            $icon = trim((string)($plugin['info']['icon'] ?? ''));
+            if (
+                $icon === ''
+                || strlen($icon) > 255
+                || preg_match('/[\x00-\x20\x7F<>"\']/u', $icon)
+                || str_starts_with($icon, '//')
+                || !preg_match('~^(?:/|https?://)~i', $icon)
+            ) {
+                $icon = '/favicon.ico';
+            }
+            $plugins[$index]['icon'] = $icon;
+        }
 
         return $this->json(data: ["list" => $plugins]);
     }

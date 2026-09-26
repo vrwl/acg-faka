@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <title>微信支付 #{$order.pay_amount} 元</title>
+    <link href="#{PluginView('Assets/Css/checkout.css')}" rel="stylesheet" type="text/css">
+</head>
+
+<body data-state="#{$state}" data-urgency="" style="--ac:#07C160;--deep:#06A552;--soft:#E8F8EF;">
+<div class="bg"></div>
+
+#{include file="./Assets/Icons.html"}
+
+<div class="wrap" id="app"
+     data-trade="#{$order.trade_no|escape}"
+     data-remain="#{$remain}"
+     data-total="#{$expire}"
+     data-state="#{$state}"
+     data-return="#{$order.return_url|escape}"
+     data-amount="#{$order.pay_amount}"
+     data-payurl="#{$config.wx_url|escape}"
+     data-route="/plugin/WeChatPersonal">
+
+    <div class="card">
+        <div class="bar" id="bar"></div>
+
+        <div class="head">
+            <div class="brand">
+                <svg class="logo" aria-hidden="true"><use href="#lg-wechat" xlink:href="#lg-wechat"></use></svg>
+                <div>
+                    <div class="name">微信支付</div>
+                    <span class="chan">扫码支付</span>
+                </div>
+            </div>
+            <div class="clock" title="剩余支付时间">
+                <svg viewBox="0 0 36 36" aria-hidden="true">
+                    <circle class="track" cx="18" cy="18" r="15.9" fill="none" stroke-width="3.4"></circle>
+                    <circle class="ring" id="ring" cx="18" cy="18" r="15.9" fill="none" stroke-width="3.4"
+                            stroke-dasharray="99.9" stroke-dashoffset="0"></circle>
+                </svg>
+                <b id="cd">--:--</b>
+            </div>
+        </div>
+
+        <div class="amount">
+            <div class="lbl">支付金额 <span class="tag">需一分不差</span></div>
+            <div class="amt-row">
+                <span class="cur">¥</span>
+                <b>#{$order.pay_amount}</b>
+                <button class="cbtn" type="button" data-copy="#{$order.pay_amount}" data-copytip="金额已复制" aria-label="复制金额">
+                    <svg><use href="#ic-copy" xlink:href="#ic-copy"></use></svg>复制
+                </button>
+            </div>
+        </div>
+
+        <div class="qrzone">
+            <div class="qr">
+                <div id="qrcode"></div>
+                <div class="chip"><svg aria-hidden="true"><use href="#lg-wechat" xlink:href="#lg-wechat"></use></svg></div>
+            </div>
+            <div class="scan-hint only-pc">打开手机微信，扫一扫上方二维码</div>
+            <div class="scan-hint only-wap">手机上无法扫描本机屏幕<br>请用下方按钮直接打开微信付款</div>
+        </div>
+
+        <div class="acts">
+            <a class="btn btn-primary only-wap" href="#{$config.wx_url|escape}">
+                <svg><use href="#ic-wallet" xlink:href="#ic-wallet"></use></svg>打开微信付款
+            </a>
+        </div>
+
+        <div class="warnline">
+            <svg aria-hidden="true"><use href="#ic-alert" xlink:href="#ic-alert"></use></svg>
+            <div>付款金额必须是 <b>#{$order.pay_amount}</b> 元，系统靠金额识别订单，多付或少付都无法自动发货。</div>
+        </div>
+
+        <div class="foot">
+            <div class="listen">
+                <span class="dot"></span>
+                <span id="listenText">正在等待付款</span>
+            </div>
+
+            <details class="detail">
+                <summary>订单详情
+                    <svg aria-hidden="true"><use href="#ic-down" xlink:href="#ic-down"></use></svg>
+                </summary>
+                <div class="rows">
+                    <div class="row"><s>商户订单号</s><span>#{$order.trade_no}</span></div>
+                    <div class="row"><s>应付金额</s><span>¥ #{$order.pay_amount}</span></div>
+                    <div class="row"><s>创建时间</s><span>#{$order.create_time}</span></div>
+                    <div class="row"><s>支付方式</s><span>微信 · 扫码</span></div>
+                </div>
+            </details>
+        </div>
+
+        #{include file="./Assets/States.html"}
+    </div>
+</div>
+
+<div class="toast" id="toast"><svg><use href="#ic-check" xlink:href="#ic-check"></use></svg><span id="toastText">已复制</span></div>
+
+#{js([
+"/assets/common/js/jquery.min.js",
+"/assets/common/js/jquery.qrcode.min.js"
+])}
+<script src="#{PluginView('Assets/Js/checkout.js')}"></script>
+</body>
+</html>

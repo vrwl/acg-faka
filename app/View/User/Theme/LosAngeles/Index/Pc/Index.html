@@ -1,0 +1,223 @@
+#{*
+  洛杉矶 · 电脑端首页
+
+  骨架取自拼多多，不是京东。区别是刻意的：
+
+    京东   = 左侧全品类 + 中轮播 + 右用户卡，往下一层一个样的楼层。
+             信息量大，但首屏几乎看不到商品。
+    拼多多 = 搜索 → 金刚区 → 秒杀条 → 一条望不到头的商品流。
+             首屏就是商品，往下还是商品。
+
+  货源站要的是后者：用户来是为了找货，不是为了逛版式。所以这里：
+    · 首屏不做三栏。轮播压到 320 高，右边只留一张窄用户卡。
+    · 金刚区紧跟轮播，一行十个。
+    · 秒杀是一条红带 + 横向轨，不占整屏。
+    · 分类楼层每层只有「一行标题 + 一行商品」，不做海报位。
+    · 页面重心是「猜你喜欢」：吸顶分类标签 + 六列无限流。
+*}
+#{include file="../../Common/Pc/Head.html" laArea="shop" laPage="home"}
+#{include file="../../Common/Pc/Header.html" laSearch=1 laCats=$category}
+
+#{assign var=laBanners value=\App\View\User\Theme\LosAngeles\Support::banners($setting)}
+#{assign var=laQuick value=\App\View\User\Theme\LosAngeles\Support::shortcuts($setting, $user)}
+#{assign var=laFloors value=\App\View\User\Theme\LosAngeles\Support::floors($setting)}
+#{assign var=laFloorCats value=\App\View\User\Theme\LosAngeles\Support::floorCategoryList($setting, $category, 6)}
+#{assign var=laTopAll value=\App\View\User\Theme\LosAngeles\Support::topCount($category)}
+#{* 猜你喜欢的标签：站长在后台挑（任意层级、可含「推荐」），没挑就取前 12 个一级 *}
+#{assign var=laTabs value=\App\View\User\Theme\LosAngeles\Support::feedCategoryList($setting, $category, 12)}
+#{assign var=laTabsCurated value=\App\View\User\Theme\LosAngeles\Support::list($setting, 'feed_cats')|@count}
+
+#{if \App\View\User\Theme\LosAngeles\Support::isCatalog()}
+    #{include file="./Catalog.html" laCatId=$categoryId}
+#{else}
+<main class="la-home" data-la-home>
+
+    #{* ---------------------------------------------------------- 首屏：轮播 + 窄用户卡 *}
+    <section class="la-hero la-wrap">
+        <div class="la-hero__stage">
+            #{if $laBanners}
+                <div class="la-slider" data-la-slider>
+                    <div class="la-slider__track" data-la-slider-track>
+                        #{foreach $laBanners as $b}
+                            <div class="la-slider__slide">
+                                #{if $b.url}<a href="#{$b.url|escape:'html'}" class="la-slider__link">#{/if}
+                                <img src="#{$b.image|escape:'html'}" alt="#{$b.title|escape:'html'}" loading="#{if $b@first}eager#{else}lazy#{/if}" decoding="async">
+                                #{if $b.title || $b.sub}
+                                    <div class="la-slider__cap">
+                                        #{if $b.title}<strong>#{$b.title|escape:'html'}</strong>#{/if}
+                                        #{if $b.sub}<span>#{$b.sub|escape:'html'}</span>#{/if}
+                                    </div>
+                                #{/if}
+                                #{if $b.url}</a>#{/if}
+                            </div>
+                        #{/foreach}
+                    </div>
+                    #{if $laBanners|@count > 1}
+                        <button type="button" class="la-slider__nav la-slider__nav--prev" data-la-slider-prev aria-label="#{t('上一张')}">#{\App\View\User\Theme\LosAngeles\Icons::svg('left')}</button>
+                        <button type="button" class="la-slider__nav la-slider__nav--next" data-la-slider-next aria-label="#{t('下一张')}">#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</button>
+                        <div class="la-slider__dots" data-la-slider-dots></div>
+                    #{/if}
+                </div>
+            #{else}
+                #{* 站长没配轮播时的出厂位：不引入任何图片依赖，纯 CSS *}
+                <a class="la-poster" href="#la-feed">
+                    <span class="la-poster__glow" aria-hidden="true"></span>
+                    <span class="la-poster__copy">
+                        <b>#{$config.shop_name|escape:'html'}</b>
+                        <em>#{if $config.description}#{$config.description|escape:'html'}#{else}#{t("海量优质货源，下单即刻发货")}#{/if}</em>
+                    </span>
+                    <span class="la-poster__go">#{t("立即选购")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</span>
+                </a>
+            #{/if}
+        </div>
+
+        <aside class="la-hero__side">
+            #{if $user}
+                <div class="la-mecard">
+                    <a class="la-mecard__top" href="/user/dashboard/index">
+                        <img class="la-mecard__avatar" src="#{$user.avatar|default:$favicon|escape:'html'}" alt="" width="38" height="38">
+                        <span class="la-mecard__id">
+                            <strong class="la-ellipsis">#{$user.username|escape:'html'}</strong>
+                            #{if $group && $group.name}
+                                <span class="la-mecard__lv">
+                                    #{if $group.icon}<img src="#{$group.icon}" alt="" width="11" height="11">#{/if}#{lang($group.name, 'dyn')|escape:'html'}
+                                </span>
+                            #{/if}
+                        </span>
+                    </a>
+                    <div class="la-mecard__wallet">
+                        <a href="/user/recharge/index"><b>#{$config.currency_symbol}#{$user.balance|escape:'html'}</b><span>#{t("余额")}</span></a>
+                        <a href="/user/cash/index"><b>#{$user.coin|escape:'html'}</b><span>#{t("硬币")}</span></a>
+                    </div>
+                    <a class="la-mecard__cta" href="/user/recharge/index">#{t("去充值")}</a>
+                    <div class="la-mecard__links">
+                        <a href="/user/personal/purchaseRecord">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}<span>#{t("订单")}</span></a>
+                        <a href="/user/index/query">#{\App\View\User\Theme\LosAngeles\Icons::svg('search')}<span>#{t("查单")}</span></a>
+                        <a href="/user/ticket/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('headset')}<span>#{t("客服")}</span></a>
+                    </div>
+                </div>
+            #{else}
+                <div class="la-mecard la-mecard--guest">
+                    <span class="la-mecard__ring" aria-hidden="true">#{\App\View\User\Theme\LosAngeles\Icons::svg('user')}</span>
+                    <strong>#{t("Hi，欢迎光临")}</strong>
+                    <p>#{t("登录后可享会员价")}</p>
+                    <div class="la-mecard__auth">
+                        <a class="la-btn la-btn--brand la-btn--block" href="/user/authentication/login">#{t("登录")}</a>
+                        #{if $config.registered_state == 1}
+                            <a class="la-btn la-btn--line la-btn--block" href="/user/authentication/register">#{t("注册")}</a>
+                        #{/if}
+                    </div>
+                    <ul class="la-mecard__sell">
+                        <li>#{\App\View\User\Theme\LosAngeles\Icons::svg('flash')}<span>#{t("自动发货")}</span></li>
+                        <li>#{\App\View\User\Theme\LosAngeles\Icons::svg('shield')}<span>#{t("交易保障")}</span></li>
+                        <li>#{\App\View\User\Theme\LosAngeles\Icons::svg('headset')}<span>#{t("在线客服")}</span></li>
+                    </ul>
+                </div>
+            #{/if}
+        </aside>
+    </section>
+
+    #{* ---------------------------------------------------------- 金刚区 *}
+    #{if $laQuick}
+        #{* 版心归版心，卡片归卡片：.la-wrap 只能是透明容器。
+           让一张带白底的卡自己当 .la-wrap，它的底色会铺满整个 1200 版心（连两侧 gutter 一起吃掉），
+           比旁边那些"版心的子元素"宽出 24px —— 就是之前左右各溢出 12px 的原因。 *}
+        <div class="la-wrap">
+            <nav class="la-quick" aria-label="#{t('快捷入口')}">
+                #{foreach $laQuick as $q}
+                    <a class="la-quick__item" href="#{$q.url|escape:'html'}"#{if $q.blank} target="_blank" rel="noopener nofollow"#{/if}>
+                        <span class="la-quick__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg($q.icon)}</span>
+                        <span class="la-quick__name la-ellipsis">#{$q.name|escape:'html'}</span>
+                    </a>
+                #{/foreach}
+            </nav>
+        </div>
+    #{/if}
+
+    #{* ---------------------------------------------------------- 公告条 *}
+    #{if $config.notice}
+        <div class="la-wrap">
+            <button type="button" class="la-noticebar" data-la-notice>
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('megaphone')}
+                <span class="la-noticebar__txt la-ellipsis">#{$config.notice|strip_tags|trim}</span>
+                <em>#{t("详情")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</em>
+            </button>
+            <div hidden data-la-notice-html>#{$config.notice}</div>
+        </div>
+    #{/if}
+
+    #{* ---------------------------------------------------------- 楼层 *}
+    <div class="la-wrap">
+        #{foreach $laFloors as $f}
+            #{if $f.type == 'seckill'}
+                <section class="la-floor la-floor--seckill" data-la-floor="seckill" hidden>
+                    <div class="la-floor__band">
+                        <div class="la-floor__title">
+                            #{\App\View\User\Theme\LosAngeles\Icons::svg('flash')}
+                            <span>#{if $f.title}#{$f.title|escape:'html'}#{else}#{t("限时秒杀")}#{/if}</span>
+                        </div>
+                        <span class="la-live"><span class="la-live__dot"></span>#{t("抢购中")}</span>
+                        <a class="la-floor__more" href="/cat/recommend">#{t("更多")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                    </div>
+                    <div class="la-floor__body">
+                        <div class="la-rail" data-la-slot="seckill"></div>
+                    </div>
+                </section>
+
+            #{elseif $f.type == 'recommend'}
+                <section class="la-floor" data-la-floor="recommend" hidden>
+                    <div class="la-floor__head">
+                        <h2 class="la-floor__title">
+                            #{\App\View\User\Theme\LosAngeles\Icons::svg('star')}
+                            <span>#{if $f.title}#{$f.title|escape:'html'}#{else}#{t("店长推荐")}#{/if}</span>
+                        </h2>
+                        <a class="la-floor__more" href="/cat/recommend">#{t("更多")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                    </div>
+                    <div class="la-grid" data-la-slot="recommend"></div>
+                </section>
+
+            #{elseif $f.type == 'category'}
+                #{foreach $laFloorCats as $fc}
+                    <section class="la-floor" data-la-floor="category" data-cat="#{$fc.id}" hidden>
+                        <div class="la-floor__head">
+                            <h2 class="la-floor__title"><span>#{$fc.name}</span></h2>
+                            <div class="la-floor__chips">
+                                #{foreach $fc.subs|default:[] as $child}
+                                    <a class="la-chip la-chip--xs" href="/cat/#{$child.id}">#{$child.name}</a>
+                                #{/foreach}
+                            </div>
+                            <a class="la-floor__more" href="/cat/#{$fc.id}">#{t("全部")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                        </div>
+                        <div class="la-grid" data-la-slot="cat-#{$fc.id}"></div>
+                    </section>
+                #{/foreach}
+
+            #{elseif $f.type == 'waterfall'}
+                #{* 页面的重心：吸顶分类标签 + 六列无限流 *}
+                <section class="la-feed" data-la-floor="waterfall" id="la-feed">
+                    <div class="la-feed__bar" data-la-feed-bar>
+                        <h2 class="la-feed__title">#{if $f.title}#{$f.title|escape:'html'}#{else}#{t("猜你喜欢")}#{/if}</h2>
+                        <div class="la-feed__tabs" data-la-fall-tabs>
+                            <button type="button" class="la-tab is-on" data-cat="0">#{t("全部")}</button>
+                            #{foreach $laTabs as $c}
+                                <button type="button" class="la-tab" data-cat="#{$c.id}">#{$c.name}</button>
+                            #{/foreach}
+                            #{if !$laTabsCurated && $laTopAll > $laTabs|@count}
+                                <a class="la-tab la-tab--more" href="/cat/recommend">#{t("更多")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                            #{/if}
+                        </div>
+                    </div>
+                    <div class="la-grid" data-la-slot="waterfall" aria-live="polite"></div>
+                    <div class="la-fall__foot">
+                        <div class="la-fall__sentinel" data-la-fall-more></div>
+                        <div class="la-fall__end" hidden>#{t("已经到底啦")}</div>
+                    </div>
+                </section>
+            #{/if}
+        #{/foreach}
+    </div>
+</main>
+#{/if}
+
+#{include file="../../Common/Pc/Footer.html"}
+#{include file="../../Common/Pc/Foot.html" laArea="shop" laJs="Pc.Shop.js"}

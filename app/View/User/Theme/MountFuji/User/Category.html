@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell mf-page-shell-goods-admin" data-mf-controller="/assets/user/controller/business/category.js" data-mf-table="#category-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">CATALOG STRUCTURE</span><h1>#{t("商品分类")}</h1><p>#{t("用清晰的分类层级组织商品，让顾客更快找到目标。")}</p></div>
+            <button type="button" class="mf-button mf-button--primary button-add"><span class="material-icons-outlined">add</span>#{t("新建分类")}</button>
+        </section>
+        <section class="mf-panel">
+            <div class="mf-panel-heading"><div><span class="material-icons-outlined">category</span><div><strong>#{t("分类列表")}</strong><small>#{t("支持排序、状态管理与快速编辑")}</small></div></div></div>
+            <div class="mf-panel-body mf-table-wrap"><table id="category-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/category.js")}
+#{include file="../Common/Footer.html"}

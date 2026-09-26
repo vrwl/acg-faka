@@ -1,0 +1,15 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page" data-ny-page="member">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("我的下级")}</h1><p>#{t("成员等级、状态与贡献")}</p></div>
+            <a class="ny-button ny-button--tonal" href="/user/agent/promote"><span class="material-icons-outlined">share</span>#{t("去推广")}</a>
+        </section>
+        <section class="ny-panel">
+            <div class="ny-panel-body ny-table-wrap"><table id="member-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/child.js")}
+#{include file="../Common/Footer.html"}

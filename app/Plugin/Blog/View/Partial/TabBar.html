@@ -1,0 +1,19 @@
+<!--移动端底部 Tab（仅一级页渲染；safe-area 由 CSS 处理）-->
+<nav class="blog-tab" aria-label="#{t('底部导航')}">
+    <a href="#{$blog.urls.index}" #{if $page.tab == 'home'}aria-current="page"#{/if}>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>
+        <span>#{t("首页")}</span>
+    </a>
+    <a href="#{$blog.urls.category}" #{if $page.tab == 'category'}aria-current="page"#{/if}>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
+        <span>#{t("分类")}</span>
+    </a>
+    <a href="#{$blog.urls.search}" #{if $page.tab == 'search'}aria-current="page"#{/if}>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5 16.6 16.6"/></svg>
+        <span>#{t("搜索")}</span>
+    </a>
+    <button type="button" data-blog-me-btn>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.6-3.4 4.3-5 7.5-5s5.9 1.6 7.5 5"/></svg>
+        <span>#{t("我的")}</span>
+    </button>
+</nav>

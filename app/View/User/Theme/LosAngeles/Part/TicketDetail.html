@@ -1,0 +1,75 @@
+#{*
+  洛杉矶 · 工单详情（两端共用）
+  user/ticket.detail.js 的容器契约见文件内类名；
+  .uc-ticket-detail-state__icon 里的 .material-icons-outlined 是控制器要写连字的，
+  本主题不加载 Material 字体，所以把它设成读屏专用（.la-sr），状态图标用主题 SVG。
+*}
+<div class="uc-ticket-detail-page la-tdetail" data-ticket-id="#{$ticketId|escape:'html'}">
+    <div class="uc-ticket-detail-loading la-tdetail__loading">
+        <span class="uc-ticket-detail-loading__orb la-spinner"></span>
+        <span>#{t("正在读取工单")}</span>
+    </div>
+
+    <div class="uc-ticket-detail-error la-empty" hidden>
+        #{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}
+        <strong class="la-empty__title">#{t("工单读取失败")}</strong>
+        <p class="la-empty__desc"></p>
+        <a class="la-btn la-btn--line la-btn--sm" href="/user/ticket/index">#{t("返回工单列表")}</a>
+    </div>
+
+    <div class="uc-ticket-detail la-tdetail__main" hidden>
+        <header class="la-card la-tdetail__head">
+            <div class="la-tdetail__headtop">
+                <span class="uc-ticket-detail-number la-num"></span>
+                <span class="uc-ticket-detail-status la-ostat"></span>
+                <span class="uc-ticket-detail-type la-badge"></span>
+                <span class="uc-ticket-detail-priority la-badge"></span>
+            </div>
+            <h2 class="uc-ticket-detail-title"></h2>
+            <div class="uc-ticket-detail-state la-note">
+                <span class="uc-ticket-detail-state__icon">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('clock')}
+                    <span class="material-icons-outlined la-sr"></span>
+                </span>
+                <span class="uc-ticket-detail-state__copy">
+                    <span class="uc-ticket-detail-state__hint"></span>
+                </span>
+            </div>
+            <dl class="uc-ticket-context la-tdetail__ctx">
+                <div><dt>#{t("创建时间")}</dt><dd data-context="create_time">-</dd></div>
+                <div><dt>#{t("最后更新")}</dt><dd data-context="update_time">-</dd></div>
+                <div><dt>#{t("当前状态")}</dt><dd data-context="status">-</dd></div>
+                <div><dt>#{t("优先级")}</dt><dd data-context="priority">-</dd></div>
+            </dl>
+        </header>
+
+        <section class="la-card la-tdetail__thread">
+            <button type="button" class="uc-ticket-history-more la-btn la-btn--ghost la-btn--sm" hidden>#{t("查看更早的消息")}</button>
+            <div class="uc-ticket-messages la-tdetail__msgs" aria-live="polite"></div>
+            <div class="uc-ticket-new-messages la-tdetail__new" hidden></div>
+            <span class="uc-ticket-live la-sr" aria-live="polite"></span>
+        </section>
+
+        <section class="la-card uc-ticket-related la-tdetail__related" hidden>
+            <div class="uc-ticket-related-card"></div>
+        </section>
+
+        <section class="uc-ticket-proof-view la-tdetail__proof" hidden>
+            <img src="" alt="#{t('凭证')}">
+        </section>
+        <div class="uc-ticket-proof-card" hidden></div>
+
+        <form class="la-card uc-ticket-reply la-tdetail__reply">
+            <label class="la-label">#{t("回复内容")}</label>
+            <div id="ticket-reply-editor"></div>
+            <button type="submit" class="la-btn la-btn--brand la-btn--lg uc-ticket-reply__submit">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('message')}<span>#{t("发送回复")}</span>
+            </button>
+        </form>
+
+        <div class="uc-ticket-readonly la-note la-note--warn" hidden>
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('lock')}
+            <span>#{t("该工单已结束，如仍有问题请新建工单。")}</span>
+        </div>
+    </div>
+</div>

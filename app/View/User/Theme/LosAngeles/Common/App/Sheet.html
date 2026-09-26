@@ -1,0 +1,49 @@
+#{*
+  洛杉矶 · 手机端半屏面板（APP 形态）
+  全站共用一个 Sheet 宿主：App.Shell.js 往 [data-la-sheet-body] 里填内容，
+  再加 is-open 触发上滑动画。这样弹层只有一份 DOM，不会每次打开都新建节点。
+
+  外壳上不加 transform 动画 —— 容器一旦有非 none 的 transform 就成了包含块，
+  会把 layui 的 fixed 弹层困在局部坐标系里（站内踩过）。位移只加在面板本身。
+*}
+<div class="la-sheet" data-la-sheet hidden aria-hidden="true">
+    <div class="la-sheet__scrim" data-la-sheet-close></div>
+    <div class="la-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="la-sheet-title">
+        <div class="la-sheet__grip" data-la-sheet-grip></div>
+        <header class="la-sheet__head">
+            <h2 class="la-sheet__title" id="la-sheet-title" data-la-sheet-title></h2>
+            <button type="button" class="la-sheet__x" data-la-sheet-close aria-label="#{t('关闭')}">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('close')}
+            </button>
+        </header>
+        <div class="la-sheet__body" data-la-sheet-body></div>
+    </div>
+</div>
+
+#{* 「更多」菜单：APP 里这类入口是从底部升起来的动作面板，不是网页那种右上角下拉。
+   类名与 data 属性是 App.Shell.js 的契约（data-la-appmenu-panel / -close / data-la-theme / data-lang-value），只换形态。 *}
+<div class="la-appmenu" data-la-appmenu-panel hidden>
+    <div class="la-appmenu__scrim" data-la-appmenu-close></div>
+    <div class="la-appmenu__panel" role="dialog" aria-modal="true" aria-label="#{t('更多')}">
+        <div class="la-appmenu__grip" aria-hidden="true"></div>
+        <a class="la-appmenu__item" href="/">#{\App\View\User\Theme\LosAngeles\Icons::svg('home')}<span>#{t("首页")}</span></a>
+        <a class="la-appmenu__item" href="/user/index/query">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}<span>#{t("订单查询")}</span></a>
+        #{if $user}
+            <a class="la-appmenu__item" href="/user/dashboard/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('user')}<span>#{t("会员中心")}</span></a>
+        #{else}
+            <a class="la-appmenu__item" href="/user/authentication/login">#{\App\View\User\Theme\LosAngeles\Icons::svg('key')}<span>#{t("登录")}</span></a>
+        #{/if}
+        <button type="button" class="la-appmenu__item" data-la-theme="cycle">
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('auto')}<span>#{t("切换外观")}</span>
+        </button>
+        #{if $langs|@count > 1}
+            <div class="la-appmenu__sep"></div>
+            #{foreach $langs as $l}
+                <button type="button" class="la-appmenu__item#{if $l.active} is-on#{/if}" data-lang-value="#{$l.code|escape:'html'}">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('globe')}<span>#{$l.name|escape:'html'}</span>
+                </button>
+            #{/foreach}
+        #{/if}
+        <button type="button" class="la-appmenu__cancel" data-la-appmenu-close>#{t("取消")}</button>
+    </div>
+</div>

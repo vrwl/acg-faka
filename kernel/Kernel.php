@@ -20,12 +20,6 @@ const BASE_PATH = __DIR__ . "/../";
 require(BASE_PATH . '/vendor/autoload.php');
 require("Helper.php");
 
-define("BASE_APP_SERVER", match ((int)config("store")['server']) {
-    0 => App\Service\App::MAIN_SERVER,
-    1 => App\Service\App::STANDBY_SERVER1,
-    2 => App\Service\App::STANDBY_SERVER2,
-    3 => App\Service\App::GENERAL_SERVER
-});
 define("APP_VERSION", config('app')['version']);
 
 session_set_cookie_params([
@@ -67,7 +61,7 @@ try {
     Context::set(Base::LOCK, (string)file_get_contents(BASE_PATH . "/kernel/Install/Lock"));
     Context::set(Base::IS_INSTALL, file_exists(BASE_PATH . '/kernel/Install/Lock'));
     Context::set(Base::OPCACHE, extension_loaded("Zend OPcache") || extension_loaded("opcache"));
-    Context::set(Base::STORE_STATUS, file_exists(BASE_PATH . "/kernel/Plugin.php"));
+    Context::set(Base::STORE_STATUS, true);
     Context::set(Base::LANGUAGE, \Kernel\Util\Lang::detect());
 
     $count = count($s);
@@ -106,7 +100,7 @@ try {
     $capsule->bootEloquent();
 
     if (Context::get(Base::STORE_STATUS) && Context::get(Base::IS_INSTALL)) {
-        require("Plugin.php");
+        require(__DIR__ . "/Plugin/Local.php");
         Hook::inst()->load();
         hook(\App\Consts\Hook::KERNEL_INIT);
         AdminEntrance::guard();

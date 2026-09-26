@@ -1,0 +1,117 @@
+#{include file="../Common/Header.html"}
+#{set_script_var(["_business_notice_var" => $business.notice])}
+<div class="mf-page-shell mf-page-shell-business">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        #{if !$business || $purchase == 1 && $business}
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">#{if !$business}OPEN YOUR STORE#{else}LEVEL UPGRADE#{/if}</span><h1>#{if !$business}#{t("开通你的店铺")}#{else}#{t("升级店铺等级")}#{/if}</h1><p>#{if !$business}#{t("选择适合的套餐，建立属于自己的线上店铺。")}#{else}#{t("解锁更完整的域名、供货与经营能力。")}#{/if}</p></div>
+            #{if $purchase == 1 && $business}<a class="mf-button mf-button--tonal" href="/user/business/index"><span class="material-icons-outlined">arrow_back</span>#{t("返回店铺")}</a>#{/if}
+        </section>
+        <section class="mf-panel mf-plan-panel">
+            <div class="mf-panel-heading"><div><span class="material-icons-outlined">workspace_premium</span><div><strong>#{t("选择店铺套餐")}</strong><small>#{t("一次开通，永久有效；点击卡片进行选择")}</small></div></div></div>
+            <div class="mf-panel-body">
+                <form class="layui-form">
+                    <div class="mf-plan-grid">
+                        #{foreach $level as $le}
+                        <button type="button" class="business-group mf-plan #{if $le@last && $le@total > 1}mf-plan--recommended#{/if}" data-id="#{$le.id}">
+                            #{if $le@last && $le@total > 1}<span class="mf-plan__badge">#{t("推荐")}</span>#{/if}
+                            <span class="mf-plan__check material-icons-outlined">check</span>
+                            <span class="mf-plan__head"><img src="#{$le.icon}" alt=""><strong>#{$le.name}</strong><small>#{t("终身可用")}</small></span>
+                            <span class="mf-plan__price"><small>#{$config.currency_symbol}</small>#{$le.price}</span>
+                            <span class="mf-plan__features">
+                                <span class="#{if $le.substation != 1}is-off#{/if}"><i class="material-icons-outlined">#{if $le.substation == 1}check_circle#{else}cancel#{/if}</i>#{t("分站功能")}</span>
+                                <span><i class="material-icons-outlined">check_circle</i>#{t("分站返佣")}</span>
+                                <span class="#{if $le.top_domain != 1}is-off#{/if}"><i class="material-icons-outlined">#{if $le.top_domain == 1}check_circle#{else}cancel#{/if}</i>#{t("独立域名")}</span>
+                                <span class="#{if $le.supplier != 1}is-off#{/if}"><i class="material-icons-outlined">#{if $le.supplier == 1}check_circle#{else}cancel#{/if}</i>#{t("供货权限")}</span>
+                                <span class="mf-plan__fee"><em>#{t("供货手续费")}</em><b>#{if $le.supplier == 1}#{$le.cost*100}%#{else}—#{/if}</b></span>
+                            </span>
+                        </button>
+                        #{/foreach}
+                    </div>
+                    <div class="mf-benefit-grid">
+                        <div><span class="material-icons-outlined">hub</span><p><strong>#{t("分站返佣")}</strong>#{t("主站商品在分站成交后，按成交价与拿货价的差额返佣。")}</p></div>
+                        <div><span class="material-icons-outlined">language</span><p><strong>#{t("独立域名")}</strong>#{t("绑定自己的顶级域名，建立更统一的品牌入口。")}</p></div>
+                        <div><span class="material-icons-outlined">inventory_2</span><p><strong>#{t("供货权限")}</strong>#{t("自建分类并上架商品，由主站协助推广与售卖。")}</p></div>
+                        <div><span class="material-icons-outlined">receipt_long</span><p><strong>#{t("供货手续费")}</strong>#{t("自主上架商品成交后，按套餐比例收取服务费。")}</p></div>
+                    </div>
+                    <div class="mf-form-actions mf-form-actions--center"><button type="button" class="mf-button mf-button--primary payButton"><span class="material-icons-outlined">rocket_launch</span>#{if !$business}#{t("立即开通店铺")}#{else}#{t("确认升级店铺")}#{/if}</button></div>
+                </form>
+            </div>
+        </section>
+        #{else}
+            #{if $user.businessLevel.substation == 1}
+            <section class="mf-business-overview">
+                <div class="mf-business-overview__identity">
+                    <span><img src="#{$user.businessLevel.icon}" alt=""></span>
+                    <div><small>#{t("当前商户等级")}</small><strong>#{$user.businessLevel.name}</strong><em>#{t("店铺运行正常")}</em></div>
+                </div>
+                <div class="mf-business-overview__features">
+                    <div class="#{if $user.businessLevel.top_domain == 1}is-ok#{else}is-off#{/if}"><span class="material-icons-outlined">language</span><small>#{t("独立域名")}</small><strong>#{if $user.businessLevel.top_domain == 1}#{t("已支持")}#{else}#{t("不支持")}#{/if}</strong></div>
+                    <div class="#{if $user.businessLevel.supplier == 1}is-ok#{else}is-off#{/if}"><span class="material-icons-outlined">inventory_2</span><small>#{t("供货权限")}</small><strong>#{if $user.businessLevel.supplier == 1}#{t("已支持")}#{else}#{t("不支持")}#{/if}</strong></div>
+                    <div><span class="material-icons-outlined">percent</span><small>#{t("供货手续费")}</small><strong>#{if $user.businessLevel.supplier == 1}#{$user.businessLevel.cost*100}%#{else}—#{/if}</strong></div>
+                </div>
+                #{if count($level) > 0}<a href="/user/business/index?purchase=1" class="mf-button mf-button--tonal"><span class="material-icons-outlined">upgrade</span>#{t("升级店铺")}</a>#{/if}
+            </section>
+
+            <form class="layui-form form-data">
+                <section class="mf-panel mf-business-settings" data-mf-business-tabs>
+                    <div class="mf-business-tabs" role="tablist">
+                        <button type="button" class="mf-business-tab-trigger is-active" data-mf-business-tab-trigger="basic" role="tab"><span class="material-icons-outlined">storefront</span><span>#{t("店铺信息")}</span></button>
+                        <button type="button" class="mf-business-tab-trigger" data-mf-business-tab-trigger="product" role="tab"><span class="material-icons-outlined">inventory_2</span><span>#{t("商品设置")}</span></button>
+                        <button type="button" class="mf-business-tab-trigger" data-mf-business-tab-trigger="domain" role="tab"><span class="material-icons-outlined">language</span><span>#{t("域名绑定")}</span></button>
+                    </div>
+
+                    <div class="mf-panel-body">
+                        <section class="mf-business-tab-panel is-active" data-mf-business-tab-panel="basic" role="tabpanel">
+                            <div class="mf-form-section__head"><span class="material-icons-outlined">tune</span><div><strong>#{t("基础信息")}</strong><small>#{t("店铺名称、标题和访问者看到的公告")}</small></div></div>
+                            <div class="mf-form-grid mf-form-grid--2">
+                                <label class="mf-field"><span>#{t("店铺名称")}</span><input type="text" value="#{$business.shop_name}" name="shop_name" required autocomplete="off" placeholder="#{t('请输入店铺名称')}" class="layui-input"></label>
+                                <label class="mf-field"><span>#{t("网站标题")}</span><input type="text" value="#{$business.title}" name="title" required autocomplete="off" placeholder="#{t('用于浏览器标题')}" class="layui-input"></label>
+                            </div>
+                            <div class="mf-notice-field"><div><strong>#{t("店铺公告")}</strong><small>#{t("支持 Markdown，可切换预览与 HTML 源码")}</small></div><div class="notice-editor"></div></div>
+                            <label class="mf-switch-row"><input type="checkbox" name="master_display" lay-ignore value="1" #{if $business.master_display == 1}checked#{/if}><span></span><div><strong>#{t("显示主站商品")}</strong><small>#{t("开启后，你的店铺会同时展示主站商品")}</small></div></label>
+                        </section>
+
+                        <section class="mf-business-tab-panel" data-mf-business-tab-panel="product" role="tabpanel" aria-hidden="true">
+                            <div class="mf-business-table-section">
+                                <div class="mf-business-table-head"><div><strong>#{t("主站分类")}</strong><small>#{t("选择分类后可继续管理其中的商品")}</small></div><div><button type="button" class="mf-mini-action category-show" data-state="1"><span class="material-icons-outlined">visibility</span>#{t("全部显示")}</button><button type="button" class="mf-mini-action mf-mini-action--danger category-show" data-state="0"><span class="material-icons-outlined">visibility_off</span>#{t("全部隐藏")}</button></div></div>
+                                <div class="mf-table-wrap"><table id="master_category" lay-filter="master_category"></table></div>
+                            </div>
+                            <div data-mf-business-commodity-anchor></div>
+                            <div class="mf-business-table-section mf-business-commodity" data-mf-business-commodity-section>
+                                <div class="mf-business-table-head"><div><a id="commodity"></a><strong>#{t("主站商品")}</strong><small>#{t("按分类设置显示状态、名称与加价比例")}</small></div><div><button type="button" class="mf-mini-action commodity-show" data-state="1"><span class="material-icons-outlined">visibility</span>#{t("全部显示")}</button><button type="button" class="mf-mini-action mf-mini-action--danger commodity-show" data-state="0"><span class="material-icons-outlined">visibility_off</span>#{t("全部隐藏")}</button><button type="button" class="mf-mini-action mf-mini-action--primary commodity-premium"><span class="material-icons-outlined">percent</span>#{t("批量加价")}</button></div></div>
+                                <div class="mf-table-wrap"><table id="master_commodity" lay-filter="master_commodity"></table></div>
+                            </div>
+                        </section>
+
+                        <section class="mf-business-tab-panel" data-mf-business-tab-panel="domain" role="tabpanel" aria-hidden="true">
+                            <div class="mf-form-section__head"><span class="material-icons-outlined">dns</span><div><strong>#{t("店铺访问域名")}</strong><small>#{t("绑定状态清楚可见，避免误操作")}</small></div></div>
+                            <div class="mf-domain-card">
+                                <div class="mf-domain-card__head"><span class="material-icons-outlined">link</span><div><strong>#{t("系统子域名")}</strong><small>#{t("使用平台提供的域名快速访问")}</small></div>#{if $business.subdomain}<span class="mf-status-chip is-ok">#{t("已绑定")}</span>#{/if}</div>
+                                <div class="mf-domain-row"><input type="text" value="#{$business.subdomain}" name="subdomain" autocomplete="off" placeholder="#{t('例如 myshop')}" class="layui-input" #{if $business.subdomain}disabled#{/if}><select name="suffix" lay-ignore #{if $business.subdomain}disabled#{/if}>#{foreach $domain as $d}<option value="#{$d}">.#{$d}</option>#{/foreach}</select></div>
+                                #{if $business.subdomain}<button type="button" class="mf-text-danger unbind-subdomain"><span class="material-icons-outlined">link_off</span>#{t("解绑当前子域名")}</button>#{/if}
+                            </div>
+
+                            #{if $user.businessLevel.top_domain == 1}
+                            <div class="mf-domain-card">
+                                <div class="mf-domain-card__head"><span class="material-icons-outlined">public</span><div><strong>#{t("独立域名")}</strong><small>#{t("请先将域名完成 CNAME 解析")}</small></div>#{if $business.topdomain}#{if gethostbyname($config.cname) == gethostbyname($business.topdomain)}<span class="mf-status-chip is-ok">#{t("解析正常")}</span>#{else}<span class="mf-status-chip is-warn">#{t("等待解析")}</span>#{/if}#{/if}</div>
+                                <input type="text" value="#{$business.topdomain}" name="topdomain" autocomplete="off" placeholder="#{t('例如 shop.yourdomain.com')}" class="layui-input" #{if $business.topdomain}disabled#{/if}>
+                                <div class="mf-cname">#{t("CNAME 指向")} <button type="button" class="clipboard" data-text="#{$config.cname}"><code>#{$config.cname}</code><span class="material-icons-outlined">content_copy</span></button></div>
+                                #{if $business.topdomain}<button type="button" class="mf-text-danger unbind-topdomain"><span class="material-icons-outlined">link_off</span>#{t("解绑当前独立域名")}</button>#{/if}
+                            </div>
+                            #{/if}
+                        </section>
+
+                        <div class="mf-form-actions"><button type="button" class="mf-button mf-button--primary save-config"><span class="material-icons-outlined">save</span>#{t("保存店铺设置")}</button></div>
+                    </div>
+                </section>
+            </form>
+            #{else}
+            <section class="mf-panel mf-locked-state"><div class="mf-panel-body"><span class="material-icons-outlined">lock</span><h1>#{t("当前等级暂未开放店铺功能")}</h1><p>#{t("升级商户等级后，即可配置店铺、域名和商品。")}</p><a href="/user/business/index?purchase=1" class="mf-button mf-button--primary"><span class="material-icons-outlined">upgrade</span>#{t("查看升级方案")}</a></div></section>
+            #{/if}
+        #{/if}
+    </main>
+</div>
+#{ready("/assets/user/controller/business/business.js")}
+#{include file="../Common/Footer.html"}

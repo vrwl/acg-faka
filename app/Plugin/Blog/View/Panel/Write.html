@@ -1,0 +1,215 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<link rel="stylesheet" href="#{Plugin('Blog','View/Css/admin.css')}">
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <div id="kt_content_container" class="container-fluid">
+            <div class="blog-write blog-admin" id="blog-write-app">
+
+                <!--顶部操作条-->
+                <div class="card blog-write__topbar mb-4">
+                    <div class="card-body py-3 d-flex align-items-center flex-wrap gap-3">
+                        <button class="ba-btn ba-btn--ghost blog-write-back" title="#{t('返回列表')}" style="padding:9px 12px">
+                            <i class="blogi blogi-back"></i>
+                        </button>
+                        <input class="blog-write__title-input flex-grow-1"
+                               id="blog-title-input" maxlength="200" placeholder="#{t('输入标题…')}">
+                        <span class="blog-write__chip" data-blog-status-chip>#{t("新草稿")}</span>
+                        <span class="blog-write__savehint" data-blog-save-hint></span>
+                        <button class="ba-btn ba-btn--ghost blog-btn-server-preview" title="#{t('用服务端渲染器预览最终效果')}">
+                            <i class="blogi blogi-preview"></i>
+                            <span class="d-none d-md-inline">#{t("最终预览")}</span>
+                        </button>
+                        <button class="ba-btn ba-btn--ghost blog-btn-save-draft">
+                            <i class="blogi blogi-save"></i>
+                            <span>#{t("存草稿")}</span>
+                        </button>
+                        <button class="ba-btn ba-btn--primary blog-btn-publish">
+                            <i class="blogi blogi-publish"></i>
+                            <span data-blog-publish-label>#{t("发布")}</span>
+                        </button>
+                        <button class="ba-btn ba-btn--ghost blog-btn-side-toggle" title="#{t('发布设置')}" style="padding:9px 12px">
+                            <i class="blogi blogi-settings"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="blog-write__main">
+                    <!--编辑器区-->
+                    <div class="card blog-write__editorwrap">
+                        <div class="blog-write__toolbar">
+                            <div class="blog-write__tools" role="toolbar">
+                                <button data-md-cmd="bold" title="#{t('加粗')} (Ctrl+B)"><i class="blogi blogi-bold"></i></button>
+                                <button data-md-cmd="italic" title="#{t('斜体')} (Ctrl+I)"><i class="blogi blogi-italic"></i></button>
+                                <button data-md-cmd="strike" title="#{t('删除线')}"><i class="blogi blogi-strike"></i></button>
+                                <span class="blog-write__tools-sep"></span>
+                                <button data-md-cmd="h2" title="#{t('二级标题')}">H2</button>
+                                <button data-md-cmd="h3" title="#{t('三级标题')}">H3</button>
+                                <span class="blog-write__tools-sep"></span>
+                                <button data-md-cmd="link" title="#{t('链接')} (Ctrl+K)"><i class="blogi blogi-link"></i></button>
+                                <button data-md-cmd="image" title="#{t('插入图片(可粘贴/拖拽)')}"><i class="blogi blogi-image"></i></button>
+                                <button data-md-cmd="codeinline" title="#{t('行内代码')}"><i class="blogi blogi-code-inline"></i></button>
+                                <button data-md-cmd="codeblock" title="#{t('代码块')}"><i class="blogi blogi-code"></i></button>
+                                <span class="blog-write__tools-sep"></span>
+                                <button data-md-cmd="quote" title="#{t('引用')}"><i class="blogi blogi-quote"></i></button>
+                                <button data-md-cmd="ul" title="#{t('无序列表')}"><i class="blogi blogi-list-ul"></i></button>
+                                <button data-md-cmd="ol" title="#{t('有序列表')}"><i class="blogi blogi-list-ol"></i></button>
+                                <button data-md-cmd="task" title="#{t('任务清单')}"><i class="blogi blogi-task"></i></button>
+                                <button data-md-cmd="table" title="#{t('表格')}"><i class="blogi blogi-table"></i></button>
+                                <span class="blog-write__tools-sep"></span>
+                                <button data-md-cmd="tip" title="#{t('提示框')}"><i class="blogi blogi-tip"></i></button>
+                                <button data-md-cmd="warning" title="#{t('警告框')}"><i class="blogi blogi-warn"></i></button>
+                                <button data-md-cmd="hr" title="#{t('分割线')}"><i class="blogi blogi-hr"></i></button>
+                            </div>
+                            <div class="blog-write__viewtabs" role="tablist">
+                                <button class="active" data-blog-pane="edit">#{t("编辑")}</button>
+                                <button data-blog-pane="preview">#{t("预览")}</button>
+                                <button data-blog-pane="split" class="d-none d-lg-inline-block">#{t("分屏")}</button>
+                            </div>
+                        </div>
+                        <div class="blog-write__panes" data-blog-mode="split">
+                            <div class="blog-write__editor">
+                                <textarea id="blog-md-editor"></textarea>
+                            </div>
+                            <div class="blog-write__preview blog-mdb" id="blog-md-preview"></div>
+                        </div>
+                        <div class="blog-write__statusbar">
+                            <span data-blog-count-chars>0 #{t("字")}</span>
+                            <span data-blog-count-reading></span>
+                            <span class="blog-write__statusbar-right">#{t("支持粘贴/拖拽图片上传 · Ctrl+S 保存")}</span>
+                        </div>
+                    </div>
+
+                    <!--发布设置侧栏-->
+                    <aside class="card blog-write__side" id="blog-write-side">
+                        <div class="card-body py-4">
+                            <div class="blog-side__head">
+                                <h3 class="fw-bolder m-0">#{t("发布设置")}</h3>
+                                <button class="ba-btn ba-btn--ghost blog-btn-side-close d-lg-none" style="padding:7px 10px"><i class="blogi blogi-close"></i></button>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="ba-field__label">#{t("状态")}</label>
+                                <div class="blog-seg" data-blog-status-seg>
+                                    <button data-status="0">#{t("草稿")}</button>
+                                    <button data-status="1">#{t("发布")}</button>
+                                    <button data-status="2">#{t("隐藏")}</button>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="ba-field__label">#{t("发布时间")}</label>
+                                <input type="datetime-local" class="ba-input" id="blog-field-publish-time">
+                                <div class="text-muted mt-1" style="font-size:12px">#{t("留空 = 立即；设为未来时间 = 定时发布（到点自动可见）")}</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="ba-field__label">Slug</label>
+                                <input class="ba-input" id="blog-field-slug" placeholder="#{t('留空自动生成')}">
+                                <div class="mt-1" style="font-size:12px" data-blog-slug-hint></div>
+                            </div>
+
+                            <div class="mb-4" data-blog-post-only>
+                                <label class="ba-field__label">#{t("分类")}</label>
+                                <select class="ba-select" id="blog-field-category"></select>
+                            </div>
+
+                            <div class="mb-4" data-blog-post-only>
+                                <label class="ba-field__label">#{t("绑定商品")}</label>
+                                <div class="text-muted mb-2" style="font-size:12px">#{t("本文是某个商品的教程时绑定它：文章顶部出现购买入口，商品页也会展示这篇教程")}</div>
+                                <div class="blog-goodspick" data-blog-goodspick>
+                                    <div class="blog-goodspick__empty" data-blog-goods-empty>
+                                        <button type="button" class="ba-btn ba-btn--ghost w-100 justify-content-center blog-goods-open">
+                                            <i class="blogi blogi-cart"></i> #{t("选择商品")}
+                                        </button>
+                                    </div>
+                                    <div class="blog-goodspick__picked" data-blog-goods-picked hidden>
+                                        <span class="blog-goodspick__thumb" data-blog-goods-thumb></span>
+                                        <span class="blog-goodspick__body">
+                                            <b data-blog-goods-name></b>
+                                            <span data-blog-goods-price></span>
+                                        </span>
+                                        <button type="button" class="blog-goodspick__x blog-goods-clear" title="#{t('解除绑定')}">
+                                            <i class="blogi blogi-close"></i>
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="blog-field-commodity" value="0">
+                                </div>
+                            </div>
+
+                            <div class="mb-4" data-blog-post-only>
+                                <label class="ba-field__label">#{t("标签")}</label>
+                                <select class="ba-select" id="blog-field-tags" multiple></select>
+                                <div class="text-muted mt-1" style="font-size:12px">#{t("输入新标签名可直接创建")}</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="ba-field__label">#{t("封面图")}</label>
+                                <div class="blog-cover" data-blog-cover>
+                                    <div class="blog-cover__preview" data-blog-cover-preview>
+                                        <i class="blogi blogi-image"></i>
+                                    </div>
+                                    <div class="blog-cover__actions">
+                                        <button class="ba-btn ba-btn--ghost blog-cover-upload">#{t("上传")}</button>
+                                        <button class="ba-btn ba-btn--ghost blog-cover-clear">#{t("清除")}</button>
+                                    </div>
+                                    <input class="ba-input mt-2" id="blog-field-cover" placeholder="#{t('或直接粘贴图片地址')}">
+                                    <input type="file" accept="image/*" class="d-none" data-blog-cover-file>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="ba-field__label">#{t("摘要")} <span class="text-muted" data-blog-summary-count>0/500</span></label>
+                                <textarea class="ba-textarea" id="blog-field-summary" rows="3" maxlength="500"
+                                          placeholder="#{t('留空则前台自动截取正文开头')}"></textarea>
+                            </div>
+
+                            <div class="mb-4" data-blog-post-only>
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text"><span class="ba-switchrow__title">#{t("置顶")}</span></span>
+                                    <span class="ba-switch"><input type="checkbox" id="blog-field-top"><i></i></span>
+                                </label>
+                                <label class="ba-switchrow">
+                                    <span class="ba-switchrow__text"><span class="ba-switchrow__title">#{t("允许评论")}</span></span>
+                                    <span class="ba-switch"><input type="checkbox" id="blog-field-allow-comment" checked><i></i></span>
+                                </label>
+                            </div>
+
+                            <div class="mb-4 d-none" data-blog-page-only>
+                                <label class="ba-field__label">#{t("页面排序")}</label>
+                                <input type="number" class="ba-input ba-input--num" id="blog-field-weight" min="0" value="0">
+                                <label class="ba-switchrow mt-2">
+                                    <span class="ba-switchrow__text"><span class="ba-switchrow__title">#{t("允许评论")}</span></span>
+                                    <span class="ba-switch"><input type="checkbox" id="blog-field-allow-comment-page"><i></i></span>
+                                </label>
+                            </div>
+
+                            <details class="blog-seo mb-2">
+                                <summary>#{t("SEO 优化（可选）")}</summary>
+                                <div class="mt-3">
+                                    <label class="ba-field__label">SEO #{t("标题")}</label>
+                                    <input class="ba-input mb-3" id="blog-field-seo-title" maxlength="200">
+                                    <label class="ba-field__label">SEO #{t("关键词")}</label>
+                                    <input class="ba-input mb-3" id="blog-field-seo-keywords" maxlength="255" placeholder="#{t('逗号分隔')}">
+                                    <label class="ba-field__label">SEO #{t("描述")}</label>
+                                    <textarea class="ba-textarea" id="blog-field-seo-description" rows="2" maxlength="500"></textarea>
+                                </div>
+                            </details>
+
+                            <div class="mt-4" data-blog-front-link style="display:none">
+                                <a href="#" data-acg-noop target="_blank" class="ba-btn ba-btn--soft w-100 justify-content-center" data-blog-front-url>
+                                    <i class="blogi blogi-open"></i> #{t("前台查看")}
+                                </a>
+                            </div>
+                        </div>
+                    </aside>
+                    <div class="blog-write__side-shade" data-blog-side-shade></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script src="#{Plugin('Blog','View/Vendor/hljs/highlight.min.js')}"></script>
+#{ready("/app/Plugin/Blog/View/Js/write.js")}
+#{include file=$manage_view_path|cat:"Footer.html"}

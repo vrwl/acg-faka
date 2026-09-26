@@ -1,0 +1,28 @@
+</main>
+
+<footer class="blog-footer">
+    <div class="blog-footer__inner">
+        <!--博客名默认就等于店铺名，这时别输出「© 店铺名 · 店铺名」；只有站长单独起了名字才并列显示-->
+        <span>© #{$config.shop_name|escape:'html'}#{if $blog.name != $config.shop_name} · #{$blog.name|escape:'html'}#{/if}</span>
+        <span class="blog-footer__links">
+            #{if $blog.feed_enabled}<a href="#{$blog.urls.feed}" data-no-pjax>RSS</a>#{/if}
+            #{if $blog.back_url}<a href="#{$blog.back_url|escape:'html'}" data-no-pjax>#{t("返回商城")}</a>#{/if}
+        </span>
+    </div>
+</footer>
+
+#{if $page.tab}
+    #{include file="../Partial/TabBar.html"}
+#{/if}
+#{include file="../Partial/Sheet.html"}
+</div><!--/#blog-shell-->
+
+<!--全部脚本常驻：每个模块用 B.page() 注册，pjax 换页后重跑，不再按页增删 <script>-->
+<script defer src="#{Plugin('Blog','View/Js/core.js')}"></script>
+<script defer src="#{Plugin('Blog','View/Js/theme.js')}"></script>
+<script defer src="#{Plugin('Blog','View/Js/app.js')}"></script>
+<script defer src="#{Plugin('Blog','View/Js/post.js')}"></script>
+<script defer src="#{Plugin('Blog','View/Js/front-comments.js')}"></script>
+<script defer src="#{Plugin('Blog','View/Js/pjax.js')}"></script>
+</body>
+</html>

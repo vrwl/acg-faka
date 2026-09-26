@@ -1,0 +1,16 @@
+#{include file="../../Common/Pc/MemberTop.html" laPage="message-table" laTitle=t("站内消息") laIcon="bell" laSub=t("系统与商家发给你的通知")}
+
+#{* 平台控制器 user/message.js 只在 .uc-message-page 包着 #message-table 时才启动（否则整页静默空白）；
+   批量按钮认 data-message-action；.uc-card__sub 会被它改写成「共 N 条消息 · 打开后自动标记为已读」 *}
+<div class="uc-message-page">
+    <div class="la-actbar">
+        <button type="button" class="la-btn la-btn--line la-btn--sm" data-message-action="delete-selected">#{\App\View\User\Theme\LosAngeles\Icons::svg('trash')}<span>#{t("删除选中")}</span></button>
+        <button type="button" class="la-btn la-btn--danger la-btn--sm" data-message-action="clear">#{\App\View\User\Theme\LosAngeles\Icons::svg('close')}<span>#{t("清空全部")}</span></button>
+        <span class="la-actbar__end la-actbar__note uc-card__sub">#{t("打开消息后自动标记为已读")}</span>
+    </div>
+    <div class="la-card la-tablecard">
+        <table id="message-table"></table>
+    </div>
+</div>
+
+#{include file="../../Common/Pc/MemberBottom.html" laCtrl="/assets/user/controller/user/message.js"}

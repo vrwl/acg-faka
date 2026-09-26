@@ -5,21 +5,16 @@ namespace App\Controller;
 
 
 use App\Controller\Base\API\User;
-use App\Service\App;
 use App\Util\Client;
 use App\Util\Opcache;
 use App\Util\Str;
 use App\Util\Validation;
-use Kernel\Annotation\Inject;
 use Kernel\Exception\JSONException;
 use Kernel\Util\SQL;
 use Kernel\Util\View;
 
 class Install extends User
 {
-
-    #[Inject]
-    private App $app;
 
     /**
      * 安装向导要求的最低 MySQL / MariaDB 版本。
@@ -313,11 +308,6 @@ class Install extends User
         try {
             $this->importLanguagePacks();
         } catch (\Throwable $e) {
-        }
-
-        try {
-            $this->app->install();
-        } catch (\Exception|\Error $e) {
         }
 
         return $this->json(200, '安装完成');

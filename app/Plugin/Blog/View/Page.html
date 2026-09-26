@@ -1,0 +1,33 @@
+#{include file="./Layout/Header.html"}
+
+<div class="blog-progress" data-blog-progress aria-hidden="true"><i></i></div>
+
+<div class="blog-container blog-container--narrow">
+    <article class="blog-post blog-post--static" data-post-id="#{$post.id}">
+        #{if $post.cover}
+            <div class="blog-post__hero">
+                <img src="#{$post.cover|escape:'html'}" alt="" fetchpriority="high" decoding="async">
+            </div>
+        #{/if}
+        <header class="blog-post__head">
+            <h1 class="blog-post__title">#{$post.title|escape:'html'}</h1>
+        </header>
+        <div class="blog-prose" data-blog-prose>#{$post.content_html}</div>
+
+        #{if $blog.comment_enabled && $post.allow_comment}
+            <section class="blog-comments" id="comments"
+                     data-blog-comments="#{$post.id}" data-blog-allow="1">
+                <h2 class="blog-section-title">#{t("评论")} <span class="blog-comments__count" data-blog-comments-count>#{$post.comments_count}</span></h2>
+                <div class="blog-comments__composer" data-blog-composer></div>
+                <div class="blog-comments__list" data-blog-comments-list>
+                    <div class="blog-skeleton"></div>
+                </div>
+                <div class="blog-comments__more" data-blog-comments-more hidden>
+                    <button type="button">#{t("加载更多评论")}</button>
+                </div>
+            </section>
+        #{/if}
+    </article>
+</div>
+
+#{include file="./Layout/Footer.html"}

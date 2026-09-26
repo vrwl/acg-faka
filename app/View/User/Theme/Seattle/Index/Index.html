@@ -1,0 +1,73 @@
+#{include file="./Header.html"}
+<main class="st-page st-store-home" data-st-store-page data-default-category="#{$categoryId}" data-user-logged-in="#{if $user}1#{else}0#{/if}" data-show-sold="#{$setting.show_sold}" data-fallback-cover="#{$favicon}">
+    <header class="st-mobile-pagebar">
+        <div><strong>#{t("商城")}</strong><span class="st-page-context" data-st-catalog-title>#{t("全部商品")}</span></div>
+        <button type="button" class="st-icon-button st-filter-trigger" aria-controls="categories" aria-expanded="false" aria-label="#{t('筛选商品分类')}"><span class="material-icons-outlined" aria-hidden="true">tune</span></button>
+    </header>
+
+    #{assign var="stRailWidth" value=$setting.category_width|default:'standard'}
+    #{if ($setting.show_quick_menu|default:'1') != '0'}#{assign var="stQuickPanel" value=\App\View\User\Theme\Seattle\QuickMenu::renderPanel($setting, $user, $isBusinessSite)}#{else}#{assign var="stQuickPanel" value=""}#{/if}
+    #{assign var="stBuyTips" value=(($setting.show_buy_tips|default:'1') != '0')}
+    <div class="st-store-layout" data-st-rail="#{$stRailWidth|escape:'html'}"#{if !$stQuickPanel && !$stBuyTips} data-st-aside="off"#{/if}>
+        <button type="button" class="st-filter-backdrop" data-st-filter-close aria-label="#{t('关闭分类筛选')}" tabindex="-1"></button>
+        <aside class="st-category-rail" id="categories" aria-label="#{t('商品分类')}">
+            <div class="st-rail-header">
+                <div><span class="st-kicker">Browse</span><h1>#{t("商品分类")}</h1></div>
+                <button type="button" class="st-icon-button st-filter-close" data-st-filter-close aria-label="#{t('关闭分类筛选')}"><span class="material-icons-outlined" aria-hidden="true">close</span></button>
+            </div>
+            <div class="st-category-tree" data-st-category-tree aria-live="polite">
+                #{include file="./CategoryTree.html" nodes=$category depth=0}
+            </div>
+        </aside>
+
+        <section class="st-catalog" aria-labelledby="st-catalog-heading">
+            <div class="st-catalog-header">
+                <div class="st-catalog-heading">
+                    <span class="st-kicker">Catalog</span>
+                    <h1 id="st-catalog-heading" data-st-catalog-title>#{t("全部商品")}</h1>
+                    <p>#{t("清晰查看价格、库存和发货方式。")}</p>
+                </div>
+                <form class="st-search" role="search" data-st-store-search>
+                    <span class="material-icons-outlined" aria-hidden="true">search</span>
+                    <input class="item-search-input" type="search" name="keywords" placeholder="#{t('搜索商品')}" autocomplete="off" enterkeyhint="search" aria-label="#{t('搜索商品')}">
+                    <button type="button" class="st-search-clear" aria-label="#{t('清除搜索内容')}" hidden><span class="material-icons-outlined" aria-hidden="true">close</span></button>
+                    <button type="submit" class="item-search-trigger" aria-label="#{t('开始搜索')}"><span class="material-icons-outlined" aria-hidden="true">arrow_forward</span></button>
+                </form>
+            </div>
+
+            <div class="item-list st-feed st-product-feed" aria-live="polite" aria-busy="true">
+                <div class="st-feed-state st-feed-loading">
+                    <span class="st-spinner" aria-hidden="true"></span>
+                    <span>#{t("正在读取商品")}</span>
+                </div>
+            </div>
+        </section>
+
+        #{if $stQuickPanel || $stBuyTips}
+            <aside class="st-store-aside" aria-label="#{t('商城快捷信息')}">
+                #{$stQuickPanel}
+                #{if $stBuyTips}
+                    <section class="st-panel">
+                        <div class="st-panel__header"><div><span class="st-panel__icon material-icons-outlined" aria-hidden="true">verified_user</span><div><h2>#{t("购买提示")}</h2><p>#{t("下单前请确认")}</p></div></div></div>
+                        <div class="st-panel__body"><div class="st-callout"><span class="material-icons-outlined" aria-hidden="true">info</span><span>#{t("请核对商品选项和联系方式。付款后可在订单查询中查看交付内容。")}</span></div></div>
+                    </section>
+                #{/if}
+            </aside>
+        #{/if}
+    </div>
+
+    #{if $config.notice}
+        <dialog class="st-dialog st-notice-dialog" id="st-store-notice" data-st-notice aria-labelledby="st-notice-title">
+            <div class="st-dialog-header">
+                <div><span class="st-kicker">Notice</span><h2 id="st-notice-title">#{t("店铺公告")}</h2></div>
+                <button type="button" class="st-icon-button" data-st-notice-close aria-label="#{t('关闭公告')}"><span class="material-icons-outlined" aria-hidden="true">close</span></button>
+            </div>
+            <div class="st-dialog-body st-rich-content" data-st-notice-content>#{$config.notice}</div>
+            <div class="st-dialog-actions">
+                <button type="button" class="st-button st-button-quiet" data-st-notice-close>#{t("稍后再看")}</button>
+                <button type="button" class="st-button st-button-primary" data-st-notice-ack>#{t("我已阅读")}</button>
+            </div>
+        </dialog>
+    #{/if}
+</main>
+#{include file="./Footer.html"}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>#{$title} - #{$config.shop_name}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta name="keywords" content="#{$config.keywords}">
+    <meta name="description" content="#{$config.description}">
+    <meta name="color-scheme" content="light dark">
+    <link href="#{$favicon}" rel="icon">
+
+    <script>
+        (function () {
+            var key = 'mountfuji.theme.preference';
+            var allowed = ['auto', 'light', 'dark'];
+            var configured = '#{$setting.theme_mode}';
+            var stored = null;
+            var preference;
+            var dark;
+
+            if (allowed.indexOf(configured) === -1) configured = 'auto';
+            try { stored = window.localStorage.getItem(key); } catch (error) { stored = null; }
+            if (allowed.indexOf(stored) === -1) stored = null;
+
+            preference = stored || configured;
+            dark = preference === 'dark' || (preference === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+            document.documentElement.setAttribute('data-theme-storage-key', key);
+            document.documentElement.setAttribute('data-theme-default-preference', configured);
+            document.documentElement.setAttribute('data-theme-preference', preference);
+            document.documentElement.setAttribute('data-theme-mode', dark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        }());
+    </script>
+
+    #{css(
+    [
+    "/assets/common/css/bootstrap.min.css",
+    "/assets/common/css/_.css",
+    "/assets/user/css/_user.css",
+    "/assets/static/codemirror/lib/codemirror.css",
+    "/assets/common/css/_material.css",
+    "/assets/common/fonts/material-icons.css"
+    ],
+    [
+    "/assets/common/css/font.min.css",
+    "/assets/common/js/layui/css/layui.css",
+    "/assets/common/css/select2.min.css",
+    "/assets/common/css/toastr.min.css",
+    "/assets/common/js/table/bootstrap-table.css",
+    "/assets/common/js/layer/theme/default/layer.css",
+    "/assets/common/css/component.css",
+    "/assets/user/css/global_2.css",
+    "/assets/static/codemirror/lib/codemirror.css",
+    "/assets/common/css/md-tokens.css",
+    "/assets/common/css/md-components.css",
+    "/assets/common/fonts/material-icons.css"
+    ])}
+
+    #{* 本主题的样式不进 css()：那里的 ?v= 是 APP_VERSION，模板单独升级时它不会变，
+       浏览器会继续用上一版的 _theme.css。改用主题自己的版本号，见 Support::asset()。
+       必须排在 css() 之后，它是层叠里最后一层。 *}
+    <link rel="stylesheet" class="cdn-support" href="#{\App\View\User\Theme\MountFuji\Support::asset($static, 'Css')}">
+
+    #{js("/assets/common/js/ready.js")}
+    #{index_var()}
+
+    <!--start::HOOK-->
+    #{hook(\App\Consts\Hook::USER_VIEW_HEADER)}
+    <!--end::HOOK-->
+</head>
+<body class="mf-body">
+<div class="net-loading" style="display:none;">
+    <div class="loading-view"><div class="loading-image"></div></div>
+</div>
+
+<div class="mf-background" aria-hidden="true">
+    <span class="mf-background__sun"></span>
+    <span class="mf-background__mountain mf-background__mountain--far"></span>
+    <span class="mf-background__mountain mf-background__mountain--near"></span>
+    <span class="mf-background__mist"></span>
+</div>
+
+<header class="mf-topbar">
+    <div class="mf-topbar-inner">
+        <div class="mf-topbar-main">
+            <button type="button" class="mf-menu-button" data-mf-sidebar-toggle aria-label="#{t('打开导航')}" aria-expanded="false">
+                <span class="material-icons-outlined">menu</span>
+            </button>
+            <a class="mf-brand" href="/user/dashboard/index">
+                <span class="mf-brand-mark"><img src="#{$favicon}" alt=""></span>
+                <span class="mf-brand-copy">
+                    <strong>#{$config.shop_name}</strong>
+                    <small>#{t("会员中心")}</small>
+                </span>
+            </a>
+            <span class="mf-topbar-divider" aria-hidden="true"></span>
+            <span class="mf-topbar-context">#{$title}</span>
+        </div>
+
+        <div class="mf-topbar-right">
+            <nav class="mf-topbar-nav" aria-label="#{t('快捷入口')}">
+                <a class="mf-topbar-link" href="/" target="_blank">
+                    <span class="material-icons-outlined">shopping_bag</span>
+                    <span>#{t("前往商城")}</span>
+                </a>
+                <a class="mf-topbar-link" href="/user/personal/purchaseRecord">
+                    <span class="material-icons-outlined">receipt_long</span>
+                    <span>#{t("购买记录")}</span>
+                </a>
+            </nav>
+
+            <div class="mf-theme-toggle" role="group" aria-label="#{t('外观模式')}">
+                <button type="button" class="mf-theme-button" data-theme-toggle="light" title="#{t('白天模式')}">
+                    <span class="material-icons-outlined">light_mode</span><span>#{t("白天")}</span>
+                </button>
+                <button type="button" class="mf-theme-button" data-theme-toggle="auto" title="#{t('跟随系统')}">
+                    <span class="material-icons-outlined">brightness_auto</span><span>#{t("自动")}</span>
+                </button>
+                <button type="button" class="mf-theme-button" data-theme-toggle="dark" title="#{t('黑夜模式')}">
+                    <span class="material-icons-outlined">dark_mode</span><span>#{t("黑夜")}</span>
+                </button>
+            </div>
+
+            <div class="mf-message-center">
+                <button type="button" class="mf-message-button uc-message-btn" data-mf-message-toggle
+                        title="#{t('消息通知')}" aria-label="#{t('没有未读消息')}" aria-expanded="false"
+                        aria-controls="mf-message-popover">
+                    <span class="material-icons-outlined mf-message-button__icon">notifications_none</span>
+                    <span class="mf-message-badge is-empty" aria-hidden="true">0</span>
+                </button>
+                <div class="mf-message-popover" id="mf-message-popover" data-mf-message-popover
+                     role="dialog" aria-label="#{t('最近消息')}" aria-hidden="true">
+                    <div class="mf-message-popover__head">
+                        <div>
+                            <span class="mf-message-popover__icon material-icons-outlined">notifications_active</span>
+                            <span><strong>#{t("消息通知")}</strong><small>#{t("来自店铺的最新动态")}</small></span>
+                        </div>
+                        <em class="mf-message-popover__count">#{t("暂无未读")}</em>
+                    </div>
+                    <div class="mf-message-recent" aria-live="polite">
+                        <div class="mf-message-recent__loading" aria-label="#{t('正在加载消息')}">
+                            <i></i><i></i><i></i>
+                        </div>
+                    </div>
+                    <a class="mf-message-popover__all" href="/user/message/index" data-mf-message-all>
+                        <span><span class="material-icons-outlined">inbox</span>#{t("进入消息中心")}</span>
+                        <span class="material-icons-outlined">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="mf-user-menu">
+                <button type="button" class="mf-user-card" data-mf-user-menu-toggle aria-haspopup="menu" aria-expanded="false">
+                    <span class="mf-user-avatar"><img src="#{$user.avatar}" alt="#{$user.username}" data-acg-fallback="#{$favicon}"></span>
+                    <span class="mf-user-summary">
+                        <strong>#{$user.username}</strong>
+                        <small>#{if $group.name}#{$group.name}#{else}#{t("会员中心")}#{/if}</small>
+                    </span>
+                    <span class="material-icons-outlined mf-user-menu-caret">expand_more</span>
+                </button>
+
+                <div class="mf-user-dropdown" data-mf-user-menu role="menu" aria-hidden="true">
+                    <div class="mf-user-dropdown-head">
+                        <span>UID #{$user.id}</span>
+                        <strong>#{$config.currency_symbol}#{$user.balance}</strong>
+                    </div>
+                    <a href="/user/security/personal" class="mf-user-dropdown-item" role="menuitem">
+                        <span class="material-icons-outlined">manage_accounts</span><span>#{t("账户与安全")}</span>
+                    </a>
+                    <div class="mf-user-dropdown-item mf-lang-parent" data-lang-parent role="menuitem"
+                         aria-haspopup="menu" aria-expanded="false" tabindex="0">
+                        <span class="material-icons-outlined">translate</span><span>#{t("语言")}</span>
+                        <span class="material-icons-outlined mf-lang-caret">chevron_right</span>
+                        <div class="mf-lang-submenu" role="menu" aria-label="#{t('语言')}">
+                            #{foreach $langs as $l}
+                                <button type="button" class="mf-user-dropdown-item mf-lang-item" data-lang-value="#{$l.code}" role="menuitem">
+                                    <span>#{$l.name}</span><i class="material-icons-outlined mf-lang-check">check</i>
+                                </button>
+                            #{/foreach}
+                        </div>
+                    </div>
+                    <div class="mf-user-dropdown-split" aria-hidden="true"></div>
+                    <a href="javascript:void(0);" class="mf-user-dropdown-item logout" role="menuitem">
+                        <span class="material-icons-outlined">logout</span><span>#{t("安全退出")}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="mf-app-shell">
+    <div id="pjax-container">

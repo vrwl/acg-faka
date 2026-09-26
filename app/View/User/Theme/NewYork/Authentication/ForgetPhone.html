@@ -1,0 +1,13 @@
+#{include file="./Header.html"}
+<main class="ny-auth-main">
+    <section class="ny-auth-brand"><span class="material-icons-outlined ny-auth-icon">phone_iphone</span><h1>#{t("通过手机重置")}</h1><p>#{t("验证码将发送到账号绑定的手机号。")}</p></section>
+    <form method="post" class="needs-validation ny-auth-form">
+        <label class="ny-outlined-field"><span>#{t("手机号")}</span><input type="number" class="form-control" name="username" placeholder="#{t('请输入绑定手机号')}" autocomplete="tel" required></label>
+        <div class="ny-code-field"><label class="ny-outlined-field"><span>#{t("短信验证码")}</span><input type="text" class="form-control" id="captcha" name="captcha" placeholder="#{t('6 位验证码')}" autocomplete="one-time-code"></label><button type="button" class="send-phone-captcha">#{t("获取验证码")}</button></div>
+        <label class="ny-outlined-field"><span>#{t("新密码")}</span><input type="password" class="form-control" name="password" placeholder="#{t('至少 6 位')}" autocomplete="new-password" minlength="6" required></label>
+        <button type="submit" class="ny-primary-button ny-auth-submit">#{t("确认重置")}</button>
+    </form>
+    <p class="ny-auth-switch">#{t("想起密码？")}<a href="/user/authentication/login">#{t("返回登录")}</a></p>
+</main>
+#{ready("/assets/user/controller/auth/forget.phone.js")}
+#{include file="./Footer.html"}

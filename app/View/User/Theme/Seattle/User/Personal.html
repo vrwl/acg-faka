@@ -1,0 +1,91 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-security-page" data-st-page="personal">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("账户设置")}</span><h1>#{t("账户与安全")}</h1><p>#{t("查看登录状态，维护身份资料和经营收款信息。")}</p></div>
+        </header>
+
+        <section class="st-panel st-security-panel">
+            #{include file="../Common/SecurityNav.html"}
+
+            <div class="st-tabpanel active" data-panel="security">
+                <div class="st-security-layout">
+                    <section class="st-security-card" aria-labelledby="st-login-title">
+                        <div class="st-section-header"><span class="st-panel__icon material-icons-outlined">shield</span><div><h2 id="st-login-title">#{t("登录记录")}</h2><p>#{t("发现异常时请立即修改密码")}</p></div></div>
+                        <dl class="st-detail-list">
+                            <div><dt>#{t("当前登录 IP")}</dt><dd>#{$user.login_ip}</dd></div>
+                            <div><dt>#{t("当前登录时间")}</dt><dd>#{$user.login_time}</dd></div>
+                            <div><dt>#{t("上次登录 IP")}</dt><dd>#{if $user.last_login_ip}#{$user.last_login_ip}#{if $user.login_ip != $user.last_login_ip}<em class="st-warning-text">#{t("登录地点发生变化")}</em>#{/if}#{else}-#{/if}</dd></div>
+                            <div><dt>#{t("上次登录时间")}</dt><dd>#{if $user.last_login_time}#{$user.last_login_time}#{else}-#{/if}</dd></div>
+                        </dl>
+                    </section>
+
+                    <section class="st-security-card" aria-labelledby="st-api-title">
+                        <div class="st-section-header"><span class="st-panel__icon material-icons-outlined">key</span><div><h2 id="st-api-title">#{t("商户凭证")}</h2><p>#{t("API 接入时用于识别当前账户")}</p></div></div>
+                        <dl class="st-detail-list">
+                            <div><dt>#{t("商户 ID")}</dt><dd><code>#{$user.id}</code></dd></div>
+                            <div class="st-detail-list__secret"><dt>#{t("商户密钥")}</dt><dd><code class="app-key" data-st-secret="#{$user.app_key}" aria-label="#{t('商户密钥已隐藏')}" aria-live="polite">••••••••••••••••</code><span class="st-key-actions"><button type="button" class="st-text-button st-key-toggle" aria-pressed="false"><span class="material-icons-outlined" aria-hidden="true">visibility</span><span>#{t("显示")}</span></button><button type="button" class="st-text-button st-key-copy"><span class="material-icons-outlined" aria-hidden="true">content_copy</span><span>#{t("复制")}</span></button><button type="button" class="st-text-button reset-key"><span class="material-icons-outlined" aria-hidden="true">refresh</span><span>#{t("重置")}</span></button></span></dd></div>
+                        </dl>
+                        <div class="st-notice st-notice--warning"><span class="material-icons-outlined">privacy_tip</span><span>#{t("请勿向他人透露商户密钥；重置后旧密钥会立即失效。")}</span></div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="st-tabpanel st-panel__body" data-panel="profile">
+                <form class="layui-form form-data">
+                    <div class="st-profile-layout">
+                        <aside class="st-avatar-card">
+                            <input type="file" class="avatar-input" hidden>
+                            <input type="text" name="avatar" hidden value="#{$user.avatar}">
+                            <button type="button" class="st-avatar-editor" data-st-avatar-upload aria-label="#{t('选择新头像')}">
+                                <img class="avatar-img" src="#{$user.avatar}" data-acg-fallback="#{$favicon}" alt="#{t('修改头像')}">
+                                <span class="material-icons-outlined">photo_camera</span>
+                            </button>
+                            <strong>#{$user.username}</strong>
+                            <span>#{if $group.name}#{$group.name}#{else}#{t("会员用户")}#{/if}</span>
+                            <small>#{t("点击头像上传新图片")}</small>
+                        </aside>
+
+                        <div class="st-profile-form">
+                            <section class="st-form-section">
+                                <div class="st-form-section__header"><span class="material-icons-outlined">person</span><div><h2>#{t("基础资料")}</h2><p>#{t("用于账户识别与联系")}</p></div></div>
+                                <div class="st-form-grid st-form-grid--two">
+                                    <label class="st-field"><span>#{t("QQ 号")}</span><input type="number" value="#{$user.qq}" name="qq" autocomplete="off" placeholder="#{t('请输入 QQ 号')}" class="layui-input"></label>
+                                    <label class="st-field"><span>#{t("真实姓名")}</span><input type="text" value="#{$user.nicename}" name="nicename" autocomplete="off" placeholder="#{t('用于外部账户兑现')}" class="layui-input"></label>
+                                </div>
+                            </section>
+
+                            <section class="st-form-section">
+                                <div class="st-form-section__header"><span class="material-icons-outlined">account_balance_wallet</span><div><h2>#{t("结算与收款")}</h2><p>#{t("用于经营收益自动结算和硬币兑现")}</p></div></div>
+                                <div class="st-form-grid st-form-grid--two">
+                                    <label class="st-field"><span>#{t("自动结算方式")}</span><select name="settlement" lay-ignore><option value="0" #{if $user.settlement == 0}selected#{/if}>#{t("支付宝")}</option><option value="1" #{if $user.settlement == 1}selected#{/if}>#{t("微信")}</option><option value="3" #{if $user.settlement == 3}selected#{/if}>USDT (TRC20)</option></select></label>
+                                    <label class="st-field"><span>#{t("支付宝账号")}</span><input type="text" value="#{$user.alipay}" name="alipay" autocomplete="off" placeholder="#{t('兑现使用的支付宝账号')}" class="layui-input"></label>
+                                    <label class="st-field st-form-grid__wide"><span>#{t("TRC20 钱包地址")}</span><input type="text" value="#{$user.wallet_address}" name="wallet_address" autocomplete="off" placeholder="#{t('兑现使用的钱包地址')}" class="layui-input"></label>
+                                </div>
+                                <div class="st-qrcode-field">
+                                    <div><strong>#{t("微信收款二维码")}</strong><small>#{t("仅在兑现到微信时使用，点击可上传或更换。")}</small></div>
+                                    <input type="file" class="st-wechat-input" hidden>
+                                    <input type="text" name="wechat" hidden value="#{$user.wechat}">
+                                    #{if $user.wechat == ''}
+                                    <button type="button" class="st-wechat-upload" data-st-wechat-upload><span class="material-icons-outlined">add_photo_alternate</span><small>#{t("上传二维码")}</small></button>
+                                    #{else}
+                                    <button type="button" class="st-wechat-qr" data-st-wechat-upload aria-label="#{t('更换微信收款二维码')}"></button>
+                                    #{/if}
+                                </div>
+                            </section>
+
+                            <!--start::HOOK-->
+                            #{hook(\App\Consts\Hook::USER_VIEW_PERSONAL_FORM)}
+                            <!--end::HOOK-->
+
+                            <div class="st-form-actions"><button type="button" class="st-button st-button--primary save-data"><span class="material-icons-outlined">save</span>#{t("保存修改")}</button></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Personal.js'), ["_user_wechat" => $user.wechat])}
+#{include file="../Common/Footer.html"}

@@ -701,125 +701,6 @@
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 官方公告
-    // ---------------------------------------------------------------------------------------------
-
-    /** 公告标题是外部 HTML：只留少数排版标签和文字颜色，其余属性一律剥掉 */
-    const sanitizeAnnouncement = value => {
-        const template = document.createElement('template');
-        template.innerHTML = String(value ?? '');
-        const allowedTags = new Set(['B', 'STRONG', 'SPAN', 'BR', 'EM', 'I', 'U', 'S', 'SMALL', 'MARK', 'CODE', 'FONT']);
-        const dangerousTags = new Set([
-            'SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'TEMPLATE',
-            'NOSCRIPT', 'FORM', 'INPUT', 'BUTTON', 'TEXTAREA', 'SELECT', 'OPTION',
-            'META', 'LINK', 'BASE', 'VIDEO', 'AUDIO', 'CANVAS', 'FRAME', 'FRAMESET', 'IMG'
-        ]);
-        const normalizeColor = color => {
-            const probe = document.createElement('span');
-            probe.style.color = String(color ?? '').trim();
-            return probe.style.color;
-        };
-        const walk = node => {
-            Array.from(node.childNodes).forEach(child => {
-                if (child.nodeType === Node.COMMENT_NODE) {
-                    child.remove();
-                    return;
-                }
-                if (child.nodeType !== Node.ELEMENT_NODE) return;
-                const tag = String(child.tagName || '').toUpperCase();
-                if (!allowedTags.has(tag)) {
-                    if (dangerousTags.has(tag)) {
-                        child.remove();
-                    } else {
-                        walk(child);
-                        child.replaceWith(...Array.from(child.childNodes));
-                    }
-                    return;
-                }
-                const color = normalizeColor(child.style.color || (tag === 'FONT' ? child.getAttribute('color') : ''));
-                Array.from(child.attributes).forEach(attribute => child.removeAttribute(attribute.name));
-                if (color) child.style.color = color;
-                walk(child);
-            });
-        };
-        walk(template.content);
-        return template.content;
-    };
-
-    function buildNewsItem(item) {
-        const url = safeHttpUrl(item?.url);
-        const node = document.createElement(url ? 'a' : 'div');
-        node.className = 'dash-news__item';
-        if (url) {
-            node.href = url;
-            node.target = '_blank';
-            node.rel = 'noopener noreferrer';
-        }
-        const text = span('dash-news__text');
-        const content = sanitizeAnnouncement(item?.title);
-        if (content.textContent.trim()) {
-            text.append(content);
-        } else {
-            text.textContent = i18n('公告');
-        }
-        node.append(text);
-        if (url) {
-            const go = materialIcon('north_east');
-            go.classList.add('dash-news__go');
-            node.append(go);
-        }
-        return node;
-    }
-
-    function loadNews() {
-        const host = document.querySelector('[data-dash-news]');
-        trackRequest($.get('/admin/api/app/ad', res => {
-            if (!controllerActive || !host) return;
-            if (res.code != 200) {
-                renderRetryState(host, res.msg || i18n('公告加载失败，请重试'), loadNews);
-                return;
-            }
-            if (!Array.isArray(res.data) || res.data.length === 0) {
-                host.replaceChildren(span('dash-news__empty', i18n('暂无公告')));
-                return;
-            }
-            host.replaceChildren(...res.data.map(buildNewsItem));
-        }).fail((xhr, status) => {
-            if (!controllerActive || status === 'abort' || !host) return;
-            renderRetryState(host, i18n('网络异常，公告加载失败'), loadNews);
-        }));
-    }
-
-    /** 手机上公告很长：允许收起，记住选择 */
-    function initNewsDisclosure() {
-        const card = document.querySelector('.dash-news');
-        const button = card?.querySelector('.dash-news__toggle');
-        const icon = button?.querySelector('.material-icons-outlined');
-        if (!card || !button || !icon) return;
-
-        const storageKey = 'admin-dashboard-announcements-collapsed';
-        let collapsed = false;
-        try {
-            collapsed = window.localStorage.getItem(storageKey) === '1';
-        } catch (error) {}
-
-        const render = () => {
-            card.classList.toggle('is-collapsed', collapsed);
-            button.setAttribute('aria-expanded', String(!collapsed));
-            button.setAttribute('aria-label', collapsed ? i18n('展开官方公告') : i18n('收起官方公告'));
-            icon.textContent = collapsed ? 'expand_more' : 'expand_less';
-        };
-        button.addEventListener('click', () => {
-            collapsed = !collapsed;
-            render();
-            try {
-                window.localStorage.setItem(storageKey, collapsed ? '1' : '0');
-            } catch (error) {}
-        });
-        render();
-    }
-
-    // ---------------------------------------------------------------------------------------------
     // 交互绑定
     // ---------------------------------------------------------------------------------------------
     /** role=tablist 的左右方向键切换 */
@@ -883,12 +764,10 @@
         trend.data = null;
     }
 
-    initNewsDisclosure();
     bindInteractions();
     loadOverview();
     loadTrend();
     selectPeriod(0);
-    loadNews();
 
     $(document)
         .off('pjax:beforeReplace.mdDashboard')

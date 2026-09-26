@@ -1,0 +1,100 @@
+#{*
+  洛杉矶 · 充值中心（两端共用）
+
+  user/recharge.js 的契约（类名/data 属性均为控制器写死，只能换皮）：
+    .uc-topup[data-min][data-max]        开启汇总模式
+    .uc-topup-bonus[data-threshold][data-bonus]  充值赠送阶梯
+    .uc-topup-preset[data-amount]        金额快选
+    input[name=amount] / .pay-list / .payButton
+    文案位：.uc-topup-principal .uc-topup-gift .uc-topup-energy .uc-topup-total
+            .uc-topup-method-name .uc-topup-status-text .uc-topup-submit__label
+            .uc-topup-summary__status（内含 .material-icons-outlined）
+
+  注意：控制器会往 .material-icons-outlined 里写 Material 连字（check_circle）。
+  本主题不加载 Material 图标字体，所以那个节点只做读屏用（.la-sr 隐藏），
+  状态图标另用主题自己的 SVG，不会出现"check_circle"这种字面量。
+*}
+<div class="uc-topup la-topup" data-min="#{$presets[0]|default:1}" data-max="#{$config.recharge_max|default:0}">
+    <div class="la-topup__left">
+        <div class="la-card la-topup__box">
+            <div class="la-topup__balance">
+                <span class="la-topup__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('wallet','la-i--lg')}</span>
+                <div>
+                    <span class="la-faint">#{t("当前余额")}</span>
+                    <b class="la-num">#{$config.currency_symbol}#{$user.balance|escape:'html'}</b>
+                </div>
+                <a class="la-btn la-btn--line la-btn--sm" href="/user/bill/index">#{t("账单明细")}</a>
+            </div>
+
+            <div class="la-field">
+                <label class="la-label">#{t("充值金额")}</label>
+                #{if $presets}
+                    <div class="la-topup__presets">
+                        #{foreach $presets as $p}
+                            <button type="button" class="la-chip uc-topup-preset" data-amount="#{$p}">#{$config.currency_symbol}#{$p}</button>
+                        #{/foreach}
+                    </div>
+                #{/if}
+                <div class="la-amountbox">
+                    <span class="la-amountbox__unit">#{$config.currency_symbol}</span>
+                    <input class="la-amountbox__input" type="number" name="amount" inputmode="decimal" min="0" step="0.01"
+                           placeholder="#{t('请输入充值金额')}" autocomplete="off">
+                </div>
+            </div>
+
+            #{assign var=laWelfare value=\App\View\User\Theme\LosAngeles\Support::welfare($welfareConfig)}
+            #{if $laWelfare}
+                <div class="la-topup__bonuses">
+                    <div class="la-topup__bonustitle">#{\App\View\User\Theme\LosAngeles\Icons::svg('gift')}<span>#{t("充值有礼")}</span></div>
+                    <div class="la-topup__bonuslist">
+                        #{foreach $laWelfare as $w}
+                            <span class="la-topup__bonus uc-topup-bonus" data-threshold="#{$w.recharge}" data-bonus="#{$w.amount}">
+                                #{t("充")} #{$config.currency_symbol}#{$w.recharge} #{t("送")} #{$config.currency_symbol}#{$w.amount}
+                            </span>
+                        #{/foreach}
+                    </div>
+                </div>
+            #{/if}
+
+            <div class="la-field">
+                <label class="la-label">#{t("支付方式")}</label>
+                <div class="pay-list la-paylist"></div>
+            </div>
+        </div>
+    </div>
+
+    <aside class="la-topup__right">
+        <div class="la-card la-topup__summary">
+            <h3>#{t("充值确认")}</h3>
+            <dl class="la-sumlist">
+                <div><dt>#{t("充值金额")}</dt><dd class="la-num">#{$config.currency_symbol}<span class="uc-topup-principal">0</span></dd></div>
+                <div><dt>#{t("赠送")}</dt><dd class="la-num la-sumlist__gift uc-topup-gift">+#{$config.currency_symbol}0</dd></div>
+                <div><dt>#{t("支付方式")}</dt><dd class="uc-topup-method-name">#{t("未选择")}</dd></div>
+                <div class="la-sumlist__total"><dt>#{t("到账")}</dt><dd class="la-price la-price--md"><span class="la-price__sym">#{$config.currency_symbol}</span><span class="uc-topup-energy">0</span></dd></div>
+            </dl>
+
+            <div class="uc-topup-summary__status la-status is-waiting">
+                <span class="la-status__ok">#{\App\View\User\Theme\LosAngeles\Icons::svg('check')}</span>
+                <span class="la-status__wait">#{\App\View\User\Theme\LosAngeles\Icons::svg('clock')}</span>
+                <span class="material-icons-outlined la-sr"></span>
+                <span class="uc-topup-status-text">#{t("请输入充值金额并选择支付方式")}</span>
+            </div>
+
+            <button type="button" class="la-btn la-btn--brand la-btn--lg la-btn--block payButton" disabled>
+                <span class="uc-topup-submit__label">#{t("前往支付")}</span>
+            </button>
+            <span class="la-sr uc-topup-total">0</span>
+
+            #{if $groupNext}
+                <div class="la-topup__growth">
+                    <div class="la-topup__growthhead">
+                        #{\App\View\User\Theme\LosAngeles\Icons::svg('crown')}
+                        <span>#{t("再充值可升级到")} <b>#{lang($groupNext.name, 'dyn')|escape:'html'}</b></span>
+                    </div>
+                    <div class="la-progress"><span class="la-progress__bar" style="width:#{$progress|default:0}%"></span></div>
+                    <span class="la-faint">#{t("还差")} #{$config.currency_symbol}#{($groupNext.recharge - $user.recharge)|string_format:"%.2f"}</span>
+                </div>
+            #{/if}
+        </div>
+    </aside>
+</div>

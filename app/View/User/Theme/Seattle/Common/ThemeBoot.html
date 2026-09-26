@@ -1,0 +1,22 @@
+<script>
+    (function () {
+        var key = 'seattle.theme.preference';
+        var allowed = ['auto', 'light', 'dark'];
+        var configured = '#{$setting.theme_mode|escape:'javascript'}';
+        var stored = null;
+        var preference;
+        var dark;
+
+        if (allowed.indexOf(configured) === -1) configured = 'auto';
+        try { stored = window.localStorage.getItem(key); } catch (error) { stored = null; }
+        if (allowed.indexOf(stored) === -1) stored = null;
+
+        preference = stored || configured;
+        dark = preference === 'dark' || (preference === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme-storage-key', key);
+        document.documentElement.setAttribute('data-theme-default-preference', configured);
+        document.documentElement.setAttribute('data-theme-preference', preference);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    }());
+</script>

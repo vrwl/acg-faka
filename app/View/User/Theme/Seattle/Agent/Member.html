@@ -1,0 +1,28 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-list-page" data-st-page="member" data-st-transfer-balance="#{$user.balance}">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("推广关系")}</span><h1>#{t("我的下级")}</h1><p>#{t("查看成员等级、账户状态与贡献信息。")}</p></div>
+            <a class="st-button st-button--primary" href="/user/agent/promote"><span class="material-icons-outlined">share</span>#{t("开始推广")}</a>
+        </header>
+        <section class="st-panel" aria-labelledby="st-member-title">
+            <div class="st-panel__header">
+                <div><span class="st-panel__icon material-icons-outlined">groups</span><div><h2 id="st-member-title">#{t("成员列表")}</h2><p>#{t("可按会员 ID 查询并筛选状态")}</p></div></div>
+            </div>
+            <div class="st-panel__body st-table-wrap"><table id="member-table"></table></div>
+        </section>
+    </main>
+    <dialog class="st-dialog st-member-transfer-dialog" data-st-transfer-dialog aria-labelledby="st-transfer-title">
+        <header class="st-dialog-header"><div><span class="st-kicker">#{t("余额转账")}</span><h2 id="st-transfer-title">#{t("转账给下级成员")}</h2></div><button type="button" class="st-icon-button" data-st-transfer-close aria-label="#{t('关闭')}"><span class="material-icons-outlined">close</span></button></header>
+        <div class="st-dialog-body">
+            <div class="st-transfer-recipient"><span class="material-icons-outlined">person</span><span><small>#{t("收款成员")}</small><strong data-st-transfer-recipient>#{t("尚未选择")}</strong></span></div>
+            <label class="st-field"><span>#{t("转账金额")}</span><input type="text" inputmode="decimal" autocomplete="off" class="layui-input" data-st-transfer-amount placeholder="#{t('请输入金额')}"></label>
+            <div class="st-status is-waiting" data-st-transfer-status aria-live="polite"><span class="material-icons-outlined">info</span><span>#{t("输入金额后可继续确认")}</span></div>
+            <div class="st-notice st-notice--warning"><span class="material-icons-outlined">privacy_tip</span><span>#{t("仅显示成员用户名和 UID；转账成功后不可撤回。")}</span></div>
+        </div>
+        <footer class="st-dialog-actions"><button type="button" class="st-button st-button--secondary" data-st-transfer-close>#{t("取消")}</button><button type="button" class="st-button st-button--primary" data-st-transfer-confirm disabled aria-disabled="true"><span class="material-icons-outlined">payments</span><span data-st-transfer-confirm-label>#{t("确认转账")}</span></button></footer>
+    </dialog>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Member.js'))}
+#{include file="../Common/Footer.html"}

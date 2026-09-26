@@ -1,0 +1,879 @@
+/* ============================================================================
+   洛杉矶 · 手机端外壳（APP 形态）
+   固定顶栏 + 固定底部 TabBar + 独立滚动区 + 半屏 Sheet + 下拉刷新 + 页面转场。
+   ——只在 Client::isMobile() 为真时下发，电脑端的 Pc.* 一个字节都不加载。
+
+   铁律：外壳容器（.la-app / .la-app__scroll）上永远不加 transform。
+   非 none 的 transform 会形成包含块，把 position:fixed 的 TabBar / Sheet
+   和 layui 弹层困在局部坐标系里。转场动画只加在内容层 .la-view 上。
+   ========================================================================= */
+
+html, body { height: 100%; }
+
+body.la--app {
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* iOS 在输入框字号 <16px 时会自动放大整页，所有输入控件锁 16px */
+body.la--app input,
+body.la--app textarea,
+body.la--app select,
+body.la--app .form-control { font-size: 16px; }
+
+.la-app {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    height: 100vh;
+    background: var(--la-bg);
+}
+
+/* 顶部光晕：一层从品牌色淡出到页面底色的渐变，压在顶栏和首屏轮播的后面。
+   顶栏自己是透明的，所以这层光晕会从搜索胶囊后面一直流到轮播图背后，
+   顶栏和内容之间没有那道生硬的色块边界 —— 换任何强调色都成立。 */
+.la-app::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 190px;
+    background: linear-gradient(180deg, rgba(var(--la-c1-rgb), .18) 0%, rgba(var(--la-c1-rgb), .07) 55%, rgba(var(--la-c1-rgb), 0) 100%);
+    pointer-events: none;
+}
+
+.la-app > * { position: relative; }
+
+@supports (height: 100dvh) { .la-app { height: 100dvh; } }
+
+.la-app__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding-bottom: calc(var(--la-tab-h) + var(--la-safe-b) + 14px);
+    scrollbar-width: none;
+}
+
+.la-app__scroll::-webkit-scrollbar { display: none; }
+body.la-no-tab .la-app__scroll { padding-bottom: calc(var(--la-safe-b) + 14px); }
+.la-app--plain { display: block; height: auto; overflow: auto; }
+
+/* ---------------------------------------------------------------- 顶栏 */
+
+.la-bar {
+    flex: none;
+    padding-top: var(--la-safe-t);
+    background: var(--la-bg);
+    border-bottom: 1px solid transparent;
+    transition: background-color var(--la-d3) var(--la-e-smooth),
+    border-color var(--la-d3) var(--la-e-smooth);
+}
+
+.la-bar__in {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--la-bar-h);
+    padding: 0 6px;
+}
+
+.la-bar__side { display: flex; align-items: center; min-width: 40px; }
+.la-bar__side--r { justify-content: flex-end; }
+
+.la-bar__title {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    font-size: var(--la-t-md);
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
+
+.la-bar__btn {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: var(--la-ink);
+    transition: background-color var(--la-d1) var(--la-e-smooth), transform var(--la-d1) var(--la-e-out);
+}
+
+.la-bar__btn:active { background: var(--la-active); transform: scale(.9); }
+.la-bar__btn .la-i { width: 22px; height: 22px; }
+
+/* 透明起步（大图详情页），随滚动渐显 */
+.la-bar--trans {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    z-index: var(--la-z-header);
+    background: transparent;
+}
+
+.la-bar--trans .la-bar__title { opacity: 0; transition: opacity var(--la-d3) var(--la-e-smooth); }
+.la-bar--trans .la-bar__btn { color: #fff; background: rgba(16, 10, 8, .34); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.la-bar--trans.is-solid { background: color-mix(in srgb, var(--la-bg) 88%, transparent); backdrop-filter: saturate(1.6) blur(14px); -webkit-backdrop-filter: saturate(1.6) blur(14px); border-bottom-color: var(--la-line); }
+.la-bar--trans.is-solid .la-bar__title { opacity: 1; }
+.la-bar--trans.is-solid .la-bar__btn { color: var(--la-ink); background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+/* 商城首页的搜索胶囊顶栏
+
+   不再做整块的品牌色顶栏 —— 那只有在品牌色本身是拼多多那种红的时候才立得住，
+   换成绿、蓝、黑就是一块平板。现在：顶栏透明，底下是 .la-app::before 那层光晕；
+   搜索胶囊是白的、带一点投影浮起来，右端一颗品牌色渐变的圆形搜索钮；
+   滚动吸顶后顶栏转成实心白 + 细阴影，内容从它下面滑过。
+   注意别在这里写 backdrop-filter —— 它会给顶栏建包含块，
+   把里面的浮层和 fixed 弹窗一起劫持成局部定位。   */
+
+.la-apphead {
+    flex: none;
+    padding-top: var(--la-safe-t);
+    background: transparent;
+    color: var(--la-ink);
+    transition: background-color var(--la-d3) var(--la-e-smooth), box-shadow var(--la-d3) var(--la-e-smooth);
+}
+
+.la-apphead.is-stuck { background: var(--la-surface); box-shadow: var(--la-sh-2); }
+
+.la-apphead__in { display: flex; align-items: center; gap: 8px; height: 50px; padding: 0 12px 0 10px; }
+.la-apphead__mark { width: 28px; height: 28px; border-radius: 8px; flex: none; }
+.la-apphead__mark::before { top: 9px; width: 10px; height: 10px; margin-left: -5px; }
+.la-apphead__mark::after { left: 6px; right: 6px; bottom: 6px; }
+
+.la-apphead__btn {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex: none;
+    color: var(--la-ink-2);
+}
+
+.la-apphead__btn:active { background: var(--la-active); }
+
+.la-searchpill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 0 4px 0 12px;
+    border: 0;
+    border-radius: var(--la-r-pill);
+    font-size: var(--la-t-base);
+    color: var(--la-ink-4);
+    background: var(--la-surface);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .07), 0 0 0 1px rgba(0, 0, 0, .03);
+    text-align: start;
+    transition: transform var(--la-d1) var(--la-e-out), box-shadow var(--la-d2) var(--la-e-smooth);
+}
+
+:root[data-theme="dark"] .la-searchpill { background: var(--la-surface-2); box-shadow: 0 2px 10px rgba(0, 0, 0, .35), 0 0 0 1px rgba(255, 255, 255, .06); }
+
+.la-searchpill:active { transform: scale(.985); }
+.la-searchpill > .la-i { width: 15px; height: 15px; color: var(--la-ink-4); flex: none; }
+/* 只有占位文字那个 span 是弹性的；右端圆钮也是 span，必须排除，否则会被拉成一条宽胶囊 */
+.la-searchpill > span:not(.la-searchpill__go) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.la-searchpill.is-filled { color: var(--la-ink); font-weight: 600; }
+
+/* 右端的搜索钮：品牌色渐变圆，白色放大镜 */
+.la-searchpill .la-searchpill__go {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--la-sunset);
+    box-shadow: var(--la-sh-brand);
+}
+
+.la-searchpill__go .la-i { width: 14px; height: 14px; color: #fff; }
+
+/* ---------------------------------------------------------------- 底部 TabBar */
+
+.la-tabbar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: var(--la-z-sticky);
+    padding-bottom: var(--la-safe-b);
+    background: color-mix(in srgb, var(--la-surface) 92%, transparent);
+    backdrop-filter: saturate(1.8) blur(18px);
+    -webkit-backdrop-filter: saturate(1.8) blur(18px);
+    border-top: 1px solid var(--la-line);
+}
+
+.la-tabbar__in { display: flex; height: var(--la-tab-h); }
+
+.la-tabbar__item {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: var(--la-ink-3);
+    transition: color var(--la-d2) var(--la-e-smooth);
+}
+
+.la-tabbar__ico { display: grid; place-items: center; transition: transform var(--la-d3) var(--la-e-spring); }
+.la-tabbar__ico .la-i { width: 22px; height: 22px; }
+.la-tabbar__txt { font-size: var(--la-t-2xs); font-weight: 600; }
+.la-tabbar__item:active .la-tabbar__ico { transform: scale(.86); }
+.la-tabbar__item.is-on { color: var(--la-c1); }
+.la-tabbar__item.is-on .la-tabbar__ico { transform: translateY(-1px); }
+
+/* 选中态的落日光晕 */
+.la-tabbar__item.is-on .la-tabbar__ico::before {
+    content: "";
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(var(--la-c1-rgb), .20), transparent 70%);
+}
+
+.la-tabbar__ico { position: relative; }
+
+/* ---------------------------------------------------------------- 下拉刷新 */
+
+.la-refresh {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 0;
+    margin-top: 0;
+    overflow: hidden;
+    font-size: var(--la-t-sm);
+    color: var(--la-ink-3);
+    opacity: 0;
+    transition: height var(--la-d3) var(--la-e-out), opacity var(--la-d2) var(--la-e-smooth);
+}
+
+.la-refresh.is-pull, .la-refresh.is-run { opacity: 1; }
+.la-refresh__spin { display: grid; place-items: center; color: var(--la-c1); }
+.la-refresh__spin .la-i { width: 18px; height: 18px; transition: transform var(--la-d3) var(--la-e-out); }
+.la-refresh.is-ready .la-refresh__spin .la-i { transform: rotate(180deg); }
+.la-refresh.is-run .la-refresh__spin .la-i { animation: la-spin .7s linear infinite; }
+
+/* ---------------------------------------------------------------- 半屏 Sheet */
+
+.la-sheet { position: fixed; inset: 0; z-index: var(--la-z-sheet); }
+.la-sheet[hidden] { display: none; }
+
+.la-sheet__scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--la-scrim);
+    opacity: 0;
+    transition: opacity var(--la-d3) var(--la-e-smooth);
+}
+
+.la-sheet.is-open .la-sheet__scrim { opacity: 1; }
+
+.la-sheet__panel {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 86dvh;
+    max-height: 86vh;
+    padding-bottom: var(--la-safe-b);
+    border-radius: var(--la-r-2xl) var(--la-r-2xl) 0 0;
+    background: var(--la-surface);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, .22);
+    transform: translate3d(0, 100%, 0);
+    transition: transform var(--la-d4) var(--la-e-out);
+}
+
+.la-sheet.is-open .la-sheet__panel { transform: none; }
+.la-sheet.is-drag .la-sheet__panel { transition: none; }
+
+.la-sheet__grip {
+    width: 38px;
+    height: 4px;
+    margin: 9px auto 2px;
+    border-radius: var(--la-r-pill);
+    background: var(--la-line-2);
+    flex: none;
+}
+
+.la-sheet__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 16px 12px;
+    flex: none;
+}
+
+.la-sheet__title { font-size: var(--la-t-lg); font-weight: 800; }
+
+.la-sheet__x {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: var(--la-ink-3);
+    background: var(--la-surface-2);
+}
+
+.la-sheet__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 16px 16px;
+}
+
+/* ---------------------------------------------------------------- 更多菜单 */
+
+.la-appmenu { position: fixed; inset: 0; z-index: var(--la-z-sheet); }
+.la-appmenu[hidden] { display: none; }
+/* 从底部升起的动作面板 —— 和站内其它浮层（筛选抽屉、平台弹层）是同一套语言，
+   右上角的下拉是网页的做法，手机上够不着也不像 APP。 */
+.la-appmenu__scrim { position: absolute; inset: 0; background: var(--la-scrim); animation: la-fade var(--la-d3) var(--la-e-smooth) both; }
+
+.la-appmenu__panel {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    max-height: 84vh;
+    overflow-y: auto;
+    padding: 0 12px calc(12px + var(--la-safe-b));
+    border-radius: var(--la-r-2xl) var(--la-r-2xl) 0 0;
+    background: var(--la-surface);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, .22);
+    animation: la-lsheet-in var(--la-d4) var(--la-e-out) both;
+}
+
+.la-appmenu__grip { width: 38px; height: 4px; margin: 9px auto 6px; border-radius: 2px; background: var(--la-line-2); }
+
+.la-appmenu__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    height: 52px;
+    padding: 0 14px;
+    border-radius: var(--la-r-md);
+    font-size: var(--la-t-md);
+    font-weight: 500;
+    color: var(--la-ink);
+    text-align: start;
+}
+
+.la-appmenu__item:active { background: var(--la-active); }
+.la-appmenu__item .la-i { width: 20px; height: 20px; color: var(--la-ink-3); }
+.la-appmenu__item.is-on { color: var(--la-c1); font-weight: 700; }
+.la-appmenu__item.is-on .la-i { color: var(--la-c1); }
+.la-appmenu__sep { height: 1px; margin: 8px 14px; background: var(--la-line); }
+
+.la-appmenu__cancel {
+    width: 100%;
+    height: 50px;
+    margin-top: 8px;
+    border-radius: var(--la-r-lg);
+    font-size: var(--la-t-md);
+    font-weight: 700;
+    color: var(--la-ink-2);
+    background: var(--la-surface-2);
+}
+
+.la-appmenu__cancel:active { transform: scale(.985); background: var(--la-surface-3); }
+
+@keyframes la-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------------------------------------------------------------- 页面转场
+   只动内容层，不动外壳（外壳 transform 会把 fixed 元素困住）。 */
+
+[data-la-page-in] .la-view { animation: la-app-enter var(--la-d4) var(--la-e-out) both; }
+
+@keyframes la-app-enter {
+    from { opacity: 0; transform: translate3d(0, 10px, 0); }
+    to { opacity: 1; transform: none; }
+}
+
+body.is-leaving .la-view {
+    opacity: 0;
+    transform: translate3d(-14px, 0, 0);
+    transition: opacity var(--la-d2) var(--la-e-smooth), transform var(--la-d3) var(--la-e-in-out);
+}
+
+/* ---------------------------------------------------------------- 吸底操作条 */
+
+/* 吸底操作栏（商品详情）。别再叫 .la-actbar：那是 Widget.css 里会员中心工具栏的类名，
+   撞名后它的 margin-bottom:12px 会把这条 fixed 的栏整体顶离底边，flex-wrap 和 14px 图标也会串过来。 */
+.la-dockbar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: var(--la-z-sticky);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px calc(10px + var(--la-safe-b));
+    background: color-mix(in srgb, var(--la-surface) 94%, transparent);
+    backdrop-filter: saturate(1.8) blur(18px);
+    -webkit-backdrop-filter: saturate(1.8) blur(18px);
+    border-top: 1px solid var(--la-line);
+}
+
+.la-dockbar__side { display: flex; gap: 4px; flex: none; }
+
+.la-dockbar__ico {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 46px;
+    height: 46px;
+    border-radius: var(--la-r-md);
+    font-size: var(--la-t-2xs);
+    color: var(--la-ink-2);
+}
+
+.la-dockbar__ico:active { background: var(--la-active); }
+.la-dockbar__ico .la-i { width: 19px; height: 19px; }
+.la-dockbar__main { flex: 1; }
+
+/* 维护页在手机端不需要 app shell */
+.la-app--plain .la-closed { min-height: 100dvh; min-height: 100vh; }
+
+/* ================================================================ 平台弹层的 APP 形态
+   App.Shell.js 的 sheetify 在 layer 弹层进入 body 时给它加 .la-lsheet（底部抽屉）或 .la-lalert（居中小卡片）。
+   平台把弹窗开成 100%×100% 的全屏 PC 弹窗，这里改成：高度跟内容走（上限 90vh）、顶上一根抓手、
+   标题栏 / 吸底操作栏、多标签变成可横滑的分段条、表单控件 44 高 16px 字（iOS 不放大页面）。
+   layui 会把 top/left/width/height 写成内联样式并在 resize 时重写，平台皮又几乎每条 !important，
+   所以这块整体放在 @layer la-first 且每条 !important（脚本统一追加）。同块顺带收了手机端的
+   状态胶囊行、筛选抽屉里的表单尺寸（.la-fsheet 内的 .table-search 要压过 Widget.css 同层的桌面规则）。 */
+@layer la-first {
+body.la--app .layui-layer.la-lsheet {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 0 var(--la-safe-b) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border: 0 !important;
+    border-radius: var(--la-r-2xl) var(--la-r-2xl) 0 0 !important;
+    background: var(--la-surface) !important;
+    color: var(--la-ink) !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, .22) !important;
+    overflow: hidden !important;
+    animation: la-lsheet-in .34s var(--la-e-out) !important;
+}
+body.la--app .layui-layer.la-lsheet.layer-anim-close { animation: la-lsheet-out .2s var(--la-e-in-out) forwards !important; }
+/* 拖动中只关过渡，别动 animation：加减这条类时若改了 animation 属性，入场动画会被重新触发，整张抽屉再升一遍 */
+body.la--app .layui-layer.la-lsheet.is-drag { transition: none !important; }
+body.la--app .la-lsheet > .la-lsheet__grip {
+    flex: none !important;
+    width: 38px !important;
+    height: 4px !important;
+    margin: 9px auto 2px !important;
+    border-radius: 2px !important;
+    background: var(--la-line-2) !important;
+}
+body.la--app .la-lsheet > .layui-layer-title {
+    flex: none !important;
+    position: static !important;
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+    padding: 6px 56px 12px 18px !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: var(--la-ink) !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--la-line) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+body.la--app .la-lsheet > .layui-layer-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    padding: 16px 18px !important;
+    border-radius: 0 !important;
+}
+body.la--app .la-lsheet > .layui-layer-btn {
+    flex: none !important;
+    display: flex !important;
+    flex-direction: row-reverse !important;
+    gap: 10px !important;
+    margin: 0 !important;
+    padding: 12px 18px !important;
+    border-top: 1px solid var(--la-line) !important;
+    border-radius: 0 !important;
+    background: var(--la-surface) !important;
+    text-align: start !important;
+    box-shadow: none !important;
+}
+body.la--app .la-lsheet > .layui-layer-btn a {
+    flex: 1 1 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    height: 46px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-radius: var(--la-r-pill) !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--la-ink-2) !important;
+    background: var(--la-surface-2) !important;
+    box-shadow: none !important;
+}
+body.la--app .la-lsheet > .layui-layer-btn .layui-layer-btn0 {
+    flex: 1.6 1 0 !important;
+    color: #fff !important;
+    background: var(--la-c1) !important;
+}
+body.la--app .la-lsheet > .layui-layer-btn a i { color: inherit !important; }
+body.la--app .la-lsheet .layui-layer-setwin {
+    top: 12px !important;
+    right: 14px !important;
+}
+body.la--app .la-lsheet .layui-layer-setwin .layui-layer-min,
+body.la--app .la-lsheet .layui-layer-setwin .layui-layer-max { display: none !important; }
+body.la--app .la-lsheet.layui-layer-tab > .layui-layer-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 56px 10px 14px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+body.la--app .la-lsheet.layui-layer-tab > .layui-layer-title::-webkit-scrollbar { display: none !important; }
+body.la--app .la-lsheet.layui-layer-tab > .layui-layer-title span {
+    flex: none !important;
+    position: static !important;
+    float: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 32px !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-radius: var(--la-r-pill) !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 32px !important;
+    color: var(--la-ink-2) !important;
+    background: var(--la-surface-2) !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+body.la--app .la-lsheet.layui-layer-tab > .layui-layer-title span::after,
+body.la--app .la-lsheet.layui-layer-tab > .layui-layer-title span::before { display: none !important; }
+body.la--app .la-lsheet.layui-layer-tab > .layui-layer-title span.layui-this {
+    color: #fff !important;
+    background: var(--la-c1) !important;
+}
+body.la--app .la-lsheet.layui-layer-tab > .layui-layer-title span i,
+body.la--app .la-lsheet.layui-layer-tab > .layui-layer-title span.layui-this i { color: inherit !important; }
+body.la--app .la-lsheet .layui-form-item { margin: 0 0 16px !important; }
+body.la--app .la-lsheet .layui-form-label {
+    font-size: 13px !important;
+    margin: 0 0 8px !important;
+}
+body.la--app .la-lsheet .layui-input:not(textarea),
+body.la--app .la-lsheet .layui-select,
+body.la--app .la-lsheet .layui-form-select .layui-input {
+    height: 44px !important;
+    line-height: 42px !important;
+    font-size: 16px !important;
+}
+body.la--app .la-lsheet .layui-textarea {
+    font-size: 16px !important;
+    min-height: 72px !important;
+}
+body.la--app .component-popup .image-render .btn-upload {
+    width: 104px !important;
+    height: 104px !important;
+    font-size: 12px !important;
+}
+body.la--app .component-popup .layui-form-label .photo-album,
+body.la--app .component-popup .layui-form-label .external-input {
+    width: 30px !important;
+    height: 30px !important;
+}
+body.la--app .component-popup .layui-form-label .photo-album i,
+body.la--app .component-popup .layui-form-label .external-input i { font-size: 14px !important; }
+body.la--app .component-popup .layui-form-label .fa-asterisk { font-size: 10px !important; }
+body.la--app .la-lsheet .layui-form-select dl { top: 48px !important; }
+body.la--app .la-lsheet .md-secret__bar {
+    display: flex !important;
+    gap: 10px !important;
+    margin-top: 14px !important;
+}
+body.la--app .la-lsheet .md-secret__btn {
+    flex: 1 1 0 !important;
+    justify-content: center !important;
+    height: 46px !important;
+    padding: 0 12px !important;
+    border-radius: var(--la-r-pill) !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+}
+body.la--app .layui-layer.la-lalert {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: min(86vw, 340px) !important;
+    max-width: 86vw !important;
+    height: auto !important;
+    max-height: 80vh !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    border-radius: var(--la-r-xl) !important;
+    overflow: auto !important;
+    animation: la-lalert-in .22s var(--la-e-out) !important;
+}
+body.la--app .layui-layer.la-lalert.layer-anim-close { animation: la-lalert-out .18s var(--la-e-in-out) forwards !important; }
+body.la--app .fixed-table-toolbar .bs-bars {
+    float: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+body.la--app .table-switch-state {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    margin: 8px 0 4px !important;
+    padding: 0 12px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+body.la--app .table-switch-state::-webkit-scrollbar { display: none !important; }
+body.la--app .table-switch-state > * { flex: none !important; }
+body.la--app .la-fsheet .table-search {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    gap: 12px !important;
+}
+body.la--app .la-fsheet .table-search .layui-input-inline { height: 44px !important; }
+body.la--app .la-fsheet .table-search .layui-input-inline > .layui-input {
+    height: 44px !important;
+    line-height: 42px !important;
+    padding: 0 14px !important;
+    font-size: 16px !important;
+}
+body.la--app .la-fsheet .table-search .mui-sf__label {
+    left: 15px !important;
+    right: 15px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+    font-size: 16px !important;
+}
+body.la--app .la-fsheet .table-search .layui-input-inline.text-center {
+    height: 44px !important;
+    line-height: 42px !important;
+}
+body.la--app .la-fsheet .table-search .layui-input-inline.la-daterange { height: 44px !important; }
+body.la--app .la-fsheet .table-search .mui-sf--select {
+    height: 44px !important;
+    padding-left: 14px !important;
+}
+body.la--app .la-fsheet .table-search .mui-sf--select > .mui-sf__label { font-size: 14px !important; }
+body.la--app .la-fsheet .table-search .mui-sf--select .layui-form-select .layui-input {
+    height: 42px !important;
+    line-height: 42px !important;
+    font-size: 16px !important;
+}
+body.la--app .la-fsheet .table-search .layui-form-select dl { top: 48px !important; }
+body.la--app .la-fsheet .table-search .layui-input-inline:has(> .query-button) { display: none !important; }
+}
+@keyframes la-lsheet-in { from { transform: translate3d(0, 100%, 0); } to { transform: none; } }
+@keyframes la-lsheet-out { from { transform: none; } to { transform: translate3d(0, 100%, 0); } }
+@keyframes la-lalert-in { from { opacity: 0; transform: translate(-50%, -50%) scale(.94); } to { opacity: 1; transform: translate(-50%, -50%); } }
+@keyframes la-lalert-out { to { opacity: 0; transform: translate(-50%, -50%) scale(.96); } }
+
+/* ================================================================ 筛选：搜索框 + 筛选抽屉（手机端，Center.js 生成） */
+.la-fbar { display: flex; align-items: center; gap: 8px; padding: 10px 12px 2px; }
+.la-fbar__search {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: var(--la-r-pill);
+    background: var(--la-surface-2);
+    color: var(--la-ink-3);
+}
+.la-fbar__search > .la-i { flex: none; width: 16px; height: 16px; }
+.la-fbar__search input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    font-size: 16px;
+    color: var(--la-ink);
+    outline: 0;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.la-fbar__search input::placeholder { color: var(--la-ink-4); }
+.la-fbar__search input::-webkit-search-cancel-button { display: none; }
+.la-fbar__clear { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: #fff; background: var(--la-line-2); }
+.la-fbar__clear > .la-i { width: 12px; height: 12px; }
+.la-fbar__filter {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: var(--la-r-pill);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--la-ink-2);
+    background: var(--la-surface-2);
+}
+.la-fbar__filter > .la-i { width: 16px; height: 16px; }
+.la-fbar__filter.is-on { color: var(--la-c1); background: var(--la-tint); }
+.la-fbar__badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font-size: 11px; font-weight: 700; color: #fff; background: var(--la-c1); }
+.la-fbar--solo .la-fbar__filter { flex: 1 1 auto; justify-content: center; }
+.la-fsheet-src { display: none; }
+.la-fsheet__foot { position: sticky; bottom: 0; display: flex; gap: 10px; margin-top: 4px; padding: 12px 0 4px; background: var(--la-surface); }
+.la-fsheet__btn {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    border-radius: var(--la-r-pill);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--la-ink-2);
+    background: var(--la-surface-2);
+}
+.la-fsheet__btn--go { flex: 1.6 1 0; color: #fff; background: var(--la-c1); }
+.la-fsheet__btn:active { transform: scale(.97); }
+/* 已选中的商品图标：和空态的虚线框同尺寸，列表里不会忽大忽小 */
+body.la--app .component-popup .image-render img.image-upload {
+    width: 104px !important;
+    height: 104px !important;
+    max-height: none !important;
+    object-fit: cover !important;
+}
+
+/* ---------------------------------------------------------------- 手机端的轻提示
+   toastr 默认是桌面右上角 200px 宽的小方块，在 390 的屏幕上又挤又偏。改成贴着顶栏下沿的通栏条。
+   它的定位散在 _.css 的 .toast-top-right、_.css 的三条媒体查询和 md-components（在级联层里）三处，
+   层外的 !important 压不住层内的 —— 所以整块放进更早声明的 @layer la-first，逐条 important。 */
+@layer la-first {
+    body.la--app #toast-container {
+        top: calc(env(safe-area-inset-top, 0px) + 56px) !important;
+        right: 12px !important;
+        left: 12px !important;
+        bottom: auto !important;
+        width: auto !important;
+        max-width: none !important;
+        pointer-events: none !important;
+        /* 平台把提示条做成了「左 50% + translateX(-50%)」的居中动画；改成通栏后那个位移必须一起清掉，
+           否则整条会被推到屏幕外面去。换成自家的下落动画（!important 的声明优先于动画）。 */
+        transform: none !important;
+        animation: la-toast-drop .28s var(--la-e-out) both !important;
+    }
+
+    body.la--app #toast-container > div {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        margin: 0 0 8px !important;
+        padding: 13px 16px 13px 48px !important;
+        border-radius: var(--la-r-lg) !important;
+        box-shadow: var(--la-sh-3) !important;
+        font-size: var(--la-t-md) !important;
+        line-height: 1.5 !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        background-position: 14px center !important;
+    }
+
+    /* 提示条本体是平台 Material 皮的浅色卡片（白底深字 + 语义色图标），那套配色是对的，
+       这里只管尺寸与位置，别去改它的前景色，否则白底白字。 */
+    body.la--app #toast-container .toast-message { color: var(--la-ink) !important; font-size: var(--la-t-md) !important; }
+    body.la--app #toast-container .toast-title { color: var(--la-ink) !important; }
+    /* 抽屉 / 动作面板的滚动条在手机上不该露出来 */
+    body.la--app .la-sheet__body,
+    body.la--app .la-appmenu__panel { scrollbar-width: none !important; }
+}
+
+@keyframes la-toast-drop { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+
+/* ================================================================ SweetAlert2 对话框（手机）
+   人机验证、确认框在手机上是居中的 APP 小卡片。带输入框的挪到屏幕上部：键盘弹起后视口只剩上半截，
+   居中的卡片会被键盘顶住或盖住。输入框 16px（iOS 小于 16px 会整页放大）。
+   选择器都带 :root[data-theme]，否则特异性低于 Widget.css 里的桌面版规则，改不动。 */
+:root[data-theme] body.la--app .swal2-container { padding: 16px; }
+
+:root[data-theme] body.la--app .swal2-popup:not(.swal2-toast) {
+    width: min(88vw, 360px) !important;
+    padding: 24px 18px 16px;
+    border-radius: 22px;
+}
+
+/* 放进容器网格的第一行、贴行顶。组件的容器是三行网格，剩余高度平分给三行，
+   只写 align-self:start 卡片仍从屏幕三分之一处开始，键盘一弹就盖住按钮 */
+:root[data-theme] body.la--app .swal2-container.swal2-center > .swal2-popup.la-swal--input {
+    grid-row: 1;
+    align-self: start;
+    margin-top: max(10vh, calc(var(--la-safe-t) + 32px));
+}
+
+:root[data-theme] body.la--app .swal2-popup:not(.swal2-toast) .swal2-input { height: 48px; font-size: 16px; }
+:root[data-theme] body.la--app .swal2-popup:not(.swal2-toast) .swal2-styled { height: 46px; font-size: 16px; }

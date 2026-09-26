@@ -1,0 +1,23 @@
+#{include file="../../Common/Pc/Head.html" laArea="shop" laPage="closed"}
+
+<main class="la-closed">
+    <div class="la-closed__glow" aria-hidden="true"></div>
+    <div class="la-closed__card la-in-pop">
+        <div class="la-closed__mark" aria-hidden="true">#{\App\View\User\Theme\LosAngeles\Icons::svg('settings')}</div>
+        <h1 class="la-closed__title">#{t("店铺正在维护")}</h1>
+        <div class="la-closed__msg">
+            #{if $config.closed_message}#{$config.closed_message}#{else}<p>#{t("我们正在做一次升级，稍后回来会更快更好。")}</p>#{/if}
+        </div>
+        <div class="la-closed__acts">
+            <button type="button" class="la-btn la-btn--brand" data-la-reload>
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}<span>#{t("重新载入")}</span>
+            </button>
+            <a class="la-btn la-btn--line" href="/user/index/query">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}<span>#{t("订单查询")}</span>
+            </a>
+        </div>
+        <p class="la-closed__sign">#{$config.shop_name|escape:'html'}</p>
+    </div>
+</main>
+
+#{include file="../../Common/Pc/Foot.html" laArea="shop"}

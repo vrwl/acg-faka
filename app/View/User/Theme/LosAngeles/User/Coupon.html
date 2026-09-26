@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 优惠券 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/Coupon.html"}#{else}#{include file="./Pc/Coupon.html"}#{/if}

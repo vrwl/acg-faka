@@ -1,0 +1,37 @@
+#{include file="./Header.html"}
+<main class="st-page st-query-page">
+    <header class="st-page-header st-page-heading">
+        <div><span class="st-kicker">Order lookup</span><h1>#{t("订单查询")}</h1><p>#{t("使用订单号或下单时填写的联系方式查询购买记录。")}</p></div>
+    </header>
+
+    <section class="st-panel st-query-panel" aria-label="#{t('查询条件')}">
+        <form class="order-query-form st-query-form" novalidate>
+            <label class="st-field"><span>#{t("订单号 / 联系方式")}</span><input type="text" class="form-control" name="keywords" value="#{$tradeNo|escape:'html'}" placeholder="#{t('请输入订单号、手机号或邮箱')}" autocomplete="off" maxlength="256" required></label>
+            <button type="submit" class="st-button st-button-primary btn-search-query"><span class="material-icons-outlined" aria-hidden="true">search</span><span data-st-query-button-label>#{t("查询订单")}</span></button>
+            <p class="st-form-hint st-query-privacy-hint"><span class="material-icons-outlined" aria-hidden="true">lock</span><span>#{t("订单信息仅用于本次查询，不会保存在当前设备。")}</span></p>
+        </form>
+    </section>
+
+    <section class="loading-state st-state st-loading" data-st-query-state="loading" style="display:none;" hidden aria-live="polite">
+        <span class="st-spinner" aria-hidden="true"></span><div><strong>#{t("正在查询")}</strong><p>#{t("正在读取订单信息，请稍候。")}</p></div>
+    </section>
+    <section class="no-results st-state st-empty" data-st-query-state="empty" style="display:none;" hidden aria-live="polite">
+        <span class="material-icons-outlined" aria-hidden="true">search_off</span><div><strong>#{t("没有找到订单")}</strong><p>#{t("请检查输入内容，或联系店铺客服协助处理。")}</p></div>
+    </section>
+    <section class="st-state st-error" data-st-query-state="error" style="display:none;" hidden role="alert">
+        <span class="material-icons-outlined" aria-hidden="true">error_outline</span>
+        <div><strong>#{t("订单查询失败")}</strong><p data-st-query-error-text>#{t("暂时无法读取订单，请稍后重试。")}</p></div>
+        <button type="button" class="st-button st-button-quiet" data-st-query-retry>#{t("重新查询")}</button>
+    </section>
+    <section class="order-results st-query-results" data-st-query-state="results" style="display:none;" hidden aria-live="polite">
+        <div class="st-section-header"><div><span class="st-kicker">Results</span><h2>#{t("查询结果")}</h2><p>#{t("订单状态和交付内容如下。")}</p></div></div>
+        <div class="order-list st-order-feed"></div>
+        <footer class="st-query-pagination" data-st-query-pagination hidden>
+            <p data-st-query-progress></p>
+            <button type="button" class="st-button st-button-quiet" data-st-query-more><span class="material-icons-outlined" aria-hidden="true">expand_more</span><span data-st-query-more-label>#{t("加载更多")}</span></button>
+        </footer>
+    </section>
+    <template data-st-query-trade-hook>#{hook(\App\Consts\Hook::USER_VIEW_QUERY_TRADE_NO)}</template>
+</main>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Query.js'))}
+#{include file="./Footer.html"}

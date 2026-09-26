@@ -1,0 +1,42 @@
+#{include file="../../Common/App/Head.html" laArea="shop" laPage="query"}
+
+<main class="la-app" data-la-app data-la-page-in data-la-query>
+    #{include file="../../Common/App/Bar.html" laBack=1 laTitle=t("订单查询")}
+
+    <div class="la-app__scroll" data-la-scroll>
+        <div class="la-refresh" data-la-refresh aria-hidden="true">
+            <span class="la-refresh__spin">#{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}</span>
+            <span class="la-refresh__txt" data-la-refresh-txt>#{t("下拉刷新")}</span>
+        </div>
+
+        <section class="la-view">
+            <form class="la-queryapp order-query-form" data-la-query-form>
+                <div class="la-queryapp__box">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('search')}
+                    <input class="la-queryapp__input" type="text" name="keywords" enterkeyhint="search" autocomplete="off"
+                           value="#{$tradeNo|escape:'html'}"
+                           placeholder="#{t('订单号 / 手机号 / 邮箱 / QQ')}" data-la-query-input>
+                </div>
+                <button type="submit" class="la-btn la-btn--brand la-btn--block btn-search-query">#{t("查询订单")}</button>
+                <!--start::HOOK-->
+                #{hook(\App\Consts\Hook::USER_VIEW_QUERY_TRADE_NO)}
+                <!--end::HOOK-->
+            </form>
+
+            <div class="la-query__result order-list" data-la-query-list aria-live="polite"></div>
+            #{* 还没查过 / 没查到时的引导。用 :empty 兄弟选择器控制显隐，
+               控制器往 .la-query__result 里塞内容后它自动收起，不需要额外的 JS *}
+            <div class="la-queryidle">
+                <span class="la-queryidle__art">#{\App\View\User\Theme\LosAngeles\Icons::svg("receipt")}</span>
+                <strong class="la-queryidle__title">#{t("查询你的订单")}</strong>
+                <p class="la-queryidle__desc">#{t("输入下单时用的订单号、手机号、邮箱或 QQ，就能找回卡密与订单状态。")}</p>
+            </div>
+            <div class="la-fall__foot">
+                <div class="la-fall__sentinel" data-la-fall-more></div>
+                <div class="la-fall__end" hidden>#{t("已经到底啦")}</div>
+            </div>
+        </section>
+    </div>
+</main>
+
+#{include file="../../Common/App/Foot.html" laArea="shop" laJs="Query.js"}

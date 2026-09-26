@@ -1,0 +1,72 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Toolbar-->
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <!--end::Toolbar-->
+    <!--begin::Post-->
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="container-fluid">
+            <!--begin::Tables Widget 9-->
+            <div class="card mb-5 mb-xl-8">
+                <!--begin::Header-->
+                <div class="card-header border-0">
+                    <div class="card-toolbar">
+                    </div>
+                </div>
+                <!--end::Header-->
+
+                <div class="card-body py-3">
+                    <table id="logs"></table>
+                </div>
+            </div>
+
+            <!--end::Tables Widget 9-->
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Post-->
+</div>
+<!--end::Content-->
+
+#{set_script_var(["_dock_log_sites" => $sites])}
+<script>
+    documentReady(() => {
+        !function () {
+            const sitesRaw = getVar('_dock_log_sites') || '[]';
+            let siteOptions = [];
+            try {
+                siteOptions = JSON.parse(sitesRaw) || [];
+            } catch (e) {
+                console.error('Parse _dock_log_sites failed', e);
+            }
+
+            const table = new Table('/plugin/ThirdDockManage/api/log/data', '#logs');
+            table.setPagination(15, [15, 25, 50, 100]);
+
+            table.setColumns([
+                {checkbox: true},
+                {field: 'id', title: 'ID'},
+                {field: 'trade_no', title: '订单号'},
+                {field: 'site_id', title: '站点ID'},
+                {field: 'site_name', title: '站点名称'},
+                {field: 'uri', title: '请求地址'},
+                {field: 'method', title: '请求方式'},
+                {field: 'parameter', title: '请求参数'},
+                {field: 'result', title: '结果'},
+                {field: 'remark', title: '备注'},
+                {field: 'created_at', title: '请求时间'}
+            ]);
+            table.setSearch([
+                {title: '站点', name: 'equal-site_id', type: 'select', dict: siteOptions, default: 0},
+                {title: '参数内容', name: 'search-parameter', type: 'input'},
+                {title: '请求地址', name: 'search-uri', type: 'input'},
+                {title: '请求结果', name: 'search-result', type: 'input'}
+            ])
+
+            table.render();
+        }();
+    });
+</script>
+#{include file=$manage_view_path|cat:"Footer.html"}

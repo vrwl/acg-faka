@@ -1,0 +1,16 @@
+#{*
+  洛杉矶 · 会员中心页头（手机端 APP 形态）
+  参数：laPage / laTitle / laIcon / laBack(默认 1) / laAction
+*}
+#{assign var=laBack value=$laBack|default:1}
+#{include file="./Head.html" laArea="member" laPage=$laPage|default:'member'}
+
+<main class="la-app" data-la-app data-la-page-in>
+    #{include file="./Bar.html" laBack=$laBack laTitle=$laTitle|default:$title laAction=$laAction|default:''}
+
+    <div class="la-app__scroll" data-la-scroll>
+        <div class="la-refresh" data-la-refresh aria-hidden="true">
+            <span class="la-refresh__spin">#{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}</span>
+            <span class="la-refresh__txt" data-la-refresh-txt>#{t("下拉刷新")}</span>
+        </div>
+        <section class="la-view">

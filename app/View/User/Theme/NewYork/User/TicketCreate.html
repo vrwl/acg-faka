@@ -1,0 +1,89 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-ticket-page ny-ticket-focus-page ny-ticket-create-page" data-ny-ticket-screen="create">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main ny-ticket-create-main">
+        <header class="ny-ticket-subbar">
+            <a href="/user/ticket/index" aria-label="#{t('返回工单列表')}"><span class="material-icons-outlined">arrow_back</span></a>
+            <div><strong>#{t("创建工单")}</strong><small data-ny-ticket-step-label>#{t("选择服务类型")}</small></div>
+            <span class="ny-ticket-step-count"><b data-ny-ticket-step-count>1</b>/3</span>
+        </header>
+
+        <div class="ny-ticket-progress" aria-label="#{t('创建进度')}">
+            <button type="button" class="is-active" data-ny-ticket-step-jump="1"><i>1</i><span>#{t("类型")}</span></button>
+            <button type="button" data-ny-ticket-step-jump="2"><i>2</i><span>#{t("关联")}</span></button>
+            <button type="button" data-ny-ticket-step-jump="3"><i>3</i><span>#{t("说明")}</span></button>
+        </div>
+
+        <form class="ny-ticket-create-form" autocomplete="off" data-acg-prevent>
+            <section class="ny-ticket-step-panel is-active" data-ny-ticket-step="1">
+                <div class="ny-ticket-step-head"><span class="ny-route-mark ny-route-mark--yellow">1</span><div><h2>#{t("需要哪种帮助？")}</h2><p>#{t("选择后，我们会引导你补充最有用的信息。")}</p></div></div>
+                <div class="ny-ticket-choice-list" role="radiogroup" aria-label="#{t('工单类型')}">
+                    <button type="button" class="is-active" data-ny-ticket-type="0" role="radio" aria-checked="true"><span class="material-icons-outlined">question_answer</span><span><strong>#{t("售前咨询")}</strong><small>#{t("商品功能、购买方式或使用范围")}</small></span><i class="material-icons-outlined">check</i></button>
+                    <button type="button" data-ny-ticket-type="1" role="radio" aria-checked="false"><span class="material-icons-outlined">handyman</span><span><strong>#{t("售后支持")}</strong><small>#{t("已购商品异常，需要客服协助处理")}</small></span><i class="material-icons-outlined">check</i></button>
+                </div>
+                <div class="ny-ticket-field-group">
+                    <div class="ny-ticket-field-heading"><strong>#{t("处理优先级")}</strong><small>#{t("请选择最接近实际影响的程度")}</small></div>
+                    <div class="ny-ticket-priority" role="radiogroup" aria-label="#{t('优先级')}">
+                        <button type="button" data-ny-ticket-priority="0" role="radio" aria-checked="false"><i></i><span><strong>#{t("低")}</strong><small>#{t("一般咨询")}</small></span></button>
+                        <button type="button" class="is-active" data-ny-ticket-priority="1" role="radio" aria-checked="true"><i></i><span><strong>#{t("中")}</strong><small>#{t("影响使用")}</small></span></button>
+                        <button type="button" data-ny-ticket-priority="2" role="radio" aria-checked="false"><i></i><span><strong>#{t("高")}</strong><small>#{t("购买受阻")}</small></span></button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ny-ticket-step-panel" data-ny-ticket-step="2" hidden>
+                <div class="ny-ticket-step-head"><span class="ny-route-mark ny-route-mark--yellow">2</span><div><h2 data-ny-ticket-relation-title>#{t("关联商品")}</h2><p data-ny-ticket-relation-copy>#{t("选填，关联后客服能更快理解你的问题。")}</p></div></div>
+                <div data-ny-ticket-presale>
+                    <button type="button" class="ny-ticket-picker-field" data-ny-ticket-picker-open="commodity"><span class="material-icons-outlined">inventory_2</span><span><small>#{t("相关商品 · 选填")}</small><strong data-ny-ticket-commodity-label>#{t("从店铺商品中选择")}</strong></span><i class="material-icons-outlined">chevron_right</i></button>
+                    <button type="button" class="ny-ticket-selection-clear" data-ny-ticket-clear="commodity" hidden>#{t("移除已选商品")}</button>
+                </div>
+                <div data-ny-ticket-aftersale hidden>
+                    <div class="ny-ticket-mode-switch" role="tablist" aria-label="#{t('订单填写方式')}"><button type="button" class="is-active" data-ny-ticket-order-mode="account">#{t("购买记录")}</button><button type="button" data-ny-ticket-order-mode="manual">#{t("手动输入")}</button></div>
+                    <div data-ny-ticket-order-panel="account">
+                        <button type="button" class="ny-ticket-picker-field" data-ny-ticket-picker-open="order"><span class="material-icons-outlined">receipt_long</span><span><small>#{t("相关订单 · 必选")}</small><strong data-ny-ticket-order-label>#{t("选择已支付订单")}</strong></span><i class="material-icons-outlined">chevron_right</i></button>
+                    </div>
+                    <div data-ny-ticket-order-panel="manual" hidden>
+                        <label class="ny-ticket-input-field"><span>#{t("游客订单号")}</span><input type="text" name="trade_no" maxlength="32" inputmode="numeric" placeholder="#{t('输入购买时的订单号')}"></label>
+                        <p class="ny-ticket-inline-help"><span class="material-icons-outlined">info</span>#{t("仅用于游客订单，其他会员订单不能跨账号提交。")}</p>
+                    </div>
+                    <div class="ny-ticket-proof-block">
+                        <div class="ny-ticket-field-heading"><strong>#{t("购买凭证")}</strong><small>#{t("售后工单必须上传一张图片")}</small></div>
+                        <input type="file" data-ny-ticket-proof-input accept="image/jpeg,image/png,image/webp" hidden>
+                        <button type="button" class="ny-ticket-upload-card" data-ny-ticket-proof-pick><span class="material-icons-outlined">add_photo_alternate</span><span><strong>#{t("添加购买凭证")}</strong><small>#{t("JPG、PNG、WebP，最大 10 MB")}</small></span><i>#{t("选择图片")}</i></button>
+                        <div class="ny-ticket-proof-preview" data-ny-ticket-proof-preview hidden><img src="" alt="#{t('购买凭证')}"><span><strong>#{t("凭证已添加")}</strong><small></small></span><button type="button" data-ny-ticket-proof-remove aria-label="#{t('移除凭证')}"><span class="material-icons-outlined">delete</span></button></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ny-ticket-step-panel" data-ny-ticket-step="3" hidden>
+                <div class="ny-ticket-step-head"><span class="ny-route-mark ny-route-mark--yellow">3</span><div><h2>#{t("说明具体情况")}</h2><p>#{t("清楚描述现象与期望结果，处理会更高效。")}</p></div></div>
+                <div class="ny-ticket-create-summary"><span data-ny-ticket-summary-type>#{t("售前咨询")}</span><span data-ny-ticket-summary-priority>#{t("中优先级")}</span><span data-ny-ticket-summary-relation>#{t("未关联商品")}</span></div>
+                <label class="ny-ticket-input-field"><span>#{t("工单标题")}</span><input type="text" name="title" maxlength="100" placeholder="#{t('用一句话概括问题')}"><em><b data-ny-ticket-title-count>0</b>/100</em></label>
+                <label class="ny-ticket-textarea-field"><span>#{t("问题详情")}</span><textarea name="content" rows="7" placeholder="#{t('请描述遇到问题的步骤、实际现象，以及你希望得到的帮助…')}"></textarea></label>
+                <div class="ny-ticket-attachments">
+                    <div class="ny-ticket-field-heading"><strong>#{t("补充图片")}</strong><small><b data-ny-ticket-image-count>0</b>/8</small></div>
+                    <div class="ny-ticket-attachment-grid" data-ny-ticket-attachments></div>
+                    <input type="file" data-ny-ticket-content-input accept="image/jpeg,image/png,image/webp" multiple hidden>
+                    <button type="button" class="ny-ticket-add-images" data-ny-ticket-content-pick><span class="material-icons-outlined">add_photo_alternate</span>#{t("添加截图")}</button>
+                </div>
+                <div class="ny-ticket-privacy-note"><span class="material-icons-outlined">shield</span><p>#{t("请勿发送登录密码、完整卡密或其他敏感信息。")}</p></div>
+            </section>
+        </form>
+    </main>
+
+    <div class="ny-ticket-action-dock" data-ny-ticket-create-dock>
+        <button type="button" class="ny-ticket-dock-back" data-ny-ticket-step-back hidden><span class="material-icons-outlined">arrow_back</span>#{t("上一步")}</button>
+        <button type="button" class="ny-ticket-dock-next" data-ny-ticket-step-next><span>#{t("下一步")}</span><span class="material-icons-outlined">arrow_forward</span></button>
+        <button type="button" class="ny-ticket-dock-submit" data-ny-ticket-submit hidden><span>#{t("提交工单")}</span><span class="material-icons-outlined">send</span></button>
+    </div>
+
+    <button type="button" class="ny-ticket-picker-backdrop" data-ny-ticket-picker-close aria-label="#{t('关闭选择器')}" hidden></button>
+    <section class="ny-ticket-picker" data-ny-ticket-picker hidden aria-label="#{t('选择关联内容')}">
+        <div class="ny-ticket-picker__handle"></div>
+        <header><div><strong data-ny-ticket-picker-title>#{t("选择商品")}</strong><small data-ny-ticket-picker-subtitle>#{t("轻触一项即可选中")}</small></div><button type="button" data-ny-ticket-picker-close aria-label="#{t('关闭')}"><span class="material-icons-outlined">close</span></button></header>
+        <div class="ny-ticket-picker__search" role="search"><span class="material-icons-outlined">search</span><input type="search" data-ny-ticket-picker-search aria-label="#{t('搜索可关联内容')}" placeholder="#{t('搜索')}"><button type="button" data-ny-ticket-picker-search-clear aria-label="#{t('清空搜索')}" hidden><span class="material-icons-outlined">cancel</span></button></div>
+        <div class="ny-ticket-picker__list" data-ny-ticket-picker-list></div>
+        <button type="button" class="ny-ticket-picker__more" data-ny-ticket-picker-more hidden>#{t("加载更多")}</button>
+    </section>
+</div>
+#{include file="../Common/Footer.html"}

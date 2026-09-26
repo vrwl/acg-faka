@@ -1,0 +1,134 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-page-shell-dashboard" data-ny-page="dashboard">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-me-head">
+            <a class="ny-avatar-button" href="/user/security/personal" aria-label="#{t('修改头像与资料')}"><img src="#{$user.avatar}" alt="#{$user.username}" data-acg-fallback="#{$favicon}"></a>
+            <div class="ny-me-head__info">
+                <h1>#{$user.username}</h1>
+                <div class="ny-me-head__meta">
+                    <span class="ny-me-level"><img src="#{$user.group.icon}" alt="">#{$user.group.name}</span>
+                    #{if $user.businessLevel}<span class="ny-me-level"><img src="#{$user.businessLevel.icon}" alt="">#{$user.businessLevel.name}</span>#{/if}
+                </div>
+            </div>
+            <a class="ny-icon-button" href="/user/security/personal" aria-label="#{t('个人资料')}"><span class="material-icons-outlined">edit</span></a>
+        </section>
+
+        <section class="ny-me-wallet" aria-label="#{t('资产')}">
+            <div class="ny-me-wallet__grid">
+                <div><small>#{t("余额")}</small><strong><small>#{$config.currency_symbol}</small>#{$user.balance}</strong></div>
+                <a href="/user/cash/index"><small>#{t("硬币")}</small><strong>#{$user.coin}</strong></a>
+                <div><small>#{t("元气")}</small><strong>#{$user.recharge}</strong></div>
+            </div>
+            <div class="ny-me-wallet__actions">
+                <a href="/user/recharge/index"><span class="material-icons-outlined">add_card</span>#{t("充值")}</a>
+                <a href="/user/bill/index"><span class="material-icons-outlined">receipt_long</span>#{t("账单")}</a>
+                <a href="/user/cash/index"><span class="material-icons-outlined">currency_exchange</span>#{t("兑现")}</a>
+            </div>
+        </section>
+
+        <section class="ny-section">
+            <div class="ny-section-heading">
+                <h2>#{t("我的购物")}</h2>
+                <a class="ny-text-link" href="/user/personal/purchaseRecord">#{t("全部订单")}<span class="material-icons-outlined">arrow_forward</span></a>
+            </div>
+            <div class="ny-consume-grid">
+                <div><span class="material-icons-outlined">calendar_month</span><small>#{t("本月购物")}</small><strong>#{$config.currency_symbol}#{$buy_month}</strong></div>
+                <div><span class="material-icons-outlined">shopping_bag</span><small>#{t("累计购物")}</small><strong>#{$config.currency_symbol}#{$buy_total}</strong></div>
+                <div><span class="material-icons-outlined">receipt</span><small>#{t("累计订单")}</small><strong>#{$buy_count}<em>#{t("单")}</em></strong></div>
+            </div>
+        </section>
+
+        #{if $user.businessLevel}
+        <section class="ny-section">
+            <div class="ny-section-heading">
+                <h2>#{t("经营概况")}</h2>
+                <a class="ny-text-link" href="/user/order/index">#{t("商家订单")}<span class="material-icons-outlined">arrow_forward</span></a>
+            </div>
+            <div class="ny-business-stats">
+                <div><span>#{t("今日收入")}</span><strong>#{$config.currency_symbol}#{$today_income}</strong></div>
+                <div><span>#{t("昨日收入")}</span><strong>#{$config.currency_symbol}#{$yesterday_income}</strong></div>
+                <div><span>#{t("本月收入")}</span><strong>#{$config.currency_symbol}#{$month_income}</strong></div>
+                <div><span>#{t("总交易额")}</span><strong>#{$config.currency_symbol}#{$trade}</strong></div>
+            </div>
+            <div class="ny-operation-strip">
+                <a href="/user/order/index"><span class="material-icons-outlined">today</span><small>#{t("今日订单")}</small><strong>#{$today_orders}<em>#{t("单")}</em></strong></a>
+                <a href="/user/order/index" class="#{if $pending_delivery > 0}is-alert#{/if}"><span class="material-icons-outlined">local_shipping</span><small>#{t("待发货")}</small><strong>#{$pending_delivery}<em>#{t("单")}</em></strong></a>
+                <a href="/user/card/index"><span class="material-icons-outlined">vpn_key</span><small>#{t("未售卡密")}</small><strong>#{$card_unsold}<em>#{t("张")}</em></strong></a>
+                <a href="/user/commodity/index"><span class="material-icons-outlined">inventory_2</span><small>#{t("在售商品")}</small><strong>#{$commodity_online}<em>/#{$commodity_count}</em></strong></a>
+            </div>
+            <section class="ny-panel">
+                <div class="ny-panel-heading">
+                    <div><span class="material-icons-outlined">bar_chart</span><div><strong>#{t("近 7 日收入")}</strong><small>#{t("峰值")} #{$config.currency_symbol}#{$week_series_max}</small></div></div>
+                </div>
+                <div class="ny-panel-body">
+                    <div class="ny-spark">
+                        #{foreach $week_series as $d}
+                        <div class="ny-spark__col" title="#{$d.label}:#{$config.currency_symbol}#{$d.amount}">
+                            <div class="ny-spark__value">#{$d.amount}</div>
+                            <div class="ny-spark__track"><span style="height:#{$d.pct}%;"></span></div>
+                            <div class="ny-spark__label">#{$d.label}</div>
+                        </div>
+                        #{/foreach}
+                    </div>
+                </div>
+            </section>
+            #{if count($recent_sales) > 0}
+            <section class="ny-panel">
+                <div class="ny-panel-heading">
+                    <div><span class="material-icons-outlined">storefront</span><div><strong>#{t("最近卖出")}</strong><small>#{t("最近 5 笔成交")}</small></div></div>
+                </div>
+                <div class="ny-panel-body">
+                    <div class="ny-activity-list">
+                        #{foreach $recent_sales as $o}
+                        <div class="ny-activity-item">
+                            <img src="#{$o.commodity.cover}" alt="">
+                            <div><strong>#{$o.commodity.name}</strong><span>#{$o.create_time}</span></div>
+                            <div class="ny-activity-item__amount"><strong>#{$config.currency_symbol}#{$o.amount}</strong>#{if $o.rebate > 0}<span>#{t("收益")} #{$config.currency_symbol}#{$o.rebate}</span>#{/if}</div>
+                        </div>
+                        #{/foreach}
+                    </div>
+                </div>
+            </section>
+            #{/if}
+        </section>
+        #{else}
+        <a class="ny-business-entry" href="/user/business/index">
+            <span class="ny-business-entry__icon material-icons-outlined" aria-hidden="true">storefront</span>
+            <div><h2>#{t("开通店铺")}</h2><p>#{t("选择店铺等级后,即可上架商品并参与推广分成。")}</p></div>
+            <span class="material-icons-outlined ny-business-entry__go" aria-hidden="true">arrow_forward_ios</span>
+        </a>
+        #{/if}
+
+        <section class="ny-section">
+            <div class="ny-section-heading"><h2>#{t("账号与安全")}</h2></div>
+            <nav class="ny-me-menu" aria-label="#{t('账号设置')}">
+                <a href="/user/security/personal"><span class="material-icons-outlined">badge</span><span>#{t("个人资料")}</span><small>#{t("头像、收款信息")}</small><span class="material-icons-outlined">arrow_forward_ios</span></a>
+                <a href="/user/security/password"><span class="material-icons-outlined">password</span><span>#{t("密码设置")}</span><small></small><span class="material-icons-outlined">arrow_forward_ios</span></a>
+                <a href="/user/ticket/index" class="ny-ticket-entry"><span class="material-icons-outlined">support_agent</span><span>#{t("我的工单")}</span><small><em class="ny-ticket-entry-badge" data-ny-ticket-badge hidden>0</em><span>#{t("咨询与售后")}</span></small><span class="material-icons-outlined">arrow_forward_ios</span></a>
+                #{if $user.registered_type == 2}
+                <a href="/user/security/email"><span class="material-icons-outlined">alternate_email</span><span>#{t("邮箱设置")}</span><small>#{$user.email}</small><span class="material-icons-outlined">arrow_forward_ios</span></a>
+                #{/if}
+                #{if $user.registered_type == 1}
+                <a href="/user/security/phone"><span class="material-icons-outlined">smartphone</span><span>#{t("手机设置")}</span><small>#{$user.phone}</small><span class="material-icons-outlined">arrow_forward_ios</span></a>
+                #{/if}
+                <a href="/user/agent/member"><span class="material-icons-outlined">groups</span><span>#{t("我的下级")}</span><small></small><span class="material-icons-outlined">arrow_forward_ios</span></a>
+                <a href="/user/agent/promote"><span class="material-icons-outlined">share</span><span>#{t("推广中心")}</span><small>#{t("分享得分成")}</small><span class="material-icons-outlined">arrow_forward_ios</span></a>
+                <button type="button" class="logout ny-me-menu__danger"><span class="material-icons-outlined">logout</span><span>#{t("退出登录")}</span><small></small><span class="material-icons-outlined">arrow_forward_ios</span></button>
+            </nav>
+        </section>
+
+        <section class="ny-panel">
+            <div class="ny-panel-heading">
+                <div><span class="material-icons-outlined">verified_user</span><div><strong>#{t("登录记录")}</strong><small>#{t("发现异常请尽快修改密码")}</small></div></div>
+            </div>
+            <div class="ny-panel-body">
+                <div class="ny-security-fact"><span>#{t("当前登录")}</span><strong>#{$user.login_time}</strong><small>#{$user.login_ip}</small></div>
+                <div class="ny-security-fact"><span>#{t("上次登录")}</span><strong>#{if $user.last_login_time}#{$user.last_login_time}#{else}#{t("暂无记录")}#{/if}</strong><small>#{if $user.last_login_ip}#{$user.last_login_ip}#{else}-#{/if}</small></div>
+                #{if $user.last_login_ip && $user.login_ip != $user.last_login_ip}<div class="ny-security-alert"><span class="material-icons-outlined">warning</span>#{t("登录 IP 发生变化,请确认是本人操作。")}</div>#{/if}
+            </div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/dashboard/index.js")}
+#{include file="../Common/Footer.html"}

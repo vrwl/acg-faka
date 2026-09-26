@@ -206,7 +206,6 @@
         });
         if (!signatures.some(function (signature) { return /(?:^|\s)admin-/.test(signature); })) return false;
         return !signatures.some(function (signature) {
-            if (/(?:^|\s)admin-(?:store(?:-|$)|license-transfer(?:-|$))/.test(signature)) return true;
             if (/(?:^|[-\s])plugins?(?:-|$|\s)/.test(signature)) return true;
             return /(?:^|\s)(?:admin-)?(?:supply-market|third-dock)(?:-|$|\s)/.test(signature);
         });
@@ -366,7 +365,6 @@
         return !candidates.some(function (candidate) {
             if (candidate.referenceCard === false || candidate.cardLayout === 'ledger') return true;
             var id = String(candidate.id || '').toLowerCase();
-            if (['admin-store-home', 'admin-store-developer', 'admin-license-transfer'].indexOf(id) >= 0) return true;
             if (/(?:^|-)plugin(?:-|$)/.test(id)) return true;
             return /^(?:supply-market|third-dock)(?:-|$)/.test(id);
         });
@@ -819,31 +817,6 @@
             count: count,
             run: function () { if (hasLocalSearch) openLocalFilter(snapshot, recipe); else openFilters(snapshot); }
         });
-    }
-
-    function renderStoreDiscovery(host, snapshot, recipe) {
-        if (!host || !recipe || recipe.id !== 'admin-store-home') return;
-        var search = snapshot.search && snapshot.search.instance;
-        var state = snapshot.state;
-        if (!search && !(state && state.options && state.options.length)) return;
-
-        var discovery = document.createElement('section');
-        discovery.className = 'admin-mobile-store-discovery';
-        discovery.setAttribute('aria-label', i18n('应用搜索与类型筛选'));
-
-        var count = snapshotFilterCount(snapshot);
-        var trigger = document.createElement('button');
-        trigger.type = 'button';
-        trigger.className = 'admin-mobile-search';
-        trigger.setAttribute('aria-label', count ? i18n('搜索应用，已启用 ') + count + i18n(' 个筛选条件') : i18n('搜索应用'));
-        trigger.innerHTML = '<span class="material-icons-outlined admin-mobile-search__lead" aria-hidden="true">search</span>' +
-            '<span class="admin-mobile-search__copy">' + i18n('搜索应用') + '</span>' +
-            '<span class="admin-mobile-search__count"' + (count ? '' : ' hidden') + '>' + (count > 99 ? '99+' : count) + '</span>' +
-            '<span class="material-icons-outlined admin-mobile-search__trail" aria-hidden="true">tune</span>';
-        trigger.addEventListener('click', function () { openFilters(snapshot); });
-        discovery.appendChild(trigger);
-
-        host.appendChild(discovery);
     }
 
     function columnFor(columns, field) {
@@ -1461,14 +1434,11 @@
         var candidates = [recipe, pageRecipe].filter(Boolean);
         if (candidates.some(function (candidate) { return candidate.recordSheet === true; })) return true;
         return !candidates.some(function (candidate) {
-            if (candidate.recordSheet === false || candidate.cardCta || candidate.staticCard || candidate.inlineSwitch) return true;
+            if (candidate.recordSheet === false || candidate.staticCard || candidate.inlineSwitch) return true;
             var id = String(candidate.id || '').toLowerCase();
             if ([
                 'admin-plugin',
                 'admin-pay-plugin',
-                'admin-store-home',
-                'admin-store-developer',
-                'admin-license-transfer',
                 'admin-category-group-visibility',
                 'admin-commodity-group-pricing',
                 'admin-group-discount-config',
@@ -1811,132 +1781,6 @@
         });
     }
 
-    function cardOfferContent(recipe, snapshot, row, index) {
-        var cardCta = recipe && recipe.cardCta || {};
-        var offer = cardCta.offer;
-        if (!offer || !offer.field) return null;
-        var value = rawValue(row, offer.field);
-        if (typeof offer.format === 'function') {
-            try { value = offer.format(value, row, index, snapshot); } catch (error) {}
-        }
-
-        var section = document.createElement('section');
-        section.className = 'admin-mobile-app-detail__commerce';
-        var priceWrap = document.createElement('div');
-        priceWrap.className = 'admin-mobile-app-detail__price-wrap';
-        var label = document.createElement('small');
-        label.className = 'admin-mobile-app-detail__price-label';
-        label.textContent = text(offer.label || i18n('应用价格'));
-        var price = document.createElement('strong');
-        price.className = 'admin-mobile-app-detail__price';
-        price.textContent = text(value == null || value === '' ? '-' : value) || '-';
-        price.classList.toggle('is-free', price.textContent === '免费');
-        priceWrap.append(label, price);
-        section.appendChild(priceWrap);
-
-        var benefits = document.createElement('div');
-        benefits.className = 'admin-mobile-app-detail__benefits';
-        (Array.isArray(offer.benefits) ? offer.benefits : []).forEach(function (benefit) {
-            if (!benefit) return;
-            if (typeof benefit.show === 'function') {
-                try { if (!benefit.show(row, index, snapshot)) return; } catch (error) { return; }
-            }
-            var badge = document.createElement('span');
-            var tone = String(benefit.tone || 'success').trim().toLowerCase();
-            badge.className = 'admin-mobile-app-detail__benefit is-' + (/^(?:success|neutral)$/.test(tone) ? tone : 'success');
-            badge.textContent = text(benefit.label || i18n('专属权益'));
-            benefits.appendChild(badge);
-        });
-        if (benefits.children.length) section.appendChild(benefits);
-        else section.classList.add('is-price-only');
-        return section;
-    }
-
-    function cardCtaContent(recipe, snapshot, columns, row, index, heading, headingField, subtitle, rowActions) {
-        var content = document.createElement('div');
-        content.className = 'admin-mobile-app-detail';
-        var hero = document.createElement('section');
-        hero.className = 'admin-mobile-app-detail__hero';
-        hero.innerHTML = '<span class="admin-mobile-app-detail__icon"><span class="material-icons-outlined" aria-hidden="true"></span></span><div><strong></strong><small></small></div>';
-        setDefinitionInlineContent(hero.querySelector('strong'), recipeDefinitions(recipe, 'primary')[0], row, heading || '-');
-        hero.querySelector('small').textContent = subtitle && subtitle !== heading ? subtitle : '';
-        var heroIcon = hero.querySelector('.admin-mobile-app-detail__icon');
-        var mediaDescriptor = mediaDefinition(recipe, row);
-        heroIcon.querySelector('.material-icons-outlined').textContent = mediaDescriptor && mediaDescriptor.fallbackIcon || mediaIcon(recipe);
-        var source = mediaDescriptorSource(mediaDescriptor, row, snapshot, columns, index);
-        if (source) {
-            var image = document.createElement('img');
-            image.alt = '';
-            image.src = source;
-            image.addEventListener('load', function () { heroIcon.classList.add('has-image'); }, {once: true});
-            image.addEventListener('error', function () { image.remove(); }, {once: true});
-            heroIcon.appendChild(image);
-        }
-        content.appendChild(hero);
-
-        var offer = cardOfferContent(recipe, snapshot, row, index);
-        if (offer) content.appendChild(offer);
-
-        var details = detailContent(recipe, snapshot, detailColumns(snapshot), row, index, headingField, {
-            definitions: recipeDefinitions(recipe, 'details'),
-            includeCustom: false
-        });
-        details.classList.add('admin-mobile-app-detail__details');
-        if (details.childNodes.length) content.appendChild(details);
-
-        var actionSection = document.createElement('section');
-        actionSection.className = 'admin-mobile-app-detail__action-section';
-        var actionTitle = document.createElement('strong');
-        actionTitle.className = 'admin-mobile-app-detail__action-title';
-        actionTitle.textContent = i18n('可用操作');
-        actionSection.appendChild(actionTitle);
-        var actionList = document.createElement('div');
-        actionList.className = 'admin-mobile-app-detail__actions';
-        orderedCardActions(recipe, rowActions).forEach(function (action) {
-            var label = actionLabel(recipe, action);
-            var danger = actionDanger(recipe, action);
-            var primary = !danger && Boolean(recipeAction(recipe, 'primary', action.id) || /安装|更新|购买/.test(label));
-            var button = document.createElement('button');
-            button.type = 'button';
-            button.className = danger ? 'is-danger' : (primary ? 'is-primary' : 'is-secondary');
-            var icon = document.createElement('span');
-            icon.className = 'material-icons-outlined admin-mobile-app-detail__action-icon';
-            icon.setAttribute('aria-hidden', 'true');
-            icon.textContent = cardActionIcon(label, danger);
-            var caption = document.createElement('span');
-            caption.className = 'admin-mobile-app-detail__action-label';
-            caption.textContent = label;
-            button.append(icon, caption);
-            button.addEventListener('click', function () {
-                api.dismissAllThen(function () { invokeRecipeAction(snapshot, recipe, action, row, index); });
-            });
-            actionList.appendChild(button);
-        });
-        if (!actionList.children.length) {
-            var empty = document.createElement('p');
-            empty.className = 'admin-mobile-app-detail__action-empty';
-            empty.textContent = i18n('当前应用暂无可执行操作');
-            actionList.appendChild(empty);
-        }
-        actionSection.appendChild(actionList);
-        content.appendChild(actionSection);
-        return content;
-    }
-
-    function openCardCta(recipe, snapshot, columns, row, index, heading, headingField, subtitle, rowActions) {
-        var cardCta = recipe && recipe.cardCta || {};
-        var sheetSubtitle = Object.prototype.hasOwnProperty.call(cardCta, 'subtitle')
-            ? text(cardCta.subtitle)
-            : i18n('完整信息');
-        return api.openSheet({
-            id: 'row-cta-' + snapshot.id + '-' + index,
-            title: text(cardCta.title || i18n('应用详情')),
-            subtitle: sheetSubtitle,
-            content: cardCtaContent(recipe, snapshot, columns, row, index, heading, headingField, subtitle, rowActions),
-            className: 'admin-mobile-overlay--app-market'
-        });
-    }
-
     function cardSearchText(recipe, snapshot, columns, entry, primary, primaryDefinitions, statusDefinitions, metricDefinitions, treeNode) {
         var row = entry.row;
         var index = entry.index;
@@ -2056,8 +1900,6 @@
         var search = snapshot.search && snapshot.search.instance;
         var state = snapshot.state;
         if (!search && !(state && state.options && state.options.length)) return false;
-        var pageRecipe = snapshot && snapshot.__adminMobilePageRecipe;
-        var storeFilter = pageRecipe && pageRecipe.id === 'admin-store-home';
         var originalSearchValues = captureSearchValues(search);
         var committed = false;
         var content = document.createElement('div');
@@ -2079,7 +1921,7 @@
         if (state && state.options && state.options.length) {
             var stateGroup = document.createElement('fieldset');
             stateGroup.className = 'admin-mobile-state-filter';
-            stateGroup.innerHTML = '<legend>' + (storeFilter ? i18n('应用分类') : i18n('状态')) + '</legend><div></div>';
+            stateGroup.innerHTML = '<legend>' + i18n('状态') + '</legend><div></div>';
             state.options.forEach(function (option) {
                 var label = document.createElement('label');
                 label.innerHTML = '<input type="radio" name="admin-mobile-state" value=""><span></span>';
@@ -2102,8 +1944,8 @@
         };
         var sheet = api.openSheet({
             id: 'filters-' + snapshot.id,
-            title: storeFilter ? i18n('搜索应用') : i18n('搜索与筛选'),
-            subtitle: storeFilter ? i18n('按名称搜索或选择应用分类') : i18n('筛选条件会保留到本页刷新'),
+            title: i18n('搜索与筛选'),
+            subtitle: i18n('筛选条件会保留到本页刷新'),
             content: content,
             fullScreen: ((snapshot.search && snapshot.search.definitions) || []).length > 6,
             onClose: function () {
@@ -2866,7 +2708,6 @@
         host.classList.toggle('is-selecting', wasSelecting);
         host.classList.toggle('is-selection-persistent', persistentSelection);
         renderToolbar(host, snapshot, recipe, desktop, rowEntries);
-        renderStoreDiscovery(host, snapshot, recipe);
         var cards = document.createElement('div');
         cards.className = 'admin-mobile-card-items';
         host.appendChild(cards);
@@ -2886,12 +2727,6 @@
             var card = document.createElement('article');
             card.className = 'admin-mobile-data-card';
             applyCardVariant(card, 'admin-mobile-data-card', cardVariant);
-            var cardCta = recipe && recipe.cardCta;
-            var cardCtaVisible = Boolean(cardCta);
-            if (cardCtaVisible && typeof cardCta.show === 'function') {
-                try { cardCtaVisible = cardCta.show(row, index, snapshot) !== false; } catch (error) { cardCtaVisible = false; }
-            }
-            card.classList.toggle('admin-mobile-data-card--cta', cardCtaVisible);
             var heading = primaryDefinitions.length ? primaryDefinitionValue(snapshot, primaryDefinitions[0], columns, row, index, recipe) : (primary ? definitionValue(snapshot, mobileColumnDefinition(primary), columns, row, index, recipe) : (i18n('记录 ') + (index + 1)));
             var recordDefinition = recipeDefinitions(recipe, 'recordTitle')[0];
             var recordHeading = recordDefinition ? definitionValue(snapshot, recordDefinition, columns, row, index, recipe) : heading;
@@ -3096,7 +2931,6 @@
                 var directActionId = recipe && recipe.openAction;
                 var directAction = directActionId && rowActions.find(function (action) { return action.id === directActionId; });
                 if (directAction) return invokeRecipeAction(snapshot, recipe, directAction, row, index);
-                if (cardCta) return openCardCta(recipe, snapshot, columns, row, index, heading, headingField, subtitle, rowActions);
                 if (usesRecordSheet) return openRecord();
                 return openDetails(recipe, snapshot, columns, row, index, recordHeading, recordHeadingField);
             };
@@ -3110,14 +2944,6 @@
             if (actionFooter) actionFooter.remove();
             if (inlineSwitchRendered) {
                 // The inline switch is the only row interaction for static configuration lists.
-            } else if (cardCtaVisible) {
-                var ctaLabel = text(cardCta.label || i18n('查看'));
-                moreControl.classList.add('admin-mobile-card-cta');
-                moreControl.textContent = ctaLabel;
-                moreControl.setAttribute('aria-label', ctaLabel + recordTitle);
-                moreControl.addEventListener('click', openCard);
-            } else if (cardCta) {
-                moreControl.remove();
             } else if (usesRecordSheet) {
                 moreControl.addEventListener('click', openRecord);
             } else {

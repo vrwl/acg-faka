@@ -1,0 +1,30 @@
+<!--文章卡（列表复用；传入 $post 卡片契约；$hl=1 时用高亮字段）-->
+<article class="blog-card#{if $post.top} is-top#{/if}">
+    <a class="blog-card__link" href="#{$post.url}" data-blog-card>
+        #{if $post.cover}
+            <div class="blog-card__media">
+                <img src="#{$post.cover|escape:'html'}" alt="" #{if $blog.lazyload}loading="lazy"#{/if} decoding="async">
+            </div>
+        #{/if}
+        <div class="blog-card__body">
+            <h2 class="blog-card__title">
+                #{if $post.top}<span class="blog-card__pin">#{t("置顶")}</span>#{/if}
+                #{if isset($hl) && isset($post.title_hl)}#{$post.title_hl}#{else}#{$post.title|escape:'html'}#{/if}
+            </h2>
+            #{if $post.summary}
+                <p class="blog-card__summary">#{if isset($hl) && isset($post.summary_hl)}#{$post.summary_hl}#{else}#{$post.summary|escape:'html'}#{/if}</p>
+            #{/if}
+            <div class="blog-card__meta">
+                #{if $post.category}<span class="blog-chip">#{$post.category.name|escape:'html'}</span>#{/if}
+                <time datetime="#{$post.publish_iso}" data-blog-time="#{$post.publish_iso}">#{$post.publish_date}</time>
+                <span class="blog-card__stat">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/></svg>#{$post.views}
+                </span>
+                <span class="blog-card__stat">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5c0 4.5-4 7.5-9 7.5-1 0-2-.12-2.9-.35L4 20l1.2-3.6C3.8 15.1 3 13.4 3 11.5 3 7 7 4 12 4s9 3 9 7.5z"/></svg>#{$post.comments_count}
+                </span>
+                <span class="blog-card__reading">#{$post.reading} #{t("分钟")}</span>
+            </div>
+        </div>
+    </a>
+</article>

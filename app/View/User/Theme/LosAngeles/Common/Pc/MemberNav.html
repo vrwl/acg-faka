@@ -1,0 +1,85 @@
+#{*
+  洛杉矶 · 会员中心侧栏（电脑端）
+  路由是框架固定的，这里只做分组与高亮；经营分组按 business_level 显隐。
+  高亮一律用 active() 按路由前缀判断 —— $title 会被翻译，拿它比中文字面量必然失效。
+*}
+<aside class="la-mnav" aria-label="#{t('会员中心导航')}">
+    <a class="la-mnav__me" href="/user/security/personal">
+        <img class="la-mnav__avatar" src="#{$user.avatar|default:$favicon|escape:'html'}" alt="" width="44" height="44">
+        <span class="la-mnav__id">
+            <strong class="la-ellipsis">#{$user.username|escape:'html'}</strong>
+            #{if $group && $group.name}
+                <em class="la-mnav__lv">#{if $group.icon}<img src="#{$group.icon}" alt="" width="12" height="12">#{/if}#{lang($group.name, 'dyn')|escape:'html'}</em>
+            #{/if}
+        </span>
+    </a>
+
+    <div class="la-mnav__wallet">
+        <a class="la-mnav__cell" href="/user/recharge/index">
+            <b class="la-num">#{$config.currency_symbol}#{$user.balance|escape:'html'}</b><span>#{t("余额")}</span>
+        </a>
+        <a class="la-mnav__cell" href="/user/cash/index">
+            <b class="la-num">#{$user.coin|escape:'html'}</b><span>#{t("硬币")}</span>
+        </a>
+    </div>
+
+    <nav class="la-mnav__list">
+        <div class="la-mnav__group">
+            <span class="la-mnav__gt">#{t("概览")}</span>
+            <a class="la-mnav__item #{active('/user/dashboard','is-on')}" href="/user/dashboard/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('chart')}<span>#{t("会员中心")}</span></a>
+        </div>
+
+        <div class="la-mnav__group">
+            <span class="la-mnav__gt">#{t("交易")}</span>
+            <a class="la-mnav__item #{active('/user/personal/purchaseRecord','is-on')}" href="/user/personal/purchaseRecord">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}<span>#{t("购买记录")}</span></a>
+            <a class="la-mnav__item #{active('/user/recharge','is-on')}" href="/user/recharge/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('wallet')}<span>#{t("充值中心")}</span></a>
+            <a class="la-mnav__item #{active('/user/bill','is-on')}" href="/user/bill/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('coin')}<span>#{t("我的账单")}</span></a>
+        </div>
+
+        #{if $user.business_level}
+            <div class="la-mnav__group">
+                <span class="la-mnav__gt">#{t("经营")}</span>
+                <a class="la-mnav__item #{active('/user/business','is-on')}" href="/user/business/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('store')}<span>#{t("我的店铺")}</span></a>
+                <a class="la-mnav__item #{active('/user/category','is-on')}" href="/user/category/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('grid')}<span>#{t("商品分类")}</span></a>
+                <a class="la-mnav__item #{active('/user/commodity','is-on')}" href="/user/commodity/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('box')}<span>#{t("我的商品")}</span></a>
+                <a class="la-mnav__item #{active('/user/card','is-on')}" href="/user/card/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('card')}<span>#{t("卡密管理")}</span></a>
+                <a class="la-mnav__item #{active('/user/coupon','is-on')}" href="/user/coupon/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('gift')}<span>#{t("优惠券")}</span></a>
+                <a class="la-mnav__item #{active('/user/order','is-on')}" href="/user/order/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('truck')}<span>#{t("订单管理")}</span></a>
+                <a class="la-mnav__item #{active(['/user/cash/index','/user/cash/record'],'is-on')}" href="/user/cash/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('coin')}<span>#{t("提现")}</span></a>
+            </div>
+        #{/if}
+
+        <div class="la-mnav__group">
+            <span class="la-mnav__gt">#{t("推广")}</span>
+            <a class="la-mnav__item #{active('/user/agent/promote','is-on')}" href="/user/agent/promote">#{\App\View\User\Theme\LosAngeles\Icons::svg('megaphone')}<span>#{t("推广中心")}</span></a>
+            <a class="la-mnav__item #{active('/user/agent/member','is-on')}" href="/user/agent/member">#{\App\View\User\Theme\LosAngeles\Icons::svg('users')}<span>#{t("我的下级")}</span></a>
+        </div>
+
+        <div class="la-mnav__group">
+            <span class="la-mnav__gt">#{t("消息")}</span>
+            <a class="la-mnav__item #{active('/user/message','is-on')}" href="/user/message/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('bell')}<span>#{t("站内消息")}</span></a>
+            <a class="la-mnav__item #{active('/user/ticket','is-on')}" href="/user/ticket/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('headset')}<span>#{t("工单客服")}</span></a>
+        </div>
+
+        <div class="la-mnav__group">
+            <span class="la-mnav__gt">#{t("账号安全")}</span>
+            <a class="la-mnav__item #{active('/user/security/personal','is-on')}" href="/user/security/personal">#{\App\View\User\Theme\LosAngeles\Icons::svg('user')}<span>#{t("个人资料")}</span></a>
+            <a class="la-mnav__item #{active('/user/security/email','is-on')}" href="/user/security/email">#{\App\View\User\Theme\LosAngeles\Icons::svg('mail')}<span>#{t("邮箱绑定")}</span></a>
+            <a class="la-mnav__item #{active('/user/security/phone','is-on')}" href="/user/security/phone">#{\App\View\User\Theme\LosAngeles\Icons::svg('phone')}<span>#{t("手机绑定")}</span></a>
+            <a class="la-mnav__item #{active('/user/security/password','is-on')}" href="/user/security/password">#{\App\View\User\Theme\LosAngeles\Icons::svg('lock')}<span>#{t("登录密码")}</span></a>
+        </div>
+
+        <!--start::HOOK-->
+        #{* 插件入口（如博客）按 Cartoon 的 <li><a> 结构输出：先接住，有内容才排成「其他」分组，样式与原生菜单项一致 *}
+        #{capture assign="laPluginMenu"}#{hook(\App\Consts\Hook::USER_VIEW_MENU)}#{/capture}
+        #{if $laPluginMenu|trim != ''}
+            <div class="la-mnav__group la-mnav__hook">
+                <span class="la-mnav__gt">#{t("其他")}</span>
+                <ul class="la-mnav__hooklist">#{$laPluginMenu}</ul>
+            </div>
+        #{/if}
+        <!--end::HOOK-->
+
+        <a class="la-mnav__item la-mnav__item--quiet" href="/user/authentication/logout">#{\App\View\User\Theme\LosAngeles\Icons::svg('logout')}<span>#{t("退出登录")}</span></a>
+    </nav>
+</aside>

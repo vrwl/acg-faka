@@ -139,68 +139,6 @@
             controllerLayers.clear();
             if (typeof Swal !== 'undefined') Swal.close();
         });
-    const pluginUpdate = {
-        items: null,
-        updateNum: 0,
-        countedKeys: new Set(),
-        init() {
-            if (!this.items) {
-                let items = localStorage.getItem("pluginVersions");
-                if (items) {
-                    this.items = JSON.parse(items);
-                } else {
-                    this.items = {};
-                }
-            }
-        },
-        getPlugin(key) {
-            this.init();
-            if (!this.items || !this.items.hasOwnProperty(key)) {
-                return null;
-            }
-            return this.items[key];
-        },
-        getAvailable(key, version) {
-            const plugin = this.getPlugin(key);
-            return plugin && version != plugin.version ? plugin : null;
-        },
-        renderButton(key, version) {
-            let plugin = this.getAvailable(key, version);
-            if (!plugin) {
-                return "";
-            }
-            if (!this.countedKeys.has(key)) {
-                this.countedKeys.add(key);
-                this.updateNum++;
-            }
-
-            $('#updateNum').html('<b class="text-danger">[' + this.updateNum + ']' + i18n('个插件需要更新') + '</b>');
-
-            return ' <span style="cursor: pointer;" class="badge badge-light-success updatePlugin">' + i18n('更新-&gt;') + escapeHtml(plugin.version) + '</span>';
-        }
-    }
-
-    const runPluginUpdate = row => {
-        const plugin = pluginUpdate.getPlugin(row.id);
-        if (!plugin) {
-            message.error("初始化更新失败，请刷新页面重试");
-            return;
-        }
-        const updateContent = escapeHtml(plugin?.update_content || i18n('该更新没有提供说明')).replace(/\n/g, '<br>');
-        message.ask(updateContent, () => {
-            if (!controllerActive) return;
-            util.post('/admin/api/app/upgrade', {
-                plugin_key: row.id,
-                type: plugin.type,
-                plugin_id: plugin.id
-            }, res => {
-                if (!controllerActive) return;
-                message.info(res.msg);
-                if (res.code == 200) window.location.reload();
-            });
-        }, `<b class="text-primary"><i class="fa-duotone fa-regular fa-sparkles"></i> ${escapeHtml(pluginDisplayText(row.NAME) || row.id)}</b> <span class="text-primary" style="font-size:14px;">${escapeHtml(row.VERSION)}</span> <i class="fa-duotone fa-regular fa-right-long text-danger"></i> <span class="text-success" style="font-size:14px;">${escapeHtml(plugin.version)}</span>`, i18n("立即更新"));
-    };
-
     const modal = (title, assign = {}) => {
         let submit = [];
         if (typeof assign.PLUGIN_SUBMIT === "object") {
@@ -368,16 +306,6 @@
                     }
                 },
                 {
-                    icon: 'fa-duotone fa-regular fa-arrows-rotate text-success',
-                    class: 'admin-mobile-operation-only text-success',
-                    title: '更新插件',
-                    show: row => {
-                        const plugin = pluginUpdate.getPlugin(row.id);
-                        return mobileAdminEnabled() && Boolean(plugin) && row.VERSION != plugin.version;
-                    },
-                    click: (event, value, row) => runPluginUpdate(row)
-                },
-                {
                     icon: 'fa-duotone fa-regular fa-file-lines text-primary',
                     class: 'admin-mobile-operation-only text-primary',
                     title: '查看文档',
@@ -398,15 +326,9 @@
         , {
             field: 'version',
             class: "nowrap",
-            title: '<span id="updateNum">' + i18n('版本号') + '</span>',
+            title: i18n('版本号'),
             formatter: function (val, item) {
-                return '<span class="md-version">v' + escapeHtml(item.VERSION) + '</span>' + pluginUpdate.renderButton(item.id, item.VERSION);
-            }
-            ,
-            events: {
-                'click .updatePlugin': function (event, value, row, index) {
-                    runPluginUpdate(row);
-                }
+                return '<span class="md-version">v' + escapeHtml(item.VERSION) + '</span>';
             }
         }
 
@@ -446,7 +368,7 @@
                     click: (event, value, row, index) => {
                         message.ask(`${i18n('你想要卸载')} <b class="text-danger">${escapeHtml(pluginDisplayText(row.NAME) || row.id)}</b> ${i18n('吗，该操作会清空插件所有数据，且无法恢复，请慎重操作！')}`, () => {
                             if (!controllerActive) return;
-                            util.post('/admin/api/app/uninstall', {
+                            util.post('/admin/api/plugin/uninstall', {
                                 plugin_key: row.id,
                                 type: 0
                             }, res => {
@@ -467,15 +389,6 @@
         {id: 0, name: "未运行"},
         {id: 1, name: "正在运行"}
     ]);
-    table.onResponse(response => {
-        pluginUpdate.updateNum = 0;
-        pluginUpdate.countedKeys.clear();
-        $(`#updateNum`).html(i18n("版本号"));
-        (response?.data?.list ?? []).forEach(item => {
-            const available = pluginUpdate.getAvailable(item.id, item.VERSION);
-            item.__adminMobilePluginUpdateVersion = available?.version ?? '';
-        });
-    });
     table.disablePagination();
     table.render();
 
@@ -664,70 +577,39 @@
         }
     });
 
-
-    $('.plugin-update-all').click(() => {
-        const $updateIns = $('.plugin-update-all span');
-
-        message.ask("是否将全部插件更新至最新版？", () => {
-            if (!controllerActive) return;
-
-            util.get("/admin/api/plugin/getPlugins", res => {
+    // 工具栏：本地安装扩展。上传 zip 后由后端按「插件标识/...」的单层目录结构落盘，
+    // 不再依赖应用商店，纯本地部署也能装插件。
+    $('#plugin-install-input').off('change').on('change', function () {
+        if (!this.files || !this.files.length) return;
+        const input = this;
+        const formdata = new FormData();
+        formdata.append('file', input.files[0]);
+        formdata.append('type', '0');
+        Loading.show();
+        $.ajax({
+            type: 'POST',
+            url: '/admin/api/plugin/install',
+            data: formdata,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: res => {
+                Loading.hide();
+                if (input.isConnected) $(input).val('');
                 if (!controllerActive) return;
-
-                let index = 0;
-                const startLoadIndex = trackControllerLayer(layer.load(2, {shade: [0.3, 'var(--md-surface)']}));
-
-                util.timer(() => {
-                    return new Promise(resolve => {
-                        if (!controllerActive) {
-                            resolve(false);
-                            return;
-                        }
-                        $updateIns.html(`${i18n('正在检查并更新')} ${index}/${res?.list?.length}`);
-                        const plugin = res?.list[index];
-
-                        index++;
-                        if (plugin) {
-                            const pluginNew = pluginUpdate.getPlugin(plugin?.PLUGIN_NAME);
-                            if (!pluginNew) {
-                                resolve(true);
-                                return;
-                            }
-
-                            if (plugin.VERSION != pluginNew.version) {
-                                util.post({
-                                    url: '/admin/api/app/upgrade',
-                                    data: {
-                                        plugin_key: plugin.id,
-                                        type: plugin.type,
-                                        plugin_id: pluginNew.id
-                                    },
-                                    done: () => {
-                                        resolve(controllerActive);
-                                    },
-                                    error: () => {
-                                        resolve(controllerActive);
-                                    },
-                                    fail: () => {
-                                        resolve(controllerActive);
-                                    },
-                                    loader: false
-                                });
-
-                                return;
-                            }
-                            resolve(true);
-                            return;
-                        }
-
-                        table.refresh();
-                        $updateIns.html(`${i18n('一键更新全部插件')}`);
-                        closeControllerLayer(startLoadIndex);
-                        resolve(false);
-                        if (controllerActive) window.location.reload();
-                    });
-                }, 300, true);
-            });
+                if (res.code == 200) {
+                    message.success(res.msg || i18n('安装完成'));
+                    table.refresh();
+                } else {
+                    layer.msg(res.msg);
+                }
+            },
+            error: () => {
+                Loading.hide();
+                if (input.isConnected) $(input).val('');
+                layer.msg(i18n('网络错误'));
+            }
         });
     });
+    $('.plugin-install').off('click').on('click', () => $('#plugin-install-input').click());
 }();

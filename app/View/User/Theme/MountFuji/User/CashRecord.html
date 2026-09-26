@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell mf-page-shell-cash" data-mf-controller="/assets/user/controller/user/cash.record.js" data-mf-table="#cash-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-panel mf-cash-record-panel">
+            <div class="mf-subtabs">
+                <a href="/user/cash/index"><span class="material-icons-outlined">currency_exchange</span>#{t("硬币兑现")}</a>
+                <a href="/user/cash/record" class="is-active"><span class="material-icons-outlined">history</span>#{t("兑现记录")}</a>
+            </div>
+            <div class="mf-record-heading"><span class="material-icons-outlined">timeline</span><div><h1>#{t("兑现记录")}</h1><p>#{t("查看申请时间、处理进度与最终到账状态。")}</p></div></div>
+            <div class="mf-panel-body mf-table-wrap"><table id="cash-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/cash.record.js")}
+#{include file="../Common/Footer.html"}

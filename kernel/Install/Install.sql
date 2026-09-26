@@ -753,6 +753,7 @@ CREATE TABLE `__PREFIX__user_message` (
                                         CONSTRAINT `__PREFIX__user_message_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `__PREFIX__user` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=1 CHARACTER SET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC;
 
+DROP TABLE IF EXISTS `__PREFIX__lang`;
 CREATE TABLE `__PREFIX__lang` (
                                   `id` int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键id',
                                   `hash` char(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'md5(source)',

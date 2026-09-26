@@ -1,0 +1,442 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+
+#{css("/app/Plugin/WebsiteMonitor/Assets/wm.css")}
+
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+#{include file=$manage_view_path|cat:"Toolbar.html"}
+<div class="post d-flex flex-column-fluid" id="kt_post">
+<div id="kt_content_container" class="container-fluid">
+<div class="wm" id="wm-root">
+
+    <!-- 提示条：紧急停用、守护进程、IP 库、代理配置等需要站长注意的事 -->
+    <div id="wm-notices"></div>
+
+    <!-- Hero：在线人数 + 六宫格指标 -->
+    <div class="wm-card wm-hero">
+        <div class="wm-hero__online">
+            <span class="wm-hero__label">
+                <i class="wm-pulse wm-pulse--idle" id="wm-online-dot"></i>
+                #{t("当前在线")}
+            </span>
+            <span class="wm-hero__value num" id="wm-online" data-v="0">0</span>
+            <span class="wm-hero__meta" id="wm-online-meta">—</span>
+            <span style="margin-top:8px" id="wm-overload"></span>
+        </div>
+        <div class="wm-metrics" id="wm-metrics">
+            <div class="wm-metric"><div class="wm-skeleton" style="width:70%"></div></div>
+            <div class="wm-metric"><div class="wm-skeleton" style="width:60%"></div></div>
+            <div class="wm-metric"><div class="wm-skeleton" style="width:75%"></div></div>
+        </div>
+    </div>
+
+    <!-- 工具条：时间范围 + 防火墙模式 -->
+    <div class="wm-toolbar">
+        <div class="wm-seg">
+            <button data-range="today">#{t("今日")}</button>
+            <button data-range="yesterday">#{t("昨日")}</button>
+            <button data-range="7d">#{t("近 7 天")}</button>
+            <button data-range="30d">#{t("近 30 天")}</button>
+            <button data-range="month">#{t("本月")}</button>
+        </div>
+        <span class="wm-sub" id="wm-range-label"></span>
+        <span style="flex:1 1 auto"></span>
+        <span class="wm-sub">#{t("防火墙")}</span>
+        <div class="wm-seg" id="wm-mode"></div>
+        <button class="wm-btn" data-act="refresh">#{t("刷新")}</button>
+    </div>
+
+    <!-- 标签页 -->
+    <div class="wm-card" style="margin-bottom:0">
+        <div class="wm-tabs">
+            <button class="wm-tab wm-tab--on" data-tab="realtime">#{t("实时")}</button>
+            <button class="wm-tab" data-tab="trend">#{t("趋势")}</button>
+            <button class="wm-tab" data-tab="sources">#{t("来源")}</button>
+            <button class="wm-tab" data-tab="pages">#{t("页面")}</button>
+            <button class="wm-tab" data-tab="regions">#{t("地域")}</button>
+            <button class="wm-tab" data-tab="visitors">#{t("访客")}</button>
+            <button class="wm-tab" data-tab="spiders">#{t("蜘蛛")}</button>
+            <button class="wm-tab" data-tab="security">#{t("安全")}</button>
+            <button class="wm-tab" data-tab="rules">#{t("规则")}</button>
+            <button class="wm-tab" data-tab="settings">#{t("设置")}</button>
+        </div>
+    </div>
+
+    <!-- ══════════════ 实时 ══════════════ -->
+    <div class="wm-pane wm-pane--on" data-pane="realtime">
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("最近 60 分钟")}</h3>
+                <span class="wm-card__sub">#{t("每 3 秒自动刷新")}</span>
+            </div>
+            <div class="wm-card__body"><div id="wm-chart-realtime" class="wm-chart"></div></div>
+        </div>
+
+        <div class="wm-grid wm-grid--2">
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head">
+                    <h3 class="wm-card__title">#{t("实时请求流")}</h3>
+                    <span class="wm-card__spacer"></span>
+                    <select class="wm-select" lay-ignore data-stream-filter style="padding:3px 8px;font-size:11.5px">
+                        <option value="all">#{t("全部")}</option>
+                        <option value="page">#{t("仅页面")}</option>
+                        <option value="error">#{t("仅错误")}</option>
+                        <option value="spider">#{t("仅蜘蛛")}</option>
+                        <option value="attack">#{t("仅攻击")}</option>
+                    </select>
+                    <button class="wm-btn wm-btn--sm" data-act="stream-pause">#{t("暂停")}</button>
+                    <button class="wm-btn wm-btn--sm" data-act="stream-clear">#{t("清屏")}</button>
+                </div>
+                <div class="wm-card__body wm-card__body--flush">
+                    <div class="wm-stream" id="wm-stream">
+                        <div class="wm-empty"><span class="wm-empty__icon">&#9203;</span>#{t("等待新请求…")}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("在线访客")}</h3></div>
+                <div class="wm-card__body wm-card__body--flush">
+                    <div class="wm-scroll--y" id="wm-online-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wm-grid wm-grid--3" style="margin-top:16px">
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("热门页面")}</h3></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-top-pages"></div>
+            </div>
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("主要来源")}</h3></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-top-refs"></div>
+            </div>
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("访客地区")}</h3></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-top-regions"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════ 趋势 ══════════════ -->
+    <div class="wm-pane" data-pane="trend">
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("访问趋势")}</h3>
+                <span class="wm-card__sub">#{t("虚线为上一周期，可框选缩放")}</span>
+            </div>
+            <div class="wm-card__body" id="wm-trend-wrap"></div>
+        </div>
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("时段热力")}</h3>
+                <span class="wm-card__sub">#{t("看清访客在星期几、几点最活跃")}</span>
+            </div>
+            <div class="wm-card__body" id="wm-heatmap-wrap"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ 来源 ══════════════ -->
+    <div class="wm-pane" data-pane="sources">
+        <div class="wm-grid wm-grid--2">
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("来源构成")}</h3></div>
+                <div class="wm-card__body"><div id="wm-chart-src-type" class="wm-chart wm-chart--sm"></div></div>
+            </div>
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("来源平台")}</h3>
+                    <span class="wm-card__sub">#{t("搜索引擎与社交")}</span></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-src-platform"></div>
+            </div>
+        </div>
+        <div class="wm-card" style="margin-top:16px">
+            <div class="wm-card__head"><h3 class="wm-card__title">#{t("来源域名")}</h3></div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-src-host"></div>
+        </div>
+        <div class="wm-grid wm-grid--2">
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("搜索词")}</h3></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-src-keyword"></div>
+            </div>
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("推广来源 UTM")}</h3></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-src-utm"></div>
+            </div>
+        </div>
+        <div class="wm-card" style="margin-top:16px">
+            <div class="wm-card__head"><h3 class="wm-card__title">#{t("来源网址")}</h3></div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-src-url"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ 页面 ══════════════ -->
+    <div class="wm-pane" data-pane="pages">
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("页面热度")}</h3>
+                <span class="wm-card__sub">#{t("面积为浏览量，颜色越深越热")}</span>
+            </div>
+            <div class="wm-card__body" id="wm-page-treemap-wrap"></div>
+        </div>
+        <div class="wm-card">
+            <div class="wm-card__head"><h3 class="wm-card__title">#{t("页面排行")}</h3></div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-page-list"></div>
+        </div>
+        <div class="wm-grid wm-grid--2">
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("着陆页")}</h3>
+                    <span class="wm-card__sub">#{t("访客从哪进来")}</span></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-page-landing"></div>
+            </div>
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("退出页")}</h3>
+                    <span class="wm-card__sub">#{t("访客从哪离开")}</span></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-page-exit"></div>
+            </div>
+        </div>
+        <div class="wm-grid wm-grid--2" style="margin-top:16px">
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("404 页面")}</h3>
+                    <span class="wm-card__sub">#{t("直接指向死链")}</span></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-page-404"></div>
+            </div>
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("慢页面")}</h3></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-page-slow"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════ 地域 ══════════════ -->
+    <div class="wm-pane" data-pane="regions">
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("国家与地区")}</h3>
+                <span class="wm-card__sub">#{t("按访问次数排序")}</span>
+            </div>
+            <div class="wm-card__body" id="wm-region-bar-wrap"></div>
+        </div>
+        <div class="wm-card">
+            <div class="wm-card__head"><h3 class="wm-card__title">#{t("地区明细")}</h3></div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-region-table"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ 访客 ══════════════ -->
+    <div class="wm-pane" data-pane="visitors">
+        <div class="wm-toolbar">
+            <select class="wm-select" lay-ignore id="wm-vf-spider">
+                <option value="">#{t("排除蜘蛛")}</option>
+                <option value="1">#{t("只看蜘蛛")}</option>
+                <option value="all">#{t("全部")}</option>
+            </select>
+            <select class="wm-select" lay-ignore id="wm-vf-is_new">
+                <option value="">#{t("新老不限")}</option>
+                <option value="1">#{t("只看新访客")}</option>
+                <option value="0">#{t("只看回访")}</option>
+            </select>
+            <select class="wm-select" lay-ignore id="wm-vf-dev">
+                <option value="">#{t("全部设备")}</option>
+                <option value="0">#{t("电脑")}</option>
+                <option value="1">Android</option>
+                <option value="2">iPhone</option>
+                <option value="3">#{t("平板")}</option>
+            </select>
+            <select class="wm-select" lay-ignore id="wm-vf-ref_type">
+                <option value="">#{t("全部来源")}</option>
+                <option value="0">#{t("直接访问")}</option>
+                <option value="2">#{t("搜索引擎")}</option>
+                <option value="3">#{t("社交媒体")}</option>
+                <option value="4">#{t("外部链接")}</option>
+                <option value="5">#{t("广告投放")}</option>
+            </select>
+            <input class="wm-input" id="wm-vf-ip" placeholder="#{t('按 IP 筛选，回车确认')}" style="width:180px">
+        </div>
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("访问记录")}</h3>
+                <span class="wm-card__sub">#{t("点「足迹」看这次访问走过的每一步")}</span>
+            </div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-visitor-list"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ 蜘蛛 ══════════════ -->
+    <div class="wm-pane" data-pane="spiders">
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("蜘蛛抓取")}</h3>
+                <span class="wm-card__sub">#{t("搜索引擎、SEO 工具、AI 抓取与监控")}</span>
+            </div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-spider-list"></div>
+        </div>
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("伪装蜘蛛")}</h3>
+                <span class="wm-card__sub">#{t("声称是搜索引擎，但反向解析对不上")}</span>
+            </div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-spider-fake"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ 安全 ══════════════ -->
+    <div class="wm-pane" data-pane="security">
+        <div class="wm-card">
+            <div class="wm-card__head"><h3 class="wm-card__title">#{t("攻击类型分布")}</h3></div>
+            <div class="wm-card__body" id="wm-attack-kinds"></div>
+        </div>
+        <div class="wm-grid wm-grid--2">
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("主要攻击来源")}</h3></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-attack-top"></div>
+            </div>
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("IP 检测")}</h3>
+                    <span class="wm-card__sub">#{t("查它命中了哪条规则")}</span></div>
+                <div class="wm-card__body">
+                    <div style="display:flex;gap:8px">
+                        <input class="wm-input" id="wm-test-ip" placeholder="1.2.3.4" style="flex:1 1 auto">
+                        <button class="wm-btn wm-btn--primary" id="wm-test-run">#{t("检测")}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="wm-toolbar" style="margin-top:16px">
+            <select class="wm-select" lay-ignore id="wm-af-kind">
+                <option value="">#{t("全部类型")}</option>
+                <option value="1">#{t("WAF 规则")}</option>
+                <option value="2">#{t("404 洪水")}</option>
+                <option value="3">#{t("CC 攻击")}</option>
+                <option value="4">#{t("登录爆破")}</option>
+                <option value="5">#{t("扫描器")}</option>
+                <option value="6">#{t("伪装蜘蛛")}</option>
+                <option value="7">#{t("黑名单")}</option>
+                <option value="8">#{t("地区限制")}</option>
+                <option value="9">#{t("敏感路径")}</option>
+            </select>
+            <select class="wm-select" lay-ignore id="wm-af-blocked">
+                <option value="">#{t("是否拦截不限")}</option>
+                <option value="1">#{t("已拦截")}</option>
+                <option value="0">#{t("仅记录")}</option>
+            </select>
+            <input class="wm-input" id="wm-af-ip" placeholder="#{t('按 IP 筛选，回车确认')}" style="width:180px">
+        </div>
+        <div class="wm-card">
+            <div class="wm-card__head"><h3 class="wm-card__title">#{t("安全事件")}</h3></div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-attack-list"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ 规则 ══════════════ -->
+    <div class="wm-pane" data-pane="rules">
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("访问控制")}</h3>
+                <span class="wm-card__spacer"></span>
+                <div class="wm-seg">
+                    <button data-acl-type="1" class="on">#{t("IP 黑名单")}</button>
+                    <button data-acl-type="2">#{t("IP 白名单")}</button>
+                    <button data-acl-type="3">#{t("地区黑名单")}</button>
+                    <button data-acl-type="4">#{t("地区白名单")}</button>
+                    <button data-acl-type="5">#{t("UA 黑名单")}</button>
+                </div>
+            </div>
+            <div class="wm-card__body">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                    <input class="wm-input" id="wm-acl-value" style="flex:1 1 220px"
+                           placeholder="#{t('IP / 网段 1.2.3.0/24 / 通配 1.2.3.* / 区间 a-b / 地区码 CN.GD')}">
+                    <input class="wm-input" id="wm-acl-note" style="flex:1 1 160px" placeholder="#{t('备注（可选）')}">
+                    <input class="wm-input" id="wm-acl-hours" type="number" min="0" style="width:130px" placeholder="#{t('有效小时，0=永久')}">
+                    <button class="wm-btn wm-btn--primary" id="wm-acl-add">#{t("添加")}</button>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <input class="wm-input" id="wm-acl-kw" style="flex:1 1 auto" placeholder="#{t('搜索：输入 IP 会同时找出包含它的网段')}">
+                    <button class="wm-btn" id="wm-acl-search">#{t("搜索")}</button>
+                </div>
+            </div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-acl-list"></div>
+        </div>
+
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("自动封禁")}</h3>
+                <span class="wm-card__sub">#{t("由防火墙规则触发，到期自动解封")}</span>
+            </div>
+            <div class="wm-card__body wm-card__body--flush" id="wm-ban-list"></div>
+        </div>
+
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("防护规则")}</h3>
+                <span class="wm-card__sub">#{t("改动立即生效，无需重启")}</span>
+            </div>
+            <div class="wm-card__body wm-card__body--group" id="wm-rule-list"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ 设置 ══════════════ -->
+    <div class="wm-pane" data-pane="settings">
+        <div class="wm-grid wm-grid--2">
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("运行状态")}</h3></div>
+                <div class="wm-card__body" id="wm-set-runtime"></div>
+            </div>
+            <div class="wm-card" style="margin-bottom:0">
+                <div class="wm-card__head"><h3 class="wm-card__title">#{t("存储占用")}</h3></div>
+                <div class="wm-card__body wm-card__body--flush" id="wm-set-storage"></div>
+            </div>
+        </div>
+
+        <div class="wm-card" style="margin-top:16px">
+            <div class="wm-card__head"><h3 class="wm-card__title">#{t("维护操作")}</h3></div>
+            <div class="wm-card__body">
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <button class="wm-btn" data-op="ingest">#{t("立即入库")}</button>
+                    <button class="wm-btn" data-op="rollup">#{t("重建当前区间的汇总")}</button>
+                    <button class="wm-btn" data-op="compile">#{t("重新编译规则")}</button>
+                    <button class="wm-btn" data-op="prune">#{t("清理过期数据")}</button>
+                    <button class="wm-btn" data-act="geo-update">#{t("更新 IP 地理库")}</button>
+                </div>
+                <p class="wm-sub" style="margin:12px 0 0;line-height:1.7">
+                    #{t("这些操作都是幂等的，重复执行不会把数据算重。重建汇总会按上方选中的时间范围执行。")}
+                </p>
+            </div>
+        </div>
+
+        <div class="wm-card">
+            <div class="wm-card__head">
+                <h3 class="wm-card__title">#{t("紧急开关")}</h3>
+                <span class="wm-card__sub">#{t("防护出问题时的自救手段")}</span>
+            </div>
+            <div class="wm-card__body">
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <button class="wm-btn wm-btn--danger" data-op="emergency_on">#{t("紧急停用全部防护")}</button>
+                    <button class="wm-btn" data-op="emergency_off">#{t("恢复防护")}</button>
+                </div>
+                <p class="wm-sub" style="margin:12px 0 0;line-height:1.7">
+                    #{t("如果后台都进不去了：直接在服务器上创建下面这个空文件，防护会立即全部停用。")}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+</div><!-- /#kt_content_container -->
+</div><!-- /#kt_post -->
+</div><!-- /#kt_content -->
+
+<!-- 抽屉：访客档案 / 访问足迹 / 安全事件详情 -->
+<div class="wm-drawer" id="wm-drawer">
+    <div class="wm-drawer__mask"></div>
+    <div class="wm-drawer__panel wm">
+        <div class="wm-drawer__head">
+            <h3 class="wm-card__title" id="wm-drawer-title">—</h3>
+            <span class="wm-card__spacer"></span>
+            <button class="wm-drawer__close">&times;</button>
+        </div>
+        <div class="wm-drawer__body" id="wm-drawer-body"></div>
+    </div>
+</div>
+
+#{js("/assets/static/echarts.min.js")}
+#{ready("/app/Plugin/WebsiteMonitor/Assets/wm.js")}
+
+#{include file=$manage_view_path|cat:"Footer.html"}

@@ -1,0 +1,17 @@
+#{*
+  洛杉矶 · 认证页外壳（电脑端）
+
+  不做左右分屏。正常页头（不带搜索）+ 灰底 + 中间一张 400 宽的白卡。
+  页头留着，登录页才和其它页在同一条版心上，用户也随时能回商城。
+  参数：laPage / laTitle / laSub
+*}
+#{include file="./Head.html" laArea="auth" laPage=$laPage|default:'auth'}
+#{include file="./Header.html" laSearch=0}
+
+<main class="la-auth">
+    <div class="la-auth__card la-in">
+        <header class="la-auth__head">
+            <h1>#{$laTitle|default:$title|escape:'html'}</h1>
+            #{if $laSub}<p>#{$laSub|escape:'html'}</p>#{/if}
+        </header>
+

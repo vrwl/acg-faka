@@ -1,0 +1,22 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page" data-ny-page="card">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("卡密管理")}</h1><p>#{t("内容默认打码,查看需手动展开")}</p></div>
+            <button type="button" class="ny-button ny-button--primary button-add"><span class="material-icons-outlined">upload</span>#{t("上传")}</button>
+        </section>
+        <section class="ny-panel">
+            <div class="ny-toolbar" aria-hidden="true">
+                <button type="button" class="ny-tool-button ny-tool-button--danger button-del"><span class="material-icons-outlined">delete</span>#{t("删除选中")}</button>
+                <button type="button" class="ny-tool-button button-lock"><span class="material-icons-outlined">lock</span>#{t("锁定选中")}</button>
+                <button type="button" class="ny-tool-button button-unlock"><span class="material-icons-outlined">lock_open</span>#{t("解锁选中")}</button>
+                <button type="button" class="ny-tool-button button-sell"><span class="material-icons-outlined">sell</span>#{t("标记已售")}</button>
+                <button type="button" class="ny-tool-button button-export"><span class="material-icons-outlined">download</span>#{t("按筛选导出")}</button>
+            </div>
+            <div class="ny-panel-body ny-table-wrap"><table id="user-card-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/card.js")}
+#{include file="../Common/Footer.html"}

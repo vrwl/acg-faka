@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="keywords" content="#{$config.keywords|escape:'html'}">
+    <meta name="description" content="#{$config.description|escape:'html'}">
+    <meta name="color-scheme" content="light dark">
+    <link href="#{$favicon|escape:'html'}?v=#{$app.version|escape:'html'}" rel="icon">
+    <title>#{$title|escape:'html'} - #{$config.shop_name|escape:'html'}</title>
+    #{include file="../Common/ThemeBoot.html"}
+    #{css(
+    [
+    "/assets/common/css/bootstrap.min.css",
+    "/assets/common/css/_.css",
+    "/assets/user/css/_auth.css",
+    "/assets/common/css/md-tokens.css",
+    "/assets/common/css/md-components.css",
+    "/assets/common/fonts/material-icons.css"
+    ],
+    [
+    "/assets/common/css/font.min.css",
+    "/assets/common/js/layui/css/layui.css",
+    "/assets/common/css/select2.min.css",
+    "/assets/common/css/component.css",
+    "/assets/common/js/table/bootstrap-table.css",
+    "/assets/common/js/layer/theme/default/layer.css",
+    "/assets/common/css/bootstrap.min.css",
+    "/assets/common/css/toastr.min.css",
+    "/assets/user/css/auth.css",
+    "/assets/common/css/md-tokens.css",
+    "/assets/common/css/md-components.css",
+    "/assets/common/fonts/material-icons.css"
+    ])}
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Variables.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Base.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Components.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Pages.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Responsive.css')}">
+    #{js("/assets/common/js/ready.js")}
+    <!--start::HOOK-->
+    #{hook(\App\Consts\Hook::USER_GLOBAL_VIEW_HEADER)}
+    <!--end::HOOK-->
+</head>
+<body class="st-body st-auth-body" data-st-shell="auth">
+<a class="st-skip-link" href="#pjax-container">#{t("跳到主要内容")}</a>
+<div class="st-auth-shell">
+    <header class="st-topbar st-auth-topbar">
+        <a class="st-icon-button st-auth-back" href="/" aria-label="#{t('返回商城')}"><span class="material-icons-outlined" aria-hidden="true">arrow_back</span></a>
+        <a class="st-brand" href="/">
+            <img class="st-brand-icon" src="#{$favicon|escape:'html'}" alt="">
+            <span class="st-brand-copy"><strong>#{$config.shop_name|escape:'html'}</strong><small>Seattle</small></span>
+        </a>
+        <span class="st-auth-context">#{$title|escape:'html'}</span>
+        <nav class="st-topnav" aria-label="#{t('快捷导航')}">#{foreach user_header_nav(['shop' => ['name' => t('商城')]]) as $nav}<a href="#{$nav.url}" target="#{$nav.target}">#{$nav.name}</a>#{/foreach}</nav>
+        <details class="st-theme-menu">
+            <summary class="st-icon-button" aria-label="#{t('切换外观模式')}" title="#{t('外观模式')}"><span class="material-icons-outlined" aria-hidden="true">contrast</span></summary>
+            <div class="st-theme-options" role="group" aria-label="#{t('外观模式')}">
+                <button type="button" data-theme-toggle="light"><span class="material-icons-outlined" aria-hidden="true">light_mode</span><span>#{t("浅色")}</span></button>
+                <button type="button" data-theme-toggle="auto"><span class="material-icons-outlined" aria-hidden="true">brightness_auto</span><span>#{t("自动")}</span></button>
+                <button type="button" data-theme-toggle="dark"><span class="material-icons-outlined" aria-hidden="true">dark_mode</span><span>#{t("深色")}</span></button>
+            </div>
+        </details>
+    </header>
+    <div id="pjax-container" class="st-auth-pjax">

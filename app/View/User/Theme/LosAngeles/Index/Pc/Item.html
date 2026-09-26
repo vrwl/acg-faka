@@ -1,0 +1,148 @@
+#{include file="../../Common/Pc/Head.html" laArea="shop" laPage="item"}
+#{include file="../../Common/Pc/Header.html" laSearch=1}
+
+<main class="la-item la-wrap" data-la-item data-id="#{$item.id}">
+    <nav class="la-crumb" aria-label="#{t('位置')}">
+        <a href="/">#{\App\View\User\Theme\LosAngeles\Icons::svg('home')}<span>#{t("首页")}</span></a>
+        #{if $item.category_id}
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('right','la-crumb__sep')}
+            <a href="/cat/#{$item.category_id|escape:'html'}">#{t("所属分类")}</a>
+        #{/if}
+        #{\App\View\User\Theme\LosAngeles\Icons::svg('right','la-crumb__sep')}
+        <span class="is-on la-ellipsis">#{$item.name|strip_tags|strip|escape:'html'}</span>
+    </nav>
+
+    <div class="la-item__top">
+        #{* -------------------------------------------------- 主图 *}
+        <div class="la-item__gallery">
+            <div class="la-zoom" data-la-zoom>
+                <img class="la-zoom__img" src="#{$item.cover|escape:'html'}" alt="#{$item.name|strip_tags|strip|escape:'html'}" decoding="async">
+                #{if !$item.is_stock}<span class="la-zoom__out">#{t("已售罄")}</span>#{/if}
+                <div class="la-zoom__lens" data-la-zoom-lens hidden></div>
+            </div>
+            <div class="la-zoom__pane" data-la-zoom-pane hidden>
+                <img src="#{$item.cover|escape:'html'}" alt="" decoding="async">
+            </div>
+
+            <ul class="la-promise">
+                <li>#{\App\View\User\Theme\LosAngeles\Icons::svg('shield')}<span>#{t("交易保障")}</span></li>
+                <li>#{\App\View\User\Theme\LosAngeles\Icons::svg('flash')}<span>#{if $item.delivery_way == 0}#{t("自动发货")}#{else}#{t("人工发货")}#{/if}</span></li>
+                <li>#{\App\View\User\Theme\LosAngeles\Icons::svg('headset')}<span>#{t("在线客服")}</span></li>
+            </ul>
+        </div>
+
+        #{* -------------------------------------------------- 购买面板 *}
+        <section class="la-item__buy">
+            #{if $item.tags|default:false}
+                <div class="la-item__tags">
+                    #{foreach $item.tags as $tag}
+                        <span class="la-tag la-tag--#{$tag.color|default:'red'|escape:'html'}">#{lang($tag.text, 'dyn')|escape:'html'}</span>
+                    #{/foreach}
+                </div>
+            #{/if}
+
+            <h1 class="la-item__name">#{$item.name|strip_tags|strip|escape:'html'}</h1>
+
+            <div class="la-pricebox#{if $item.seckill_status == 1} la-pricebox--seckill#{/if}">
+                #{if $item.seckill_status == 1}
+                    <div class="la-pricebox__seckill">
+                        <span class="la-pricebox__flag">#{\App\View\User\Theme\LosAngeles\Icons::svg('flash')}#{t("限时秒杀")}</span>
+                        <div class="la-pricebox__timer" data-la-countdown data-end="#{$item.seckill_end_time|escape:'html'}">
+                            <span class="la-count">
+                                <span class="la-count__day" data-day><span class="la-count__cell"><b data-d>0</b></span><span class="la-count__sep">#{t("天")}</span></span>
+                                <span class="la-count__cell"><b data-h>00</b></span><span class="la-count__sep">:</span>
+                                <span class="la-count__cell"><b data-m>00</b></span><span class="la-count__sep">:</span>
+                                <span class="la-count__cell"><b data-s>00</b></span>
+                            </span>
+                        </div>
+                    </div>
+                #{/if}
+
+                <div class="la-pricebox__main">
+                    <div class="la-pricebox__now">
+                        <span class="la-pricebox__lab">#{if $item.login}#{t("会员价")}#{else}#{t("售价")}#{/if}</span>
+                        <span class="la-price la-price--xl" data-la-price>
+                            <span class="la-price__sym">#{$config.currency_symbol}</span><span class="la-price__int" data-la-price-int>#{$item.price|escape:'html'}</span>
+                        </span>
+                    </div>
+                    #{if !$item.login && $item.user_price > 0 && $item.user_price < $item.price}
+                        <div class="la-pricebox__member">
+                            #{\App\View\User\Theme\LosAngeles\Icons::svg('crown')}
+                            <span>#{t("登录后")} #{$config.currency_symbol}#{$item.user_price|escape:'html'}</span>
+                        </div>
+                    #{/if}
+                </div>
+
+                <div class="la-pricebox__meta">
+                    <span>#{t("已售")} <b class="la-num">#{$item.order_sold|escape:'html'}</b></span>
+                    <span>#{t("库存")} <b class="la-num item-stock" data-la-stock>#{$item.stock|escape:'html'}</b></span>
+                    <span class="la-badge#{if $item.delivery_way == 0} la-badge--auto#{else} la-badge--manual#{/if}">
+                        #{if $item.delivery_way == 0}#{t("自动发货")}#{else}#{t("人工发货")}#{/if}
+                    </span>
+                </div>
+            </div>
+
+            #{include file="../../Part/Wholesale.html"}
+
+            <form class="la-buy commodity-form" data-la-buy autocomplete="off">
+                #{include file="../../Part/ItemFields.html"}
+            </form>
+
+            #{if $item.only_user == 1 && !$item.login}
+                <div class="la-item__gate">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('lock')}
+                    <span>#{t("该商品仅限登录会员购买")}</span>
+                    <a class="la-btn la-btn--brand la-btn--sm" href="/user/authentication/login">#{t("去登录")}</a>
+                </div>
+            #{/if}
+
+            <div class="la-item__foot">
+                <div class="la-item__total">
+                    <span>#{t("合计")}</span>
+                    <span class="la-price la-price--md" data-la-total>
+                        <span class="la-price__sym">#{$config.currency_symbol}</span><span class="la-price__int" data-la-total-int>#{$item.price|escape:'html'}</span>
+                    </span>
+                </div>
+                <button type="button" class="la-btn la-btn--brand la-btn--xl la-item__submit" data-la-submit
+                        #{if !$item.is_stock || ($item.only_user == 1 && !$item.login)}disabled#{/if}>
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('bag')}
+                    <span>#{if !$item.is_stock}#{t("已售罄")}#{else}#{t("立即购买")}#{/if}</span>
+                </button>
+            </div>
+
+            <div class="la-item__links">
+                #{if $item.service_url}
+                    <a href="#{$item.service_url|escape:'html'}" target="_blank" rel="noopener nofollow">#{\App\View\User\Theme\LosAngeles\Icons::svg('headset')}<span>#{t("联系客服")}</span></a>
+                #{/if}
+                <button type="button" data-la-share data-url="#{$item.share_url|escape:'html'}">#{\App\View\User\Theme\LosAngeles\Icons::svg('share')}<span>#{t("分享商品")}</span></button>
+                <a href="/user/index/query">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}<span>#{t("订单查询")}</span></a>
+            </div>
+        </section>
+    </div>
+
+    #{* -------------------------------------------------- 详情 *}
+    <div class="la-item__detail">
+        <div class="la-tabs" role="tablist">
+            <button type="button" class="la-tabs__btn is-on" role="tab" data-la-tab="desc">#{t("商品详情")}</button>
+            <button type="button" class="la-tabs__btn" role="tab" data-la-tab="tips">#{t("购买须知")}</button>
+        </div>
+
+        <div class="la-tabs__pane la-rich" role="tabpanel" data-la-pane="desc">
+            #{if $item.description}#{$item.description}#{else}<p class="la-faint">#{t("商家还没有填写商品详情。")}</p>#{/if}
+        </div>
+
+        <div class="la-tabs__pane la-rich" role="tabpanel" data-la-pane="tips" hidden>
+            <ul>
+                <li>#{t("下单前请确认所选种类与规格，虚拟商品一经发出概不退换。")}</li>
+                <li>#{if $item.delivery_way == 0}#{t("本商品为自动发货，付款成功后立即在页面展示卡密。")}#{else}#{t("本商品为人工发货，付款后请耐心等待商家处理。")}#{/if}</li>
+                #{if $item.password_status == 1}<li>#{t("请务必牢记订单密码，查询订单时需要它。")}</li>#{/if}
+                <li>#{t("请填写真实有效的联系方式，以便查询订单和接收发货信息。")}</li>
+                #{if $item.service_url}<li>#{t("遇到问题请联系在线客服，我们会尽快为你处理。")}</li>#{/if}
+            </ul>
+        </div>
+    </div>
+</main>
+
+#{item_var($item)}
+#{include file="../../Common/Pc/Footer.html"}
+#{include file="../../Common/Pc/Foot.html" laArea="shop" laJs="Item.js"}

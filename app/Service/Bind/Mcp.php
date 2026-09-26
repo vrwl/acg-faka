@@ -3,30 +3,13 @@ declare(strict_types=1);
 
 namespace App\Service\Bind;
 
-use App\Util\PluginPacker;
-use Kernel\Annotation\Inject;
 use Kernel\Exception\JSONException;
 
 /**
- * 开发者中心 MCP 工具实现。
+ * 本机通用插件的 MCP 运维工具实现（纯本地，不经应用商店）。
  *
- * 校验入参 → 复用 \App\Service\App 的开发者方法中转到商店。
- *
- * 图标仍以 base64 传入，原始字节直接作为 icon 字段（与后台 developerCreatePlugin 一致）。
- *
- * 插件包**默认由服务端自己打**（PluginPacker）：调用方只给 plugin_id 和版本号，
- * 服务端按 id 反查 plugin_key/type、定位本机插件目录、同步版本号、打包、直传商店。
- * 原来那条「作者自己压好再传 base64」的路保留为可选兜底（插件不在本机时用），
- * 但不再是主路 —— 一个带音视频资源的插件 base64 之后轻松 260KB+，
- * AI 工具那条链路根本传不动，人手打包也容易漏排除项。
- *
- * 拿到字节后以 Guzzle multipart 直传商店 /open/project/upload，换回临时 path，
- * 再提交 createKit / createUpdate。
- *
- * 另有一组「本地插件运维」工具（local_plugins / plugin_start / plugin_stop /
- * plugin_config_get / plugin_config_set / plugin_log_read / plugin_log_clear），
- * 不经商店、直接操作本机 app/Plugin 下的通用插件，与后台「功能插件」页同一套内核
- * 流程（_plugin_start/_plugin_stop、SAVE_CONFIG 钩子链、runtime.log 约定）。
+ * 直接操作本机 app/Plugin 下的通用插件，与后台「功能插件」页同一套内核流程
+ * （_plugin_start/_plugin_stop、SAVE_CONFIG 钩子链、runtime.log 约定）。
  * 安全边界：plugin_key 白名单校验 + realpath 圈禁；配置读取默认脱敏（防提示注入
  * 拖走支付密钥），reveal_sensitive=true 才给真实值且会被审计；STATUS 不允许经
  * config_set 绕过启停校验。
@@ -35,98 +18,12 @@ use Kernel\Exception\JSONException;
  */
 class Mcp implements \App\Service\Mcp
 {
-    #[Inject]
-    private \App\Service\App $app;
-
-    /**
-     * 图标解码后体积上限（2MB）。
-     */
-    private const MAX_ICON_BYTES = 2 * 1024 * 1024;
-
-    /**
-     * 插件包解码后体积上限（15MB，留出余量给商店 16MB 整包上限）。
-     */
-    private const MAX_PACKAGE_BYTES = 15 * 1024 * 1024;
-
     /**
      * @return array
      */
     public function tools(): array
     {
         return [
-            [
-                "name" => "list_plugins",
-                "description" => "列出当前开发者账号名下的插件及其状态，支持按关键词搜索、按上架状态/插件类型/审核状态筛选（插件多时先筛再翻页，别一页页找）。返回每个插件的 id、plugin_key、plugin_name、type、version、price、group、status、audit_review_status、error_reason。其它工具需要的 plugin_id 从这里获取。status 是插件的上架状态：0=开发中，1=已上架，2=驳回，3=审核中。type：0=通用扩展，1=支付扩展，2=网站模版。audit_review_status 是最近一次提交的审核状态：0=暂未提交，1=审核中，2=审核通过，3=驳回申请——被驳回(3)时 error_reason 里是驳回原因，按它改好后重新提交即可，不需要新建插件：status=2 用 upload_install_kit，status=1（插件仍在售、只是这次更新被驳）用 submit_update。重新提交后 audit_review_status 会变回 1，驳回原因自动清空。",
-                "inputSchema" => [
-                    "type" => "object",
-                    "properties" => [
-                        "page" => ["type" => "integer", "minimum" => 1, "default" => 1, "description" => "页码，从 1 开始"],
-                        "limit" => ["type" => "integer", "minimum" => 1, "maximum" => 100, "default" => 20, "description" => "每页数量，最多 100"],
-                        "keyword" => ["type" => "string", "description" => "按插件名或插件标识模糊搜索。输入纯英文数字时搜 plugin_key，否则搜 plugin_name"],
-                        "status" => ["type" => "integer", "enum" => [0, 1, 2, 3], "description" => "按上架状态筛选：0=开发中，1=已上架，2=驳回，3=审核中"],
-                        "type" => ["type" => "integer", "enum" => [0, 1, 2], "description" => "按插件类型筛选：0=通用扩展，1=支付扩展，2=网站模版"],
-                        "audit_review_status" => ["type" => "integer", "enum" => [0, 1, 2, 3], "description" => "按审核状态筛选：0=暂未提交，1=审核中，2=审核通过，3=驳回申请"],
-                    ],
-                ],
-            ],
-            [
-                "name" => "create_plugin",
-                "description" => "创建一个新插件（初始状态=开发中）。创建成功后需再用 upload_install_kit 上传安装包提交审核。plugin_key 一旦占用不可更改。",
-                "inputSchema" => [
-                    "type" => "object",
-                    "properties" => [
-                        "plugin_key" => ["type" => "string", "pattern" => "^[A-Za-z]+$", "minLength" => 4, "maxLength" => 32, "description" => "插件唯一标识，仅英文字母，须与插件文件夹名一致"],
-                        "plugin_name" => ["type" => "string", "minLength" => 4, "maxLength" => 32, "description" => "插件名称"],
-                        "type" => ["type" => "integer", "enum" => [0, 1, 2], "description" => "0=通用扩展，1=支付扩展，2=网站模版"],
-                        "group" => ["type" => "integer", "enum" => [0, 1, 2], "default" => 0, "description" => "0=不启用，1=专业版/企业版免费，2=企业版免费"],
-                        "version" => ["type" => "string", "default" => "1.0.0", "description" => "版本号，如 1.0.0"],
-                        "description" => ["type" => "string", "maxLength" => 60, "description" => "插件简介，60 字以内"],
-                        "web_site" => ["type" => "string", "default" => "#", "description" => "插件官网/演示地址，可留空"],
-                        "price" => ["type" => "number", "minimum" => 0, "default" => 0, "description" => "市场售价，0=免费"],
-                        "icon_base64" => ["type" => "string", "description" => "插件图标图片的 base64（png/jpg/gif，建议 120x120，≤2MB）"],
-                    ],
-                    "required" => ["plugin_key", "plugin_name", "type", "description", "icon_base64"],
-                ],
-            ],
-            [
-                "name" => "upload_install_kit",
-                "description" => "为一个处于「开发中」(status=0) 或「审核驳回」(status=2) 的插件上传安装包并提交审核，提交后状态变为审核中(3)。插件被驳回后，按 error_reason 里的原因改好，用这个工具直接重新提交即可，不需要新建插件（重新提交会自动清掉上次的驳回原因）。默认由服务端直接从本机插件目录自动打包，不需要你自己压缩、更不需要传 base64——只给 plugin_id 即可。打包时会自动排除日志等运行态文件，并把 Config.php 写成空的 return []; （绝不会带上本站的密钥和启用状态，也不会改动本机那份配置）。填了 version 就会先把该版本号写回插件自己的 Info，保证包内版本与商店一致。",
-                "inputSchema" => [
-                    "type" => "object",
-                    "properties" => [
-                        "plugin_id" => ["type" => "integer", "description" => "插件 id（来自 list_plugins）"],
-                        "version" => ["type" => "string", "maxLength" => 32, "description" => "版本号，如 1.0.4。填了就写回插件的 Info 再打包；不填则用插件当前的版本号"],
-                        "package_base64" => ["type" => "string", "description" => "可选。仅当插件不在本机、需要你自带压缩包时才用；留空即走服务端自动打包"],
-                    ],
-                    "required" => ["plugin_id"],
-                ],
-            ],
-            [
-                "name" => "submit_update",
-                "description" => "为一个「已上架」(status=1) 的插件提交更新包进入审核。默认由服务端直接从本机插件目录自动打包，不需要你自己压缩、更不需要传 base64。audit_version 会先被写回插件自己的 Info 再打包，所以包内版本号与提交版本号必定一致。更新包会自动剔除 Config.php（不能覆盖用户站点的配置）和日志等运行态文件。更新包若改动数据库，需自行在插件根目录放好累计的 update.sql，它会被一起打进去。",
-                "inputSchema" => [
-                    "type" => "object",
-                    "properties" => [
-                        "plugin_id" => ["type" => "integer", "description" => "插件 id（来自 list_plugins）"],
-                        "audit_version" => ["type" => "string", "maxLength" => 32, "description" => "本次更新的版本号，如 1.0.4。会自动同步进插件的 Info"],
-                        "audit_update_content" => ["type" => "string", "description" => "更新说明（必填，用户可见）"],
-                        "package_base64" => ["type" => "string", "description" => "可选。仅当插件不在本机、需要你自带压缩包时才用；留空即走服务端自动打包"],
-                    ],
-                    "required" => ["plugin_id", "audit_version", "audit_update_content"],
-                ],
-            ],
-            [
-                "name" => "set_price",
-                "description" => "修改自己插件的市场售价。",
-                "inputSchema" => [
-                    "type" => "object",
-                    "properties" => [
-                        "plugin_id" => ["type" => "integer", "description" => "插件 id（来自 list_plugins）"],
-                        "price" => ["type" => "number", "minimum" => 0, "description" => "市场售价，0=免费"],
-                    ],
-                    "required" => ["plugin_id", "price"],
-                ],
-            ],
             [
                 "name" => "local_plugins",
                 "description" => "列出本机已安装的通用插件（app/Plugin 目录）及运行状态。本地运维类工具（启停/配置/日志）用这里的 plugin_key 定位插件。status：1=运行中，0=已停止。",
@@ -137,7 +34,7 @@ class Mcp implements \App\Service\Mcp
             ],
             [
                 "name" => "plugin_start",
-                "description" => "启动本机的一个通用插件（等同后台「功能插件」页的启动按钮）。启动会向应用商店校验授权：未授权的插件会保持停止状态。已在运行的插件直接返回，不重复启动。",
+                "description" => "启动本机的一个通用插件（等同后台「功能插件」页的启动按钮）。已在运行的插件直接返回，不重复启动。",
                 "inputSchema" => [
                     "type" => "object",
                     "properties" => [
@@ -215,28 +112,7 @@ class Mcp implements \App\Service\Mcp
      */
     public function call(string $name, array $arguments): array
     {
-        $storeTools = ["list_plugins", "create_plugin", "upload_install_kit", "submit_update", "set_price"];
-
-        //商店中转与插件启停都依赖已授权的加密内核（_plugin_* 函数），离线时直接拒绝；
-        //配置/日志类是纯本地文件操作，离线也能用
-        if (in_array($name, [...$storeTools, "plugin_start", "plugin_stop"], true)
-            && !file_exists(BASE_PATH . "/kernel/Plugin.php")) {
-            throw new JSONException("应用商店已离线，无法使用该工具");
-        }
-
-        if (in_array($name, $storeTools, true)) {
-            $store = (array)config("store");
-            if (empty($store['app_id']) || empty($store['app_key'])) {
-                throw new JSONException("本站尚未登录应用商店，请先在「应用商店」登录后再使用");
-            }
-        }
-
         return match ($name) {
-            "list_plugins" => $this->listPlugins($arguments),
-            "create_plugin" => $this->createPlugin($arguments),
-            "upload_install_kit" => $this->uploadInstallKit($arguments),
-            "submit_update" => $this->submitUpdate($arguments),
-            "set_price" => $this->setPrice($arguments),
             "local_plugins" => $this->localPlugins(),
             "plugin_start" => $this->pluginStart($arguments),
             "plugin_stop" => $this->pluginStop($arguments),
@@ -246,268 +122,6 @@ class Mcp implements \App\Service\Mcp
             "plugin_log_clear" => $this->pluginLogClear($arguments),
             default => throw new JSONException("未知的工具：{$name}"),
         };
-    }
-
-    /**
-     * @param array $args
-     * @return array
-     * @throws JSONException
-     */
-    private function listPlugins(array $args): array
-    {
-        $page = max(1, (int)($args['page'] ?? 1));
-        $limit = (int)($args['limit'] ?? 20);
-        $limit = min(100, max(1, $limit));
-
-        $query = ["page" => $page, "limit" => $limit];
-        $keyword = trim((string)($args['keyword'] ?? ""));
-        if ($keyword !== "") {
-            $query['keyword'] = $keyword;
-        }
-        foreach (["status", "type", "audit_review_status"] as $filter) {
-            if (isset($args[$filter]) && $args[$filter] !== "") {
-                $query[$filter] = (int)$args[$filter];
-            }
-        }
-
-        $result = $this->app->developerPlugins($query);
-        $rows = [];
-        foreach ((array)($result['rows'] ?? []) as $row) {
-            //只回传对开发者有意义、且不含内部路径的字段
-            $rows[] = [
-                "id" => (int)($row['id'] ?? 0),
-                "plugin_key" => (string)($row['plugin_key'] ?? ""),
-                "plugin_name" => (string)($row['plugin_name'] ?? ""),
-                "type" => (int)($row['type'] ?? 0),
-                "version" => (string)($row['version'] ?? ""),
-                "price" => $row['price'] ?? "0",
-                "group" => (int)($row['group'] ?? 0),
-                "status" => (int)($row['status'] ?? 0),
-                "audit_review_status" => (int)($row['audit_review_status'] ?? 0),
-                "description" => (string)($row['description'] ?? ""),
-                "web_site" => (string)($row['web_site'] ?? ""),
-                "error_reason" => (string)($row['error_reason'] ?? ""),
-            ];
-        }
-
-        return [
-            "total" => (int)($result['count'] ?? count($rows)),
-            "plugins" => $rows,
-        ];
-    }
-
-    /**
-     * @param array $args
-     * @return array
-     * @throws JSONException
-     */
-    private function createPlugin(array $args): array
-    {
-        $pluginKey = trim((string)($args['plugin_key'] ?? ""));
-        if (!preg_match('/^[A-Za-z]+$/', $pluginKey) || mb_strlen($pluginKey) < 4 || mb_strlen($pluginKey) > 32) {
-            throw new JSONException("plugin_key 仅支持英文字母，长度 4-32 位");
-        }
-
-        $pluginName = trim((string)($args['plugin_name'] ?? ""));
-        if (mb_strlen($pluginName) < 4 || mb_strlen($pluginName) > 32) {
-            throw new JSONException("plugin_name 长度需为 4-32 位");
-        }
-
-        $type = (int)($args['type'] ?? -1);
-        if (!in_array($type, [0, 1, 2], true)) {
-            throw new JSONException("type 只能是 0(通用) / 1(支付) / 2(模版)");
-        }
-
-        $group = (int)($args['group'] ?? 0);
-        if (!in_array($group, [0, 1, 2], true)) {
-            throw new JSONException("group 只能是 0 / 1 / 2");
-        }
-
-        $description = trim((string)($args['description'] ?? ""));
-        if ($description === "" || mb_strlen($description) > 60) {
-            throw new JSONException("description 必填且不超过 60 字");
-        }
-
-        $price = $this->normalizePrice($args['price'] ?? 0);
-        $version = trim((string)($args['version'] ?? "")) ?: "1.0.0";
-        $webSite = trim((string)($args['web_site'] ?? "")) ?: "#";
-
-        //解码图标：直接以原始字节作为 icon 字段（与后台 developerCreatePlugin 一致）
-        $icon = $this->decodeBase64((string)($args['icon_base64'] ?? ""), self::MAX_ICON_BYTES, "图标");
-        if (getimagesizefromstring($icon) === false) {
-            throw new JSONException("icon_base64 不是有效的图片");
-        }
-
-        $this->app->developerCreatePlugin([
-            "icon" => $icon,
-            "plugin_key" => $pluginKey,
-            "plugin_name" => $pluginName,
-            "type" => $type,
-            "group" => $group,
-            "version" => $version,
-            "description" => $description,
-            "web_site" => $webSite,
-            "price" => $price,
-        ]);
-
-        return ["message" => "插件「{$pluginName}」创建成功，请用 upload_install_kit 上传安装包提交审核"];
-    }
-
-    /**
-     * @param array $args
-     * @return array
-     * @throws JSONException
-     */
-    private function uploadInstallKit(array $args): array
-    {
-        $pluginId = (int)($args['plugin_id'] ?? 0);
-        if ($pluginId <= 0) {
-            throw new JSONException("plugin_id 无效");
-        }
-
-        $built = $this->buildPackage(
-            $pluginId,
-            (string)($args['package_base64'] ?? ""),
-            trim((string)($args['version'] ?? "")),
-            false
-        );
-
-        $this->app->developerCreateKit([
-            "id" => $pluginId,
-            "resource" => $built['path'],
-        ]);
-
-        return [
-            "message" => "安装包已提交，插件进入审核中(status=3)",
-            "package" => $built['summary'],
-        ];
-    }
-
-    /**
-     * @param array $args
-     * @return array
-     * @throws JSONException
-     */
-    private function submitUpdate(array $args): array
-    {
-        $pluginId = (int)($args['plugin_id'] ?? 0);
-        if ($pluginId <= 0) {
-            throw new JSONException("plugin_id 无效");
-        }
-
-        $auditVersion = trim((string)($args['audit_version'] ?? ""));
-        if ($auditVersion === "" || mb_strlen($auditVersion) > 32) {
-            throw new JSONException("audit_version 必填且不超过 32 位");
-        }
-
-        $auditUpdateContent = trim((string)($args['audit_update_content'] ?? ""));
-        if ($auditUpdateContent === "") {
-            throw new JSONException("audit_update_content（更新说明）必填");
-        }
-
-        $built = $this->buildPackage(
-            $pluginId,
-            (string)($args['package_base64'] ?? ""),
-            $auditVersion,
-            true
-        );
-
-        $this->app->developerUpdatePlugin([
-            "id" => $pluginId,
-            "audit_resource" => $built['path'],
-            "audit_version" => $auditVersion,
-            "audit_update_content" => $auditUpdateContent,
-        ]);
-
-        return [
-            "message" => "更新包已提交，等待审核",
-            "package" => $built['summary'],
-        ];
-    }
-
-    /**
-     * 拿到可提交的包：有 base64 就用调用方给的，否则从本机插件目录现打一个。
-     *
-     * @param string $version 非空则先写回插件自己的版本文件，再打包 —— 这样「包内版本号」
-     *                        和提交给商店的版本号不可能对不上（商店会卡这一条）
-     * @param bool $isUpdate true=更新包（剔除 Config.php），false=安装包（Config.php 清空成 return [];）
-     * @return array{path: string, summary: array}
-     * @throws JSONException
-     */
-    private function buildPackage(int $pluginId, string $base64, string $version, bool $isUpdate): array
-    {
-        //调用方自带压缩包时完全按老路走，不碰本机任何文件
-        if (trim($base64) !== "") {
-            return [
-                "path" => $this->uploadPackage($base64),
-                "summary" => ["source" => "调用方提供的压缩包"],
-            ];
-        }
-
-        $plugin = PluginPacker::resolveFromStore($this->app, $pluginId);
-        $type = (int)$plugin['type'];
-        $key = (string)$plugin['plugin_key'];
-        $dir = PluginPacker::sourceDir($key, $type);
-
-        $summary = [
-            "source" => "服务端自动打包",
-            "plugin_key" => $key,
-            "directory" => str_replace(BASE_PATH, "", $dir),
-        ];
-
-        if ($version !== "") {
-            $sync = PluginPacker::syncVersion($dir, $type, $version);
-            $summary['version_file'] = $sync['file'];
-            $summary['version'] = $sync['changed']
-                ? "{$sync['old']} → {$sync['new']}"
-                : "{$sync['new']}（本来就是这个版本，未改动）";
-        }
-
-        $bytes = PluginPacker::pack($dir, $type, $key, $isUpdate);
-        $info = PluginPacker::inspect($bytes);
-
-        $summary['files'] = $info['files'];
-        $summary['size'] = round($info['bytes'] / 1024, 1) . " KB";
-        $summary['config_php'] = $isUpdate
-            ? ($info['has_config'] ? "⚠ 仍在包内（不该出现）" : "已剔除")
-            : ($info['has_config'] ? "已清空为 return [];" : "无此文件");
-
-        $upload = $this->app->upload([
-            [
-                "name" => "file",
-                "contents" => $bytes,
-                "filename" => "file.zip",
-            ],
-        ]);
-
-        $path = (string)($upload['path'] ?? "");
-        if ($path === "") {
-            throw new JSONException("插件包上传失败，商店未返回路径");
-        }
-
-        return ["path" => $path, "summary" => $summary];
-    }
-
-
-    /**
-     * @param array $args
-     * @return array
-     * @throws JSONException
-     */
-    private function setPrice(array $args): array
-    {
-        $pluginId = (int)($args['plugin_id'] ?? 0);
-        if ($pluginId <= 0) {
-            throw new JSONException("plugin_id 无效");
-        }
-        $price = $this->normalizePrice($args['price'] ?? null);
-
-        $this->app->developerPluginPriceSet([
-            "id" => $pluginId,
-            "price" => $price,
-        ]);
-
-        return ["message" => "新的定价已生效：" . ($price > 0 ? $price : "免费")];
     }
 
     /* ==================== 本地插件运维（不经商店） ==================== */
@@ -549,14 +163,14 @@ class Mcp implements \App\Service\Mcp
             return ["message" => "插件「{$key}」已在运行，无需启动"];
         }
 
-        //内核启动流程：向商店校验授权 → 挂钩子 → STATUS=1。
-        //未授权时它不报错、也不改状态，所以完成后必须回读真实状态如实汇报
+        //内核启动流程：挂钩子 → STATUS=1 → 触发 START 生命周期。
+        //启动失败时它不报错、也不改状态，所以完成后必须回读真实状态如实汇报
         \_plugin_start($key);
 
         $fresh = \Kernel\Util\Plugin::getPlugin($key, false);
         $status = (int)($fresh['PLUGIN_CONFIG']['STATUS'] ?? 0);
         if ($status !== 1) {
-            throw new JSONException("插件「{$key}」未能启动：应用商店未授权该插件（未购买或授权过期）");
+            throw new JSONException("插件「{$key}」未能启动：请检查插件目录与 Config/Config.php 是否完整");
         }
         return ["message" => "插件「{$key}」已启动", "status" => 1];
     }
@@ -766,75 +380,4 @@ class Mcp implements \App\Service\Mcp
         return $log;
     }
 
-    /**
-     * 解码插件包 base64 并直传商店暂存区，返回商店临时 path。
-     * @param string $base64
-     * @return string
-     * @throws JSONException
-     */
-    private function uploadPackage(string $base64): string
-    {
-        $bytes = $this->decodeBase64($base64, self::MAX_PACKAGE_BYTES, "插件包");
-        if (!str_starts_with($bytes, "PK")) {
-            throw new JSONException("插件包不是有效的 zip 文件");
-        }
-
-        $upload = $this->app->upload([
-            [
-                "name" => "file",
-                "contents" => $bytes,
-                "filename" => "file.zip",
-            ],
-        ]);
-
-        $path = (string)($upload['path'] ?? "");
-        if ($path === "") {
-            throw new JSONException("插件包上传失败，商店未返回路径");
-        }
-        return $path;
-    }
-
-    /**
-     * @param string $base64
-     * @param int $maxBytes
-     * @param string $label
-     * @return string
-     * @throws JSONException
-     */
-    private function decodeBase64(string $base64, int $maxBytes, string $label): string
-    {
-        $base64 = trim($base64);
-        //兼容 data URI 前缀，如 data:image/png;base64,xxxx
-        if (str_contains($base64, ",") && str_starts_with($base64, "data:")) {
-            $base64 = substr($base64, strpos($base64, ",") + 1);
-        }
-        if ($base64 === "") {
-            throw new JSONException("{$label}内容为空");
-        }
-        $bytes = base64_decode($base64, true);
-        if ($bytes === false || $bytes === "") {
-            throw new JSONException("{$label} base64 解码失败");
-        }
-        if (strlen($bytes) > $maxBytes) {
-            throw new JSONException("{$label}体积超过上限（" . (int)($maxBytes / 1024 / 1024) . "MB），请改用网页后台上传");
-        }
-        return $bytes;
-    }
-
-    /**
-     * @param mixed $price
-     * @return float
-     * @throws JSONException
-     */
-    private function normalizePrice(mixed $price): float
-    {
-        if (!is_numeric($price)) {
-            throw new JSONException("price 必须是数字");
-        }
-        $price = (float)$price;
-        if ($price < 0) {
-            throw new JSONException("price 不能为负数");
-        }
-        return $price;
-    }
 }

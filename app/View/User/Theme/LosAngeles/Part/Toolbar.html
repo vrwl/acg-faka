@@ -1,0 +1,28 @@
+#{*
+  洛杉矶 · 商户管理页操作栏（两端共用）
+
+  平台控制器（business/category.js 等）只认固定类名：
+    .button-add     新建 / 添加 / 上传 / 生成（主按钮）
+    .button-del .button-lock .button-unlock .button-sell   对表格勾选行的批量操作
+    .button-export  按当前筛选导出
+  这里只负责把按钮画出来，行为全在平台控制器里。
+
+  参数：laAdd（主按钮文案）laAddIcon · laBulk（1=出批量按钮）laSell（1=出「更改为已出售」）
+        laExport（导出文案，空=不出）laApp（1=手机端样式）
+*}
+#{assign var=laAdd value=$laAdd|default:''}#{assign var=laAddIcon value=$laAddIcon|default:'plus'}#{assign var=laBulk value=$laBulk|default:0}#{assign var=laSell value=$laSell|default:0}#{assign var=laExport value=$laExport|default:''}#{assign var=laApp value=$laApp|default:0}
+<div class="la-actbar#{if $laApp} la-actbar--app#{/if}">
+    #{if $laAdd}
+        <button type="button" class="la-btn la-btn--brand la-btn--sm button-add">#{\App\View\User\Theme\LosAngeles\Icons::svg($laAddIcon)}<span>#{$laAdd}</span></button>
+    #{/if}
+    #{if $laBulk}
+        <span class="la-actbar__sep" aria-hidden="true"></span>
+        <button type="button" class="la-btn la-btn--line la-btn--sm button-lock">#{\App\View\User\Theme\LosAngeles\Icons::svg('lock')}<span>#{t("锁定选中")}</span></button>
+        <button type="button" class="la-btn la-btn--line la-btn--sm button-unlock">#{\App\View\User\Theme\LosAngeles\Icons::svg('unlock')}<span>#{t("解锁选中")}</span></button>
+        #{if $laSell}<button type="button" class="la-btn la-btn--line la-btn--sm button-sell">#{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}<span>#{t("更改为已出售")}</span></button>#{/if}
+        <button type="button" class="la-btn la-btn--danger la-btn--sm button-del">#{\App\View\User\Theme\LosAngeles\Icons::svg('trash')}<span>#{t("移除选中")}</span></button>
+    #{/if}
+    #{if $laExport}
+        <button type="button" class="la-btn la-btn--ghost la-btn--sm la-actbar__end button-export">#{\App\View\User\Theme\LosAngeles\Icons::svg('download')}<span>#{$laExport}</span></button>
+    #{/if}
+</div>

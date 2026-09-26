@@ -1,0 +1,43 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<link rel="stylesheet" href="#{Plugin('Blog','View/Css/admin.css')}">
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <div id="kt_content_container" class="container-fluid">
+            <div class="blog-admin">
+
+                <header class="ba-hero">
+                    <div class="ba-hero__inner">
+                        <span class="ba-hero__icon"><i class="blogi blogi-folder"></i></span>
+                        <div class="ba-hero__text">
+                            <h1 class="ba-hero__title">#{t("博客分类")}</h1>
+                            <p class="ba-hero__desc">#{t("最多三级；删除分类时其下文章会归入「未分类」，不会丢失")}</p>
+                        </div>
+                        <div class="ba-hero__actions">
+                            <button class="ba-btn ba-btn--primary btn-app-create">
+                                <i class="blogi blogi-folder-add"></i> #{t("新建分类")}
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="card mb-5 mb-xl-8">
+                    <div class="card-header border-0">
+                        <div class="card-toolbar">
+                            <button class="btn btn-sm btn-light-primary btn-app-create me-3">
+                                <i class="blogi blogi-folder-add"></i>
+                                #{t("新建分类")}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body py-3">
+                        <table id="blog-categories-table"></table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+#{ready("/app/Plugin/Blog/View/Js/categories.js")}
+#{include file=$manage_view_path|cat:"Footer.html"}

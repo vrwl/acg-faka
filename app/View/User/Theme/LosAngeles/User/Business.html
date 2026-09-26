@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 我的店铺 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/Business.html"}#{else}#{include file="./Pc/Business.html"}#{/if}

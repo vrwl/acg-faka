@@ -1,0 +1,11 @@
+#{* 洛杉矶 · 认证页页尾（电脑端）。参数：laCtrl *}
+        <ul class="la-auth__sell" aria-hidden="true">
+            <li>#{\App\View\User\Theme\LosAngeles\Icons::svg('flash')}<span>#{t("自动发货")}</span></li>
+            <li>#{\App\View\User\Theme\LosAngeles\Icons::svg('crown')}<span>#{t("会员价")}</span></li>
+            <li>#{\App\View\User\Theme\LosAngeles\Icons::svg('shield')}<span>#{t("交易保障")}</span></li>
+        </ul>
+    </div>
+</main>
+
+#{include file="./Footer.html"}
+#{include file="./Foot.html" laArea="auth" laCtrl=$laCtrl|default:''}

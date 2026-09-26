@@ -1,0 +1,161 @@
+#{*
+  洛杉矶 · 电脑端页头
+  细公告条 + 吸顶主导航（Logo / 全部分类巨型菜单 / 大搜索 / 快捷入口 / 账户）
+
+  参数：
+    laSearch  1 = 渲染搜索框（商城页），0 = 不渲染（会员中心）
+    laCats    分类树（$category），有值才渲染巨型菜单
+*}
+#{assign var=laSearch value=$laSearch|default:0}#{* 只把一级分类交给巨型菜单；子级由 JS 按需构建 *}
+#{assign var=laCatsAll value=\App\View\User\Theme\LosAngeles\Support::topCount($laCats|default:[])}
+#{assign var=laCats value=\App\View\User\Theme\LosAngeles\Support::topCategories($laCats|default:[], 40)}#{assign var=laNotice value=$setting.topbar_notice|default:''}
+
+<div class="la-topbar">
+    <div class="la-topbar__in">
+        <div class="la-topbar__left">
+            #{if $laNotice}
+                <span class="la-topbar__horn">#{\App\View\User\Theme\LosAngeles\Icons::svg('megaphone')}</span>
+                <div class="la-marquee" data-la-marquee>
+                    <span class="la-marquee__text">#{lang($laNotice, 'dyn')|strip_tags|escape:'html'}</span>
+                </div>
+            #{else}
+                <span class="la-topbar__hi">#{t("欢迎来到")} <b>#{$config.shop_name|escape:'html'}</b></span>
+            #{/if}
+        </div>
+
+        <div class="la-topbar__right">
+            #{if $langs|@count > 1}
+                <div class="la-pop" data-la-pop>
+                    <button type="button" class="la-topbar__btn" data-la-pop-trigger aria-haspopup="true" aria-expanded="false">
+                        #{\App\View\User\Theme\LosAngeles\Icons::svg('globe')}
+                        <span>#{foreach $langs as $l}#{if $l.active}#{$l.name|escape:'html'}#{/if}#{/foreach}</span>
+                        #{\App\View\User\Theme\LosAngeles\Icons::svg('down')}
+                    </button>
+                    <div class="la-pop__panel la-pop__panel--sm" role="menu">
+                        #{foreach $langs as $l}
+                            <button type="button" class="la-pop__item#{if $l.active} is-on#{/if}" role="menuitem" data-lang-value="#{$l.code|escape:'html'}">
+                                <span>#{$l.name|escape:'html'}</span>
+                                #{if $l.active}#{\App\View\User\Theme\LosAngeles\Icons::svg('check')}#{/if}
+                            </button>
+                        #{/foreach}
+                    </div>
+                </div>
+            #{/if}
+
+            <div class="la-pop" data-la-pop>
+                <button type="button" class="la-topbar__btn la-theme-btn" data-la-pop-trigger aria-haspopup="true" aria-expanded="false" aria-label="#{t('外观')}">
+                    <span class="la-theme-btn__ico la-theme-btn__ico--light">#{\App\View\User\Theme\LosAngeles\Icons::svg('sun')}</span>
+                    <span class="la-theme-btn__ico la-theme-btn__ico--dark">#{\App\View\User\Theme\LosAngeles\Icons::svg('moon')}</span>
+                </button>
+                <div class="la-pop__panel la-pop__panel--sm" role="menu">
+                    <button type="button" class="la-pop__item" role="menuitem" data-la-theme="auto">#{\App\View\User\Theme\LosAngeles\Icons::svg('auto')}<span>#{t("跟随系统")}</span></button>
+                    <button type="button" class="la-pop__item" role="menuitem" data-la-theme="light">#{\App\View\User\Theme\LosAngeles\Icons::svg('sun')}<span>#{t("白天")}</span></button>
+                    <button type="button" class="la-pop__item" role="menuitem" data-la-theme="dark">#{\App\View\User\Theme\LosAngeles\Icons::svg('moon')}<span>#{t("夜间")}</span></button>
+                </div>
+            </div>
+
+            #{if $user}
+                <a class="la-topbar__btn" href="/user/dashboard/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('user')}<span>#{$user.username|escape:'html'}</span></a>
+                <a class="la-topbar__btn" href="/user/authentication/logout">#{t("退出")}</a>
+            #{else}
+                <a class="la-topbar__btn" href="/user/authentication/login">#{t("登录")}</a>
+                #{if $config.registered_state == 1}
+                    <a class="la-topbar__btn la-topbar__btn--hl" href="/user/authentication/register">#{t("免费注册")}</a>
+                #{/if}
+            #{/if}
+        </div>
+    </div>
+</div>
+
+<header class="la-header" data-la-header>
+    <div class="la-header__in">
+        <a class="la-logo" href="/" aria-label="#{$config.shop_name|escape:'html'}">
+            <span class="la-logo__mark has-img" aria-hidden="true"><img class="la-logo__img" src="#{$favicon|escape:'html'}?v=#{$app.version|escape:'html'}" alt="" width="34" height="34" decoding="async"></span>
+            <span class="la-logo__text la-ellipsis">#{$config.shop_name|escape:'html'}</span>
+        </a>
+
+        #{if $laCats|@count > 0}
+            <div class="la-mega" data-la-mega>
+                <button type="button" class="la-mega__trigger" data-la-mega-trigger aria-expanded="false" aria-controls="la-mega-panel">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('menu')}
+                    <span>#{t("全部分类")}</span>
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('down','la-mega__caret')}
+                </button>
+                #{include file="./MegaMenu.html" laCats=$laCats laMegaAll=$laCatsAll}
+            </div>
+        #{/if}
+
+        #{if $laSearch}
+            <form class="la-search" data-la-search role="search" action="/" method="get">
+                <span class="la-search__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('search')}</span>
+                <input class="la-search__input" type="search" name="keywords" autocomplete="off"
+                       placeholder="#{t('搜索商品名称、关键词')}" aria-label="#{t('搜索商品')}" data-la-search-input>
+                <button type="button" class="la-search__clear" data-la-search-clear aria-label="#{t('清空')}" hidden>#{\App\View\User\Theme\LosAngeles\Icons::svg('close')}</button>
+                <button type="submit" class="la-search__go">#{t("搜索")}</button>
+                <div class="la-search__drop" data-la-search-drop hidden></div>
+            </form>
+        #{else}
+            <div class="la-header__spacer"></div>
+        #{/if}
+
+        <nav class="la-hnav" aria-label="#{t('快捷导航')}">
+            #{foreach user_header_nav() as $nav}
+                <a class="la-hnav__item#{if $nav.match && active($nav.match)} is-on#{/if}"
+                   href="#{$nav.url|escape:'html'}" target="#{$nav.target|escape:'html'}">
+                    #{if $nav.key == 'shop'}#{\App\View\User\Theme\LosAngeles\Icons::svg('store')}
+                    #{elseif $nav.key == 'query'}#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}
+                    #{else}#{user_nav_icon($nav, 'la-i')}#{/if}
+                    <span>#{$nav.name|escape:'html'}</span>
+                </a>
+            #{/foreach}
+        </nav>
+
+        <div class="la-hacct">
+            #{if $user}
+                <div class="la-pop la-pop--end" data-la-pop>
+                    <button type="button" class="la-hacct__me" data-la-pop-trigger aria-haspopup="true" aria-expanded="false">
+                        <img class="la-hacct__avatar" src="#{$user.avatar|default:$favicon|escape:'html'}" alt="" width="32" height="32">
+                        <span class="la-hacct__name la-ellipsis">#{$user.username|escape:'html'}</span>
+                        #{\App\View\User\Theme\LosAngeles\Icons::svg('down')}
+                    </button>
+                    <div class="la-pop__panel la-pop__panel--acct" role="menu">
+                        <div class="la-acctcard">
+                            <img class="la-acctcard__avatar" src="#{$user.avatar|default:$favicon|escape:'html'}" alt="" width="46" height="46">
+                            <div class="la-acctcard__id">
+                                <strong class="la-ellipsis">#{$user.username|escape:'html'}</strong>
+                                #{if $group && $group.name}
+                                    <span class="la-acctcard__lv">
+                                        #{if $group.icon}<img src="#{$group.icon}" alt="" width="14" height="14">#{/if}
+                                        #{lang($group.name, 'dyn')|escape:'html'}
+                                    </span>
+                                #{/if}
+                            </div>
+                        </div>
+                        <div class="la-acctcard__wallet">
+                            <a class="la-acctcard__cell" href="/user/recharge/index">
+                                <span class="la-faint">#{t("余额")}</span>
+                                <b class="la-num">#{$config.currency_symbol}#{$user.balance|escape:'html'}</b>
+                            </a>
+                            <a class="la-acctcard__cell" href="/user/cash/index">
+                                <span class="la-faint">#{t("硬币")}</span>
+                                <b class="la-num">#{$user.coin|escape:'html'}</b>
+                            </a>
+                        </div>
+                        <div class="la-pop__sep"></div>
+                        <a class="la-pop__item" role="menuitem" href="/user/dashboard/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('chart')}<span>#{t("会员中心")}</span></a>
+                        <a class="la-pop__item" role="menuitem" href="/user/personal/purchaseRecord">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}<span>#{t("购买记录")}</span></a>
+                        <a class="la-pop__item" role="menuitem" href="/user/recharge/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('wallet')}<span>#{t("充值中心")}</span></a>
+                        <a class="la-pop__item" role="menuitem" href="/user/ticket/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('headset')}<span>#{t("工单客服")}</span></a>
+                        <div class="la-pop__sep"></div>
+                        <a class="la-pop__item la-pop__item--quiet" role="menuitem" href="/user/authentication/logout">#{\App\View\User\Theme\LosAngeles\Icons::svg('logout')}<span>#{t("退出登录")}</span></a>
+                    </div>
+                </div>
+            #{else}
+                <a class="la-btn la-btn--line la-btn--sm" href="/user/authentication/login">#{t("登录")}</a>
+                #{if $config.registered_state == 1}
+                    <a class="la-btn la-btn--brand la-btn--sm" href="/user/authentication/register">#{t("注册")}</a>
+                #{/if}
+            #{/if}
+        </div>
+    </div>
+</header>

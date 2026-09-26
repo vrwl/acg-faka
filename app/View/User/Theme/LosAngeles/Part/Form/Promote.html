@@ -1,0 +1,53 @@
+#{*
+  洛杉矶 · 推广中心（两端共用）
+  user/promote.js 契约：.clipboard[data-text] / #share-qrcode[data-url] / #promote-table
+*}
+<div class="la-promo">
+    <section class="la-card la-promo__link">
+        <div class="la-promo__main">
+            <div class="la-promo__title">#{\App\View\User\Theme\LosAngeles\Icons::svg('megaphone')}<span>#{t("我的推广链接")}</span></div>
+            <div class="la-promo__urlbox">
+                <span class="la-promo__url la-ellipsis">#{$share_url|escape:'html'}</span>
+                <button type="button" class="la-btn la-btn--brand la-btn--sm clipboard" data-text="#{$share_url|escape:'html'}">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('copy')}<span>#{t("复制")}</span>
+                </button>
+            </div>
+            <p class="la-faint">#{t("别人通过这个链接注册后，他的每一笔消费你都能拿到收益。")}</p>
+        </div>
+        <div class="la-promo__qr">
+            <div id="share-qrcode" data-url="#{$share_url|escape:'html'}"></div>
+            <span class="la-faint">#{t("扫码直达")}</span>
+        </div>
+    </section>
+
+    <div class="la-stats">
+        <div class="la-stat la-stat--brand">
+            <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('users')}</span>
+            <span class="la-stat__label">#{t("推广人数")}</span>
+            <b class="la-stat__value la-num">#{$children|escape:'html'}<em>#{t("人")}</em></b>
+        </div>
+        <div class="la-stat">
+            <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}</span>
+            <span class="la-stat__label">#{t("推广订单")}</span>
+            <b class="la-stat__value la-num">#{$promote_orders|escape:'html'}<em>#{t("单")}</em></b>
+        </div>
+        <div class="la-stat">
+            <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('coin')}</span>
+            <span class="la-stat__label">#{t("累计收益")}</span>
+            <b class="la-stat__value la-num">#{$config.currency_symbol}#{$promote_total|escape:'html'}</b>
+        </div>
+        <div class="la-stat">
+            <span class="la-stat__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('chart')}</span>
+            <span class="la-stat__label">#{t("本月收益")}</span>
+            <b class="la-stat__value la-num">#{$config.currency_symbol}#{$promote_month|escape:'html'}</b>
+        </div>
+    </div>
+
+    <section class="la-card la-tablecard">
+        <div class="la-tablecard__head">
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('box')}
+            <div><strong>#{t("拿货价一览")}</strong><small>#{t("你的等级价与游客成交价的差额，就是每单的预计收益")}</small></div>
+        </div>
+        <table id="promote-table"></table>
+    </section>
+</div>

@@ -6,7 +6,6 @@ namespace Kernel\Plugin;
 use App\Util\Client;
 use Kernel\Component\Singleton;
 use Kernel\Consts\Base;
-use Kernel\Util\Binary;
 use Kernel\Util\Context;
 use Kernel\Util\File;
 use Kernel\Util\Plugin;
@@ -34,12 +33,18 @@ class Hook
             mkdir($path, 0777, true);
         }
 
+        //自愈：注册表缺失或损坏（含旧加密格式）时，按各插件 STATUS=1 自动重建
+        $raw = is_file(Hook::CACHE_FILE) ? (string)file_get_contents(Hook::CACHE_FILE) : '';
+        if (!is_array(json_decode($raw, true))) {
+            _plugin_hook_rebuild();
+        }
+
         if (!is_writable(Hook::CACHE_FILE)) {
             return;
         }
 
         $hooks = File::read(Hook::CACHE_FILE, function (string $contents) {
-            return Binary::inst()->unpack($contents, _plugin_get_hwid());
+            return json_decode($contents, true) ?: [];
         }) ?: [];
 
         foreach ($hooks as $points) {

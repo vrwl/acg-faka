@@ -1,0 +1,125 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-cash-page" data-st-page="cash">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main">
+        <div class="st-cash" data-coin="#{$user.coin}" data-min="#{$config.cash_min}" data-fee="#{$config.cash_cost}">
+            <nav class="st-tabs" aria-label="#{t('兑现中心')}">
+                <a href="/user/cash/index" class="is-active"><span class="material-icons-outlined">currency_exchange</span>#{t("硬币兑现")}</a>
+                <a href="/user/cash/record"><span class="material-icons-outlined">history</span>#{t("兑现记录")}#{if $processing > 0}<em aria-label="#{$processing} #{t('笔处理中')}">#{$processing}</em>#{/if}</a>
+            </nav>
+
+            <header class="st-page-header">
+                <div><span class="st-kicker">#{t("收益结算")}</span><h1>#{t("硬币兑现")}</h1><p>#{t("1 硬币按 1 元结算，可转入站内钱包或已绑定的收款账户。")}</p></div>
+            </header>
+
+            <section class="st-panel st-balance-panel" aria-labelledby="st-cash-balance-title">
+                <div class="st-cash-app-header">
+                    <div><span>#{t("收益结算")}</span><h1>#{t("硬币兑现")}</h1></div>
+                    <a href="/user/cash/record"><span class="material-icons-outlined" aria-hidden="true">history</span><span>#{t("记录")}</span>#{if $processing > 0}<em aria-label="#{$processing} #{t('笔处理中')}">#{$processing}</em>#{/if}</a>
+                </div>
+                <span class="st-kicker" id="st-cash-balance-title">#{t("当前可用硬币")}</span>
+                <div class="st-balance-panel__amount">#{$user.coin}<small> #{t("硬币")}</small></div>
+                <div class="st-stat-grid st-stat-grid--three">
+                    <div class="st-stat"><span>#{t("最低兑现")}</span><strong>#{$config.cash_min}<small> #{t("硬币")}</small></strong></div>
+                    <div class="st-stat"><span>#{t("服务费用")}</span><strong>#{$config.cash_cost}<small> #{t("元")}</small></strong></div>
+                    <a class="st-stat" href="/user/cash/record"><span>#{t("处理中")}</span><strong>#{$processing}<small> #{t("笔")}</small></strong></a>
+                </div>
+            </section>
+
+            <div class="st-content-grid st-content-grid--form">
+                <section class="st-panel" aria-labelledby="st-cash-form-title">
+                    <div class="st-panel__header">
+                        <div><span class="st-panel__icon material-icons-outlined">payments</span><div><h2 id="st-cash-form-title">#{t("发起兑现")}</h2><p>#{t("填写数量并选择到账方式")}</p></div></div>
+                    </div>
+                    <div class="st-panel__body">
+                        <form class="layui-form st-cash-form">
+                            <section class="st-form-section st-cash-amount-section">
+                                <div class="st-form-section__header"><span>01</span><div><h3>#{t("兑现数量")}</h3><p>#{t("手续费会从预计到账金额中扣除")}</p></div></div>
+                                <label class="st-amount-field st-outlined-amount">
+                                    <span class="st-amount-label">#{t("兑现数量")}</span>
+                                    <i class="st-amount-prefix material-icons-outlined" aria-hidden="true">toll</i>
+                                    <input type="text" name="amount" required lay-verify="required" value="#{if $user.coin > 0}#{$config.cash_min}#{/if}" inputmode="decimal" autocomplete="off" aria-label="#{t('兑现硬币数量')}" class="layui-input" #{if $user.coin <= 0}disabled#{/if}>
+                                    <em>#{t("硬币")}</em>
+                                </label>
+                                <div class="st-field-meta"><span>#{t("可用")} <strong>#{$user.coin}</strong> #{t("硬币")}</span><button type="button" class="st-text-button st-cash-all"#{if $user.coin <= 0} disabled#{/if}>#{t("全部兑现")}</button></div>
+                            </section>
+
+                            <button type="button" class="st-cash-method-trigger" data-st-sheet-open="cash-method" aria-haspopup="dialog" aria-controls="st-cash-method-sheet" aria-expanded="false">
+                                <span class="st-cash-method-trigger__icon material-icons-outlined" aria-hidden="true">account_balance_wallet</span>
+                                <span><small>#{t("到账方式")}</small><strong class="st-cash-method-name">#{t("待选择")}</strong></span>
+                                <span class="material-icons-outlined" aria-hidden="true">chevron_right</span>
+                            </button>
+
+                            <section class="st-form-section st-cash-method-sheet" id="st-cash-method-sheet" data-st-sheet="cash-method" aria-hidden="false" aria-labelledby="st-cash-method-title" role="region">
+                                <div class="st-cash-sheet-handle" aria-hidden="true"></div>
+                                <header class="st-cash-sheet-head">
+                                    <div><strong id="st-cash-method-title">#{t("选择到账方式")}</strong><small>#{t("选择后自动返回兑现页")}</small></div>
+                                    <button type="button" class="st-icon-button" data-st-sheet-close aria-label="#{t('关闭到账方式')}"><span class="material-icons-outlined">close</span></button>
+                                </header>
+                                <div class="st-form-section__header"><span>02</span><div><h3>#{t("到账方式")}</h3><p>#{t("外部账户需要人工审核")}</p></div></div>
+                                <div class="pay-list st-payment-list st-cash-methods" role="radiogroup" aria-label="#{t('到账方式')}">
+                                    #{if $config.cash_type_alipay == 1}
+                                    <button type="button" class="button-click cash-wallet-btn st-cash-method st-payment-option#{if $user.alipay == ''} is-unbound#{/if}" data-id="0" data-name="#{t('支付宝')}" data-speed="manual" data-ready="#{if $user.alipay == ''}0#{else}1#{/if}">
+                                        <img src="/assets/user/images/cash/alipay.png" class="pay-icon" alt=""><span><strong>#{t("支付宝")}</strong><small>#{if $user.alipay == ''}#{t("尚未绑定收款账号")}#{else}#{t("转入已绑定支付宝")}#{/if}</small></span><i class="material-icons-outlined" aria-hidden="true">check_circle</i>
+                                    </button>
+                                    #{/if}
+                                    #{if $config.cash_type_wechat == 1}
+                                    <button type="button" class="button-click cash-wallet-btn st-cash-method st-payment-option#{if $user.wechat == ''} is-unbound#{/if}" data-id="1" data-name="#{t('微信')}" data-speed="manual" data-ready="#{if $user.wechat == ''}0#{else}1#{/if}">
+                                        <img src="/assets/user/images/cash/wechat.png" class="pay-icon" alt=""><span><strong>#{t("微信")}</strong><small>#{if $user.wechat == ''}#{t("尚未绑定收款二维码")}#{else}#{t("转入已绑定微信")}#{/if}</small></span><i class="material-icons-outlined" aria-hidden="true">check_circle</i>
+                                    </button>
+                                    #{/if}
+                                    #{if $config.cash_type_usdt == 1}
+                                    <button type="button" class="button-click cash-wallet-btn st-cash-method st-payment-option#{if $user.wallet_address == ''} is-unbound#{/if}" data-id="3" data-name="USDT (TRC20)" data-speed="manual" data-ready="#{if $user.wallet_address == ''}0#{else}1#{/if}">
+                                        <img src="/assets/user/images/cash/usdt.png" class="pay-icon" alt=""><span><strong>USDT (TRC20)</strong><small>#{if $user.wallet_address == ''}#{t("尚未绑定钱包地址")}#{else}#{t("转入已绑定 TRC20 地址")}#{/if}</small></span><i class="material-icons-outlined" aria-hidden="true">check_circle</i>
+                                    </button>
+                                    #{/if}
+                                    #{if $config.cash_type_balance == 1}
+                                    <button type="button" class="button-click cash-wallet-btn st-cash-method st-payment-option checked" data-id="2" data-name="#{t('钱包余额')}" data-speed="instant" data-ready="1">
+                                        <img src="/assets/static/images/wallet.png" class="pay-icon" alt=""><span><strong>#{t("钱包余额")}</strong><small>#{t("即时到账，可直接消费")}</small></span><i class="material-icons-outlined" aria-hidden="true">check_circle</i>
+                                    </button>
+                                    #{/if}
+                                </div>
+                                <p class="st-form-hint"><span class="material-icons-outlined">manage_accounts</span>#{assign var="_payoutLink" value='<a href="/user/security/personal?tab=edit">'|cat:t("个人资料")|cat:'</a>'}#{t("外部收款信息可在 {link} 中维护。")|replace:"{link}":$_payoutLink}</p>
+                            </section>
+
+                            <div class="st-form-actions">
+                                <button type="button" class="st-button st-button--primary st-button--block payButton" disabled aria-disabled="true">
+                                    <span class="material-icons-outlined">arrow_outward</span><span class="st-cash-submit__label">#{t("暂不可兑现")}</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <aside class="st-panel st-receipt" aria-labelledby="st-cash-summary-title">
+                    <div class="st-panel__header">
+                        <div><span class="st-panel__icon material-icons-outlined">request_quote</span><div><h2 id="st-cash-summary-title">#{t("本次结算")}</h2><p>#{t("金额变化会即时更新")}</p></div></div>
+                    </div>
+                    <div class="st-panel__body">
+                        <div class="st-receipt__total"><span>#{t("预计到账")}</span><strong><small>#{$config.currency_symbol}</small><span class="st-cash-net">0</span></strong><p>#{t("实际到账以审核结果为准")}</p></div>
+                        <dl class="st-receipt__rows">
+                            <div><dt>#{t("兑现硬币")}</dt><dd><span class="st-cash-gross">0</span> #{t("硬币")}</dd></div>
+                            <div><dt>#{t("服务手续费")}</dt><dd class="st-cash-fee">-#{$config.cash_cost} #{t("元")}</dd></div>
+                            <div><dt>#{t("到账方式")}</dt><dd class="st-cash-method-name">#{t("钱包余额")}</dd></div>
+                        </dl>
+                        <div class="st-cash-receipt__status st-status is-waiting" role="status" aria-live="polite"><span class="material-icons-outlined">info</span><span class="st-cash-status-text">#{t("正在检查可兑现额度")}</span></div>
+                        <div class="st-notice"><span class="material-icons-outlined">bolt</span><span><strong>#{t("到账说明")}</strong><small class="st-cash-method-note">#{t("站内钱包即时到账，可直接用于购买商品。")}</small></span></div>
+                        <p class="st-form-hint st-cash-security-hint"><span class="material-icons-outlined">verified_user</span>#{t("提交前请确认收款信息准确。")}</p>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="st-cash-mobile-dock" role="region" aria-label="#{t('兑现确认')}">
+                <div class="st-cash-mobile-dock__summary" role="status" aria-live="polite" aria-atomic="true">
+                    <span class="st-cash-status-text">#{t("正在检查可兑现额度")}</span>
+                    <strong><small>#{t("预计到账")}</small><span>#{$config.currency_symbol}<span class="st-cash-net">0</span></span></strong>
+                </div>
+                <button type="button" class="st-button st-button--primary payButton" disabled aria-disabled="true">
+                    <span class="st-cash-submit__label">#{t("暂不可兑现")}</span><span class="material-icons-outlined">arrow_outward</span>
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Cash.js'))}
+#{include file="../Common/Footer.html"}

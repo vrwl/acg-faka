@@ -181,63 +181,6 @@
     pending = true;
     setTimeout(function () { pending = false; tagFloatables(); refreshAll(); initSettingsSelect2(); }, 60);
   }
-  /* Replace the native node <select> with a custom dropdown that shows a vendor
-   * icon per option (native <option> can't hold icons) and drops the "节点:" prefix.
-   * The native <select> is kept (hidden) as the value holder, so the existing
-   * change → /admin/api/app/setServer handler still fires. Auto-sizes to content. */
-  function nodeMeta(t) {
-    t = t || '';
-    if (t.indexOf('腾讯') >= 0) return {icon: 'fa-cloud', color: '#0052D9'};
-    if (t.indexOf('阿里') >= 0) return {icon: 'fa-cloud', color: '#FF6A00'};
-    if (t.indexOf('抖音') >= 0) return {icon: 'fa-music', color: '#FE2C55'};
-    if (t.indexOf('海外') >= 0 || t.indexOf('专线') >= 0) return {icon: 'fa-earth-asia', color: '#12B886'};
-    return {icon: 'fa-server', color: '#6E6E6E'};
-  }
-  function nodeLabel(t) { return (t || '').replace(/^\s*节点\s*[:：]\s*/, '').trim(); }
-  function nodeInner(meta, label, trailing) {
-    return '<i class="fa-duotone fa-regular ' + meta.icon + ' md-nodesel__ico" style="color:' + meta.color + '"></i>' +
-           '<span class="md-nodesel__label">' + label + '</span>' + trailing;
-  }
-  function enhanceOneNodeSelect(sel) {
-    if (sel.__mdEnhanced) return;
-    sel.__mdEnhanced = true;
-    var wrap = document.createElement('div'); wrap.className = 'md-nodesel';
-    var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'md-nodesel__btn';
-    var menu = document.createElement('div'); menu.className = 'md-nodesel__menu';
-    function sync() {
-      var opt = sel.options[sel.selectedIndex]; if (!opt) return;
-      btn.innerHTML = nodeInner(nodeMeta(opt.textContent), nodeLabel(opt.textContent), '<i class="fa-duotone fa-regular fa-chevron-down md-nodesel__caret"></i>');
-      var items = menu.querySelectorAll('.md-nodesel__item');
-      for (var k = 0; k < items.length; k++) items[k].classList.toggle('active', items[k].getAttribute('data-value') === sel.value);
-    }
-    for (var j = 0; j < sel.options.length; j++) {
-      var opt = sel.options[j];
-      var item = document.createElement('div'); item.className = 'md-nodesel__item'; item.setAttribute('data-value', opt.value);
-      item.innerHTML = nodeInner(nodeMeta(opt.textContent), nodeLabel(opt.textContent), '<i class="fa-duotone fa-regular fa-check md-nodesel__check"></i>');
-      (function (val) {
-        item.addEventListener('click', function (e) {
-          e.stopPropagation();
-          if (sel.value !== val) { sel.value = val; sel.dispatchEvent(new Event('change', {bubbles: true})); }
-          sync(); menu.classList.remove('show');
-        });
-      })(opt.value);
-      menu.appendChild(item);
-    }
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var open = menu.classList.contains('show');
-      document.querySelectorAll('.md-nodesel__menu.show').forEach(function (m) { m.classList.remove('show'); });
-      if (!open) menu.classList.add('show');
-    });
-    sel.parentNode.insertBefore(wrap, sel);
-    wrap.appendChild(btn); wrap.appendChild(menu); wrap.appendChild(sel);
-    sel.style.display = 'none';
-    sync();
-  }
-  function enhanceNodeSelects() {
-    var sels = document.querySelectorAll('.app-server-select');
-    for (var i = 0; i < sels.length; i++) enhanceOneNodeSelect(sels[i]);
-  }
 
   /* 网站设置: turn native <select data-control=select2> into a real MUI dropdown component
    * (native selects are ugly). select2 ships + its dropdown is MUI-styled in material.css.
@@ -361,10 +304,6 @@
       '<div class="md-user-cell__text">' + value +
       '<span class="md-guest-cell__tag">' + i18n('游客') + '</span></div></div>';
   };
-  document.addEventListener('click', function () {
-    document.querySelectorAll('.md-nodesel__menu.show').forEach(function (m) { m.classList.remove('show'); });
-  });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(enhanceNodeSelects);
 
   function startObserver() {
     if (!document.body || !window.MutationObserver) return;
@@ -373,7 +312,7 @@
         if (muts[i].addedNodes && muts[i].addedNodes.length) { queueScan(); return; }
       }
     }).observe(document.body, { childList: true, subtree: true });
-    tagFloatables(); refreshAll(); enhanceNodeSelects(); initSettingsSelect2();
+    tagFloatables(); refreshAll(); initSettingsSelect2();
   }
   if (document.readyState !== 'loading') startObserver();
   else document.addEventListener('DOMContentLoaded', startObserver);

@@ -454,7 +454,6 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
 :root[data-theme] .hover-shadow:hover,
 :root[data-theme] .hover-elevate-up:hover { box-shadow: var(--md-e6) !important; }
 
-
 /* Dark legibility for Metronic hard-hex text utilities */
 :root[data-theme="dark"] .text-dark { color: var(--md-on-surface) !important; }
 :root[data-theme="dark"] .text-muted { color: var(--md-on-surface-med) !important; }
@@ -789,7 +788,7 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
  * ============================================================= */
 :root[data-theme] #kt_header .header-menu { align-items: center; }
 
-/* nav items (应用商店 / lizhipay / 开发者 / balance) → clean MUI pill chips */
+/* nav items (lizhipay / balance 等) → clean MUI pill chips */
 :root[data-theme] #kt_header .header-menu .a-badge {
   display: inline-flex; align-items: center; gap: 6px;
   height: 34px; padding: 0 14px; margin: 0 3px;
@@ -801,7 +800,6 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
 :root[data-theme] #kt_header .header-menu .a-badge-success { background: rgba(var(--md-success-rgb), .12) !important; color: var(--md-success) !important; }
 :root[data-theme] #kt_header .header-menu .a-badge-warning { background: rgba(var(--md-warning-rgb), .14) !important; color: var(--md-warning) !important; }
 :root[data-theme] #kt_header .header-menu .a-badge-light   { background: var(--md-hover-overlay) !important; color: var(--md-on-surface) !important; }
-:root[data-theme] #kt_header .app-store-main > a.a-badge  { background: rgba(var(--md-primary-rgb), .10) !important; color: var(--md-primary) !important; }
 :root[data-theme] #kt_header .header-menu a.a-badge { cursor: pointer; }
 :root[data-theme] #kt_header .header-menu a.a-badge:hover { filter: brightness(.96); }
 :root[data-theme] #kt_header .header-menu .a-badge i { font-size: 13px; }
@@ -815,18 +813,6 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
   color: currentColor;
   font-size: 18px;
   line-height: 1;
-}
-
-/* node select → clean outlined pill */
-:root[data-theme] #kt_header .app-server-select {
-  height: 34px !important;
-  border: 1px solid var(--md-divider) !important;
-  border-radius: var(--md-radius-pill) !important;
-  background: transparent !important;
-  color: var(--md-on-surface-med) !important;
-  padding: 0 30px 0 14px !important;
-  font-size: 13px !important; font-weight: 500;
-  cursor: pointer;
 }
 
 /* avatar → circular MUI avatar with ring, hover lift + online dot */
@@ -855,40 +841,6 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
 :root[data-theme] #md-lang-toggle { border-radius: 50% !important; }
 
 /* node select → custom dropdown with vendor icons (built by material.js) */
-:root[data-theme] .md-nodesel { position: relative; display: inline-flex; align-items: center; }
-:root[data-theme] .md-nodesel__btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 34px; padding: 0 12px 0 14px; margin: 0 3px;
-  border: 1px solid var(--md-divider); border-radius: var(--md-radius-pill);
-  background: transparent; color: var(--md-on-surface); cursor: pointer;
-  font-size: 13px; font-weight: 500; line-height: 1; white-space: nowrap;
-  transition: background-color var(--md-dur-fast) var(--md-ease), border-color var(--md-dur-fast) var(--md-ease);
-}
-:root[data-theme] .md-nodesel__btn:hover { background: var(--md-hover-overlay); border-color: var(--md-on-surface); }
-:root[data-theme] .md-nodesel__ico { width: 16px; text-align: center; font-size: 15px; flex-shrink: 0; }
-:root[data-theme] .md-nodesel__caret { font-size: 11px; color: var(--md-on-surface-med); margin-left: 2px; transition: transform var(--md-dur-fast) var(--md-ease); }
-:root[data-theme] .md-nodesel:has(.md-nodesel__menu.show) .md-nodesel__caret { transform: rotate(180deg); }
-:root[data-theme] .md-nodesel__menu {
-  position: absolute; top: calc(100% + 6px); left: 3px;
-  min-width: calc(100% - 6px); width: max-content;
-  background: var(--md-surface-2); border: 1px solid var(--md-divider);
-  border-radius: var(--md-radius); box-shadow: var(--md-e8);
-  padding: 6px; z-index: 1100;
-  opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top left;
-  transition: opacity var(--md-dur-fast) var(--md-ease), transform var(--md-dur-fast) var(--md-ease), visibility var(--md-dur-fast) var(--md-ease);
-}
-:root[data-theme] .md-nodesel__menu.show { opacity: 1; visibility: visible; transform: none; }
-:root[data-theme] .md-nodesel__item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px; border-radius: var(--md-radius); cursor: pointer;
-  font-size: 13.5px; color: var(--md-on-surface); white-space: nowrap;
-  transition: background-color var(--md-dur-fast) var(--md-ease);
-}
-:root[data-theme] .md-nodesel__item .md-nodesel__label { flex: 1; }
-:root[data-theme] .md-nodesel__item:hover { background: var(--md-hover-overlay); }
-:root[data-theme] .md-nodesel__item.active { background: var(--md-selected-overlay); }
-:root[data-theme] .md-nodesel__check { opacity: 0; color: var(--md-primary); font-size: 12px; }
-:root[data-theme] .md-nodesel__item.active .md-nodesel__check { opacity: 1; }
 
 /* ============================================================= *
  * CONFIG SETTINGS → Material UI  (scoped to .md-settings)
@@ -1156,7 +1108,7 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
   object-fit: cover; background: var(--md-hover-overlay);
   border: 1px solid var(--md-divider);
 }
-/* 商店缓存里没有图标的主题：用首字母色块占位，不留裂图 */
+/* 没带图标（或图标加载失败）的主题：用首字母色块占位，不留裂图 */
 :root[data-theme] .md-theme-opt__icon--ph {
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 600; line-height: 1;
@@ -2798,7 +2750,6 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
     opacity: .72;
 }
 
-
 /* ===== 支付插件：商户配置切换条 =====
    配置表单顶部的一条切换器。一个插件可以有多套商户配置，但大多数站点只有一套——
    所以入口仍是原来那个「配置」按钮，点开直接是表单，多配置只是表单顶上多一排 chip。
@@ -3197,7 +3148,6 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
 @container dash (max-width: 1079.98px) {
   :root[data-theme] .dash__grid { grid-template-columns: minmax(0, 1fr); }
   :root[data-theme] :is(.dash__main, .dash__side) { display: contents; }
-  :root[data-theme] .dash-news { order: 1; }
   :root[data-theme] .dash-earn { order: 2; }
   :root[data-theme] .dash-todo { order: 3; }
   :root[data-theme] .dash-trend { order: 4; }
@@ -3588,47 +3538,6 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
   :root[data-theme] .dash-todo__list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 0 -12px 0 0; }
 }
 
-/* --- 官方公告：固定在左栏最上方（手机上是第一张卡片）。标题 HTML 来自商店接口，保留其文字颜色，只重做容器 --- */
-:root[data-theme] .dash-news__title { display: flex; align-items: center; gap: 8px; }
-:root[data-theme] .dash-news__title > .material-icons-outlined { color: var(--dash-accent); font-size: 20px; }
-:root[data-theme] .dash-news__toggle { display: none; }
-:root[data-theme] .dash-news__list { display: grid; margin: -8px -12px -12px; }
-:root[data-theme] .dash-news__item {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 11px 12px;
-  border-radius: 8px;
-  color: var(--dash-ink);
-  font-size: 13.5px;
-  line-height: 22px;
-  text-decoration: none;
-  transition: background-color var(--md-dur-fast) var(--md-ease);
-}
-:root[data-theme] .dash-news__item + .dash-news__item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 12px;
-  left: 12px;
-  height: 1px;
-  background: var(--dash-line);
-}
-:root[data-theme] a.dash-news__item:hover::before,
-:root[data-theme] a.dash-news__item:hover + .dash-news__item::before { opacity: 0; }
-:root[data-theme] a.dash-news__item:hover { background: var(--md-hover-overlay); color: var(--dash-ink); }
-:root[data-theme] a.dash-news__item:focus-visible { outline: 2px solid var(--md-focus-ring); outline-offset: -2px; }
-:root[data-theme] .dash-news__text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-:root[data-theme] .dash-news__go { flex: none; margin-top: 2px; color: var(--dash-ink-3); font-size: 16px; transition: color var(--md-dur-fast) var(--md-ease); }
-:root[data-theme] a.dash-news__item:hover .dash-news__go { color: var(--dash-accent); }
-:root[data-theme] .dash-news__empty { display: block; padding: 10px 12px; color: var(--dash-ink-3); font-size: 13px; }
-:root[data-theme] .dash-news__list > .dashboard-request-state { margin: 0 12px 10px; }
-@container (min-width: 720px) {
-  :root[data-theme] .dash-news__list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
-  :root[data-theme] .dash-news__item:nth-child(2)::before { opacity: 0; }
-}
-
 /* --- 登录信息 --- */
 :root[data-theme] .dash-account__who { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--dash-line); }
 :root[data-theme] .dash-account__avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--dash-fill); object-fit: cover; }
@@ -3652,6 +3561,6 @@ html[data-theme-pref="auto"]  #md-theme-toggle .md-ico-auto { display: inline-bl
 
 @media (prefers-reduced-motion: reduce) {
   :root[data-theme] .dash-skel { animation: none; }
-  :root[data-theme] :is(.dash-seg__btn, .dash-trend__tab-label, .dash-trend__tab-value, .dash-trend__stage, .dash-data__body, .dash-bars__fill, .dash-todo__row, .dash-news__item) { transition: none; }
+  :root[data-theme] :is(.dash-seg__btn, .dash-trend__tab-label, .dash-trend__tab-value, .dash-trend__stage, .dash-data__body, .dash-bars__fill, .dash-todo__row) { transition: none; }
   :root[data-theme] .dash-trend__tab::after { transition: none; }
 }

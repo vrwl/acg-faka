@@ -1,0 +1,93 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-promote" data-st-page="promote" data-st-table="#promote-table">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("分享与收益")}</span><h1>#{t("推广中心")}</h1><p>#{t("好友通过专属链接注册或购买后，可获得对应分成。")}</p></div>
+            <a class="st-button" href="/user/agent/member"><span class="material-icons-outlined">groups</span>#{t("查看成员")}</a>
+        </header>
+
+        <section class="st-panel st-share-panel st-promo-layout" aria-labelledby="st-share-title">
+            <div class="st-share-panel__content">
+                <div class="st-panel__header">
+                    <div><span class="st-panel__icon material-icons-outlined">link</span><div><h2 id="st-share-title">#{t("专属推广链接")}</h2><p>#{t("复制链接后发送给好友")}</p></div></div>
+                </div>
+                <div class="st-copy-field">
+                    <code>#{$share_url|escape:'html'}</code>
+                    <button type="button" class="st-button st-button--primary clipboard" data-text="#{$share_url|escape:'html'}"><span class="material-icons-outlined">content_copy</span>#{t("复制链接")}</button>
+                </div>
+                <div class="st-notice"><span class="material-icons-outlined">info</span><span>#{t("分成为成交价减去我的拿货价，以硬币入账")}#{if $group}#{t("；当前等级为")} <strong>#{$group.name|escape:'html'}。</strong>#{else}。#{/if}</span></div>
+            </div>
+            <aside class="st-qrcode-card" aria-label="#{t('推广链接二维码')}">
+                <button type="button" class="st-qrcode-trigger" data-st-qrcode-open aria-haspopup="dialog" aria-controls="st-promote-qrcode-dialog">
+                    <span id="share-qrcode" data-url="#{$share_url|escape:'html'}" aria-hidden="true"></span>
+                    <span class="st-qrcode-copy"><strong>#{t("推广二维码")}</strong><small>#{t("点击放大后扫码")}</small></span>
+                    <span class="material-icons-outlined" aria-hidden="true">zoom_in</span>
+                </button>
+            </aside>
+        </section>
+
+        <section class="st-stat-grid st-stat-grid--four" aria-label="#{t('推广数据')}">
+            <div class="st-stat"><span>#{t("推广人数")}</span><strong>#{$children}<small> #{t("人")}</small></strong></div>
+            <div class="st-stat"><span>#{t("推广订单")}</span><strong>#{$promote_orders}<small> #{t("单")}</small></strong></div>
+            <div class="st-stat"><span>#{t("本月收益")}</span><strong><small>#{$config.currency_symbol}</small>#{$promote_month}</strong></div>
+            <div class="st-stat"><span>#{t("累计收益")}</span><strong><small>#{$config.currency_symbol}</small>#{$promote_total}</strong></div>
+        </section>
+
+        <section class="st-panel" aria-labelledby="st-profit-title">
+            <div class="st-panel__header">
+                <div><span class="st-panel__icon material-icons-outlined">calculate</span><div><h2 id="st-profit-title">#{t("商品预计收益")}</h2><p>#{t("按游客成交价估算，可查看 SKU 明细")}</p></div></div>
+            </div>
+            <div class="st-panel__body st-table-wrap"><table id="promote-table"></table></div>
+        </section>
+
+        <section class="st-panel" aria-labelledby="st-promote-orders-title">
+            <div class="st-panel__header">
+                <div><span class="st-panel__icon material-icons-outlined">history</span><div><h2 id="st-promote-orders-title">#{t("最近推广订单")}</h2><p>#{t("最近 8 笔已付款订单")}</p></div></div>
+            </div>
+            <div class="st-stream st-promote-orders-desktop">
+                #{if count($recent) > 0}
+                #{foreach $recent as $o}
+                <div class="st-stream__item">
+                    <img class="st-stream__thumb" src="#{$o.commodity.cover|escape:'html'}" alt="">
+                    <div class="st-stream__content"><strong data-st-inline-html>#{$o.commodity.name|escape:'html'}</strong><span>#{$o.create_time|escape:'html'}</span></div>
+                    <div class="st-stream__value"><strong>#{$config.currency_symbol}#{$o.amount|escape:'html'}</strong>#{if $o.divide_amount > 0}<span>#{t("分成")} #{$config.currency_symbol}#{$o.divide_amount|escape:'html'}</span>#{/if}</div>
+                </div>
+                #{/foreach}
+                #{else}
+                <div class="st-empty"><span class="material-icons-outlined">share</span><strong>#{t("暂无推广订单")}</strong><p>#{t("分享专属链接后，订单会显示在这里。")}</p></div>
+                #{/if}
+            </div>
+            <section class="st-record-mobile-list st-promote-orders-mobile" data-st-record-page="promote-order" aria-label="#{t('最近推广订单')}">
+                #{if count($recent) > 0}
+                <ul class="st-record-mobile-items">
+                    #{foreach $recent as $o}
+                    <li>
+                        <article class="st-record-mobile-row st-promote-order-mobile-row" aria-label="#{$o.commodity.name|escape:'html'}，#{t('成交金额')} #{$o.amount|escape:'html'} #{t('元')}#{if $o.divide_amount > 0}，#{t('分成')} #{$o.divide_amount|escape:'html'} #{t('元')}#{/if}">
+                            <span class="st-record-mobile-icon"><img src="#{$o.commodity.cover|escape:'html'}" alt="" loading="lazy"></span>
+                            <span class="st-record-mobile-copy"><span class="st-record-mobile-eyebrow">#{t("推广订单")}</span><strong data-st-inline-html>#{$o.commodity.name|escape:'html'}</strong><small>#{$o.create_time|escape:'html'}</small></span>
+                            <span class="st-record-mobile-aside"><span class="st-record-mobile-status is-on">#{if $o.divide_amount > 0}#{t("分成")} #{$config.currency_symbol}#{$o.divide_amount|escape:'html'}#{else}#{t("已付款")}#{/if}</span><small>#{t("成交")} #{$config.currency_symbol}#{$o.amount|escape:'html'}</small></span>
+                        </article>
+                    </li>
+                    #{/foreach}
+                </ul>
+                #{else}
+                <div class="st-record-mobile-state"><span class="material-icons-outlined" aria-hidden="true">share</span><strong>#{t("暂无推广订单")}</strong><small>#{t("分享专属链接后，订单会显示在这里。")}</small></div>
+                #{/if}
+            </section>
+        </section>
+    </main>
+    <dialog class="st-dialog st-sku-dialog" data-st-sku-dialog aria-labelledby="st-sku-dialog-title">
+        <header class="st-dialog-header"><div><span class="st-kicker">#{t("收益明细")}</span><h2 id="st-sku-dialog-title">#{t("SKU 预计收益")}</h2></div><button type="button" class="st-icon-button" data-st-sku-close aria-label="#{t('关闭')}"><span class="material-icons-outlined">close</span></button></header>
+        <div class="st-dialog-body" data-st-sku-content><div class="st-loading"><span class="st-spinner"></span><span>#{t("正在读取 SKU 收益…")}</span></div></div>
+    </dialog>
+    <dialog class="st-dialog st-qrcode-dialog" id="st-promote-qrcode-dialog" data-st-qrcode-dialog aria-labelledby="st-qrcode-dialog-title">
+        <header class="st-dialog-header"><div><span class="st-kicker">#{t("扫码分享")}</span><h2 id="st-qrcode-dialog-title">#{t("推广链接二维码")}</h2></div><button type="button" class="st-icon-button" data-st-qrcode-close aria-label="#{t('关闭二维码')}"><span class="material-icons-outlined">close</span></button></header>
+        <div class="st-dialog-body st-qrcode-dialog__body">
+            <div id="share-qrcode-large" data-url="#{$share_url|escape:'html'}" aria-label="#{t('推广链接二维码')}"></div>
+            <p>#{t("使用手机扫码打开专属推广链接")}</p>
+        </div>
+    </dialog>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Promote.js'))}
+#{include file="../Common/Footer.html"}

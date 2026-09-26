@@ -1,0 +1,9 @@
+#{include file="../../Common/App/MemberTop.html" laPage="coupon-table" laTitle=t("优惠券")}
+
+#{include file="../../Part/Toolbar.html" laAdd=t("生成优惠券") laAddIcon="gift" laBulk=1 laSell=0 laExport=t("导出筛选优惠券") laApp=1}
+
+<div class="la-tablecard la-tablecard--app">
+    <table id="coupon-table"></table>
+</div>
+
+#{include file="../../Common/App/MemberBottom.html" laCtrl="/assets/user/controller/business/coupon.js"}

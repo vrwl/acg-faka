@@ -1,0 +1,12 @@
+#{* 洛杉矶 · 认证页外壳（手机端）。参数：laPage / laTitle / laSub *}
+#{include file="./Head.html" laArea="auth" laPage=$laPage|default:'auth'}
+
+<main class="la-app" data-la-app data-la-page-in>
+    #{include file="./Bar.html" laBack=1 laTitle=$laTitle|default:$title}
+    <div class="la-app__scroll" data-la-scroll>
+        <section class="la-view la-authapp">
+            <div class="la-authapp__brand">
+                <span class="la-logo__mark la-authapp__mark has-img" aria-hidden="true"><img class="la-logo__img" src="#{$favicon|escape:'html'}?v=#{$app.version|escape:'html'}" alt="" width="34" height="34" decoding="async"></span>
+                <strong>#{$config.shop_name|escape:'html'}</strong>
+                #{if $laSub}<p>#{$laSub|escape:'html'}</p>#{/if}
+            </div>

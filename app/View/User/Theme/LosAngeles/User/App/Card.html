@@ -1,0 +1,9 @@
+#{include file="../../Common/App/MemberTop.html" laPage="user-card-table" laTitle=t("卡密管理")}
+
+#{include file="../../Part/Toolbar.html" laAdd=t("上传卡密") laAddIcon="upload" laBulk=1 laSell=1 laExport=t("导出筛选卡密") laApp=1}
+
+<div class="la-tablecard la-tablecard--app">
+    <table id="user-card-table"></table>
+</div>
+
+#{include file="../../Common/App/MemberBottom.html" laCtrl="/assets/user/controller/business/card.js"}

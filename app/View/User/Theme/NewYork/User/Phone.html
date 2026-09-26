@@ -1,0 +1,25 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-page-shell-security">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("手机设置")}</h1><p>#{t("更新用于登录与安全验证的手机号码。")}</p></div>
+            <span class="ny-page-intro__icon material-icons-outlined">smartphone</span>
+        </section>
+        <section class="ny-panel ny-security-panel">
+            #{include file="../Common/SecurityNav.html"}
+            <div class="ny-security-form-layout">
+                <form class="layui-form form-data ny-compact-form">
+                    <div class="ny-form-section__head"><span class="material-icons-outlined">phone_iphone</span><div><strong>#{t("更换手机号")}</strong><small>#{t("验证码将发送到新的手机号码")}</small></div></div>
+                    <label class="ny-field"><span>#{t("当前手机")}</span><input type="text" value="#{$user.phone}" autocomplete="off" class="layui-input" placeholder="#{t('未绑定')}" disabled></label>
+                    <label class="ny-field"><span>#{t("新手机号")}</span><input type="text" name="phone" autocomplete="tel" class="layui-input" placeholder="#{t('请输入新手机号')}"></label>
+                    <label class="ny-field"><span>#{t("短信验证码")}</span><span class="ny-code-field"><input type="text" name="phone_captcha" autocomplete="one-time-code" class="layui-input" placeholder="#{t('6 位验证码')}"><button type="button" class="send-captcha">#{t("获取验证码")}</button></span></label>
+                    <div class="ny-form-actions"><button type="button" class="ny-button ny-button--primary save-data"><span class="material-icons-outlined">save</span>#{t("保存修改")}</button></div>
+                </form>
+                <aside class="ny-security-guide"><span class="material-icons-outlined">sms</span><strong>#{t("收不到短信？")}</strong><ul><li>#{t("确认手机信号正常")}</li><li>#{t("检查号码是否输入正确")}</li><li>#{t("一分钟后可重新发送")}</li></ul></aside>
+            </div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/security/phone.js")}
+#{include file="../Common/Footer.html"}

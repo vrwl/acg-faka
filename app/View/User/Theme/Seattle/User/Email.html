@@ -1,0 +1,24 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-security-page" data-st-page="email">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("登录与通知")}</span><h1>#{t("邮箱设置")}</h1><p>#{t("更新用于登录和接收安全通知的邮箱地址。")}</p></div>
+        </header>
+        <section class="st-panel st-security-panel">
+            #{include file="../Common/SecurityNav.html"}
+            <div class="st-security-form-layout">
+                <form class="layui-form form-data st-compact-form">
+                    <div class="st-section-header"><span class="st-panel__icon material-icons-outlined">alternate_email</span><div><h2>#{t("更换邮箱")}</h2><p>#{t("验证码会发送到新的邮箱地址")}</p></div></div>
+                    <label class="st-field"><span>#{t("当前邮箱")}</span><input type="text" value="#{$user.email}" autocomplete="off" class="layui-input" placeholder="#{t('未绑定')}" disabled></label>
+                    <label class="st-field"><span>#{t("新邮箱")}</span><input type="text" name="email" autocomplete="email" class="layui-input" placeholder="#{t('请输入新邮箱')}"></label>
+                    <label class="st-field"><span>#{t("邮箱验证码")}</span><span class="st-code-field"><input type="text" name="email_captcha" autocomplete="one-time-code" class="layui-input" placeholder="#{t('6 位验证码')}"><button type="button" class="send-captcha">#{t("获取验证码")}</button></span></label>
+                    <div class="st-form-actions"><button type="submit" class="st-button st-button--primary save-data"><span class="material-icons-outlined">save</span><span class="st-security-save-label">#{t("保存修改")}</span></button></div>
+                </form>
+                <aside class="st-side-note"><span class="material-icons-outlined">mark_email_read</span><h2>#{t("收不到邮件？")}</h2><ul><li>#{t("检查地址是否输入正确")}</li><li>#{t("查看垃圾邮件文件夹")}</li><li>#{t("一分钟后可重新发送")}</li></ul></aside>
+            </div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/SecurityContact.js'))}
+#{include file="../Common/Footer.html"}

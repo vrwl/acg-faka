@@ -1,0 +1,14 @@
+#{include file="./Header.html"}
+<main class="st-page st-closed st-closed-page">
+    <section class="st-closed__content st-closed-state">
+        <div class="st-closed__icon"><span class="material-icons-outlined" aria-hidden="true">schedule</span></div>
+        <span class="st-kicker">Temporarily unavailable</span>
+        <h1>#{t("店铺暂时休息")}</h1>
+        <div class="st-rich-content">#{$config.closed_message}</div>
+        <div class="st-state-actions">
+            <a class="st-button st-button-primary" href="/user/index/query"><span class="material-icons-outlined" aria-hidden="true">receipt_long</span><span>#{t("查询已有订单")}</span></a>
+            #{if $config.service_url}<a class="st-button st-button-quiet" href="#{$config.service_url}" target="_blank" rel="noopener noreferrer"><span class="material-icons-outlined" aria-hidden="true">support_agent</span><span>#{t("联系店铺客服")}</span></a>#{/if}
+        </div>
+    </section>
+</main>
+#{include file="./Footer.html"}

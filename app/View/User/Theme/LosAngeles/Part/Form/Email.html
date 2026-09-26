@@ -1,0 +1,21 @@
+#{include file="../SecurityNav.html"}
+<form class="layui-form form-data la-form la-form--card">
+    <div class="la-field">
+        <label class="la-label">#{t("当前邮箱")}</label>
+        <input class="la-input" type="text" value="#{$user.email|escape:'html'}" placeholder="#{t('尚未绑定')}" disabled>
+    </div>
+    <div class="la-field">
+        <label class="la-label">#{t("新邮箱")}</label>
+        <input class="la-input" type="email" name="email" autocomplete="off" placeholder="#{t('请输入要绑定的邮箱')}">
+    </div>
+    <div class="la-field">
+        <label class="la-label">#{t("邮箱验证码")}</label>
+        <div class="la-sendrow">
+            <input class="la-input" type="text" name="email_captcha" autocomplete="off" placeholder="#{t('查收邮件中的验证码')}">
+            <button type="button" class="la-btn la-btn--line send-captcha">#{t("获取验证码")}</button>
+        </div>
+    </div>
+    <button type="button" class="la-btn la-btn--brand la-btn--lg save-data">
+        #{\App\View\User\Theme\LosAngeles\Icons::svg('check')}<span>#{t("保存修改")}</span>
+    </button>
+</form>

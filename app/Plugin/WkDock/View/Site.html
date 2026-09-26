@@ -1,0 +1,200 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    <!--begin::Toolbar-->
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <!--end::Toolbar-->
+    <!--begin::Post-->
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="container-fluid">
+            <!--begin::Tables Widget 9-->
+            <div class="card mb-5 mb-xl-8">
+                <!--begin::Header-->
+                <div class="card-header border-0">
+                    <div class="card-toolbar">
+                        <button class="btn btn-sm btn-light-primary btn-app-create me-3"><i class="fa-duotone fa-regular fa-circle-plus"></i>
+                            新增站点
+                        </button>
+                        <button class="btn btn-sm btn-light-danger btn-app-del me-3"><i class="fa-duotone fa-regular fa-trash-can"></i>
+                            移除选中的站点
+                        </button>
+                    </div>
+                </div>
+                <!--end::Header-->
+
+                <div class="card-body py-3">
+                    <table id="wk-site-table"></table>
+                </div>
+            </div>
+
+            <!--end::Tables Widget 9-->
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Post-->
+</div>
+<!--end::Content-->
+
+<script>
+    documentReady(() => {
+        !function () {
+            const table = new Table('/plugin/WkDock/api/site/data', '#wk-site-table');
+            table.setPagination(15, [15, 25, 50, 100]);
+
+            table.setColumns([
+                {checkbox: true},
+                {field: 'id', title: 'ID'},
+                {
+                    field: 'name',
+                    title: '站点名称',
+                    formatter: (_, item) => format.badge(item?.name || '-', 'a-badge-light')
+                },
+                {
+                    field: 'domain',
+                    title: '站点地址',
+                    formatter: (_, item) => {
+                        if (!item?.domain) {
+                            return '-';
+                        }
+                        return `<a class="text-primary" href="${item.domain}" target="_blank">${item.domain}</a>`;
+                    }
+                },
+                {
+                    field: 'account',
+                    title: '账号(uid)',
+                    formatter: (_, item) => format.badge(item?.account || '-', 'a-badge-light')
+                },
+                {
+                    field: 'balance',
+                    title: '余额',
+                    formatter: (_, item) => `<span class="wk-balance-${item?.id}">${format.badge(item?.balance ?? 0, 'a-badge-primary')}</span>`
+                },
+                {
+                    field: 'rate',
+                    title: '价格倍率',
+                    formatter: (_, item) => format.badge(item?.rate ?? 1, 'a-badge-warning')
+                },
+                {
+                    field: 'connect_status',
+                    title: '连接状态',
+                    formatter: (_, item) => `<span class="wk-connect-${item?.id}">${format.badge('测试中..', 'a-badge-primary')}</span>`
+                },
+                {
+                    field: 'remark',
+                    title: '备注',
+                    formatter: (_, item) => item?.remark || '-'
+                },
+                {
+                    field: 'operation',
+                    title: '操作',
+                    type: 'button',
+                    buttons: [
+                        {
+                            icon: 'fa-duotone fa-regular fa-pen-to-square',
+                            class: 'text-primary',
+                            click: (event, value, row) => {
+                                modal(util.icon('fa-duotone fa-regular fa-pen-to-square me-1') + ' 修改站点', row);
+                            }
+                        },
+                        {
+                            icon: 'fa-duotone fa-regular fa-trash-can text-danger',
+                            click: (event, value, row) => {
+                                message.ask('您正在移除该站点，是否要继续？', () => {
+                                    util.post('/plugin/WkDock/api/site/del', {list: [row.id]}, res => {
+                                        message.success(res.msg || '删除成功');
+                                        table.refresh();
+                                    });
+                                });
+                            }
+                        }
+                    ]
+                }
+            ]);
+
+            table.setSearch([
+                {title: '名称', name: 'search-name', type: 'input'},
+                {title: '地址', name: 'equal-domain', type: 'input'}
+            ]);
+
+            table.onComplete((tableElement, unique, response) => {
+                const list = Array.isArray(response?.data) ? response.data : (response?.data?.list ?? []);
+                list.forEach(item => {
+                    const target = tableElement.find(`.wk-connect-${item.id}`);
+                    if (target.length === 0) {
+                        return;
+                    }
+                    target.html(format.badge('测试中..', 'a-badge-warning'));
+                    $.post('/plugin/WkDock/api/site/connect', {id: item.id}, run => {
+                        if (run.code === 200) {
+                            target.html(format.badge('正常', 'a-badge-success'));
+                            //检测成功：connect 已把最新余额写入数据库，这里同步刷新余额列
+                            const balance = tableElement.find(`.wk-balance-${item.id}`);
+                            if (balance.length > 0 && run.data) {
+                                balance.html(format.badge(run.data.balance ?? 0, 'a-badge-primary'));
+                            }
+                        } else {
+                            target.html(format.badge(run.msg || '异常', 'a-badge-danger'));
+                        }
+                    });
+                });
+            });
+
+            const modal = (title, assign = {}) => {
+                component.popup({
+                    submit: '/plugin/WkDock/api/site/save',
+                    tab: [
+                        {
+                            name: title,
+                            form: [
+                                {title: '名称', name: 'name', type: 'input', placeholder: '请输入站点名称', required: true},
+                                {
+                                    title: '地址',
+                                    name: 'domain',
+                                    type: 'input',
+                                    placeholder: '需要带http://或者https://，如 https://www.2025wk.top',
+                                    required: true
+                                },
+                                {title: '账号(uid)', name: 'account', type: 'input', placeholder: '平台后台API调用状态中的UID', required: true},
+                                {title: '密钥(key)', name: 'password', type: 'input', placeholder: '平台后台API调用状态中的KEY', required: true},
+                                {
+                                    title: '价格倍率',
+                                    name: 'rate',
+                                    type: 'input',
+                                    placeholder: '售价=成本x倍率，默认1',
+                                    default: 1,
+                                    tips: '生成商品时：售价 = 平台成本价 x 该倍率'
+                                },
+                                {title: '备注', name: 'remark', type: 'textarea', placeholder: '选填'},
+                                {title: 'id', name: 'id', type: 'input', hide: true}
+                            ]
+                        }
+                    ],
+                    assign,
+                    autoPosition: true,
+                    height: 'auto',
+                    width: '680px',
+                    done: () => {
+                        table.refresh();
+                    }
+                });
+            };
+
+            table.setDeleteSelector('.btn-app-del', ids => {
+                message.ask('您确定要删除已经选中的站点吗？删除后其商品池关联将被清空！', () => {
+                    util.post('/plugin/WkDock/api/site/del', {list: ids}, res => {
+                        message.success(res.msg || '删除成功');
+                        table.refresh();
+                    });
+                });
+            });
+
+            table.render();
+
+            $('.btn-app-create').click(() => {
+                modal(`${util.icon('fa-duotone fa-regular fa-circle-plus me-1')} 新增站点`);
+            });
+        }();
+    });
+</script>
+#{include file=$manage_view_path|cat:"Footer.html"}

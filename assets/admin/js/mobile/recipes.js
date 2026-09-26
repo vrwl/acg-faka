@@ -3,7 +3,7 @@
 
     var recipes = [];
 
-    //站点货币符号：读 Helper 注入的 CURRENCY 变量，缺席时兜底 ¥（应用商店的 ￥ 是真实 CNY 计价，不走这里）
+    //站点货币符号：读 Helper 注入的 CURRENCY 变量，缺席时兜底 ¥
     function currencySymbol() {
         var currency = typeof getVar === 'function' ? getVar('CURRENCY') : null;
         return currency && currency.symbol ? String(currency.symbol) : '¥';
@@ -67,32 +67,12 @@
         return descriptor;
     }
 
-    function payPluginUpdateVersionField() {
-        var descriptor = field('__adminMobilePayUpdateVersion', i18n('发现新版本'), 'success');
-        descriptor.compactLabel = false;
-        descriptor.format = function (value) {
-            var version = String(value == null ? '' : value).trim().replace(/^v/i, '');
-            return version ? i18n('发现新版本：v') + version : '';
-        };
-        return descriptor;
-    }
-
     function genericPluginVersionField() {
         var descriptor = field('version', i18n('版本'));
         descriptor.tone = 'neutral';
         descriptor.format = function (value, row) {
             var version = row && row.VERSION;
             return version ? 'v' + version : value;
-        };
-        return descriptor;
-    }
-
-    function genericPluginUpdateVersionField() {
-        var descriptor = field('__adminMobilePluginUpdateVersion', i18n('发现新版本'), 'success');
-        descriptor.compactLabel = false;
-        descriptor.format = function (value) {
-            var version = String(value == null ? '' : value).trim().replace(/^v/i, '');
-            return version ? i18n('发现新版本：v') + version : '';
         };
         return descriptor;
     }
@@ -1348,7 +1328,7 @@
         media: media('icon', 'rounded', 'extension'),
         recordSheet: true,
         status: [field('status', i18n('启用状态'))],
-        metrics: [genericPluginVersionField(), genericPluginUpdateVersionField()],
+        metrics: [genericPluginVersionField()],
         metricLimit: 2,
         summary: [field('status', i18n('启用状态')), genericPluginVersionField(), field('author', i18n('开发者'))],
         recordDetails: false,
@@ -1358,8 +1338,7 @@
             primary: [action('operation:2', i18n('配置插件'))],
             more: [
                 action('operation:1', i18n('启用插件'), {icon: 'play_circle'}),
-                action('operation:4', i18n('更新插件')),
-                action('operation:5', i18n('查看文档')),
+                action('operation:4', i18n('查看文档')),
                 action('operation:3', i18n('查看日志')),
                 action('operation:0', i18n('停用插件'), { danger: true }),
                 action('uninstall:0', i18n('卸载插件'), { danger: true })
@@ -1369,7 +1348,7 @@
                 selector('.plugin-stop', i18n('停止插件'), { role: 'batch', danger: true }),
                 selector('.plugin-restart', i18n('重启插件'), { role: 'batch' })
             ],
-            toolbar: [selector('.btn-app-create', i18n('安装插件'), { role: 'primary' }), selector('.plugin-update-all', i18n('更新全部插件'))]
+            toolbar: [selector('.plugin-install', i18n('本地上传插件'), { role: 'primary' })]
         },
         workflow: 'plugin-management'
     });
@@ -1407,7 +1386,7 @@
         subtitle: field('info.description', i18n('插件简介')),
         media: media('icon', 'rounded', 'extension'),
         recordSheet: true,
-        metrics: [payPluginVersionField(), payPluginUpdateVersionField()],
+        metrics: [payPluginVersionField()],
         summary: [payPluginVersionField(), field('author', i18n('开发者'))],
         recordBadges: [{
             field: 'info.options',
@@ -1420,8 +1399,8 @@
         details: [field('info.description', i18n('插件说明')), field('options', i18n('功能')), field('author', i18n('开发者'))],
         actions: {
             primary: [action('operation:0', i18n('配置插件'))],
-            more: [action('operation:2', i18n('更新插件')), action('operation:1', i18n('查看日志')), action('uninstall:0', i18n('卸载插件'), { danger: true })],
-            toolbar: [selector('.btn-app-create', i18n('安装更多插件'), { role: 'primary' })]
+            more: [action('operation:1', i18n('查看日志')), action('uninstall:0', i18n('卸载插件'), { danger: true })],
+            toolbar: [selector('.pay-plugin-install', i18n('本地上传插件'), { role: 'primary' })]
         },
         workflow: 'payment-plugin-management'
     });
@@ -1564,223 +1543,6 @@
             toolbar: [selector('.btn-app-create', i18n('新增店铺'), { role: 'primary' })]
         },
         workflow: 'application-store'
-    });
-
-    add({
-        id: 'admin-license-transfer',
-        title: '授权',
-        pageType: 'list',
-        match: { queryUrls: ['/admin/api/app/levels'] },
-        primary: [
-            field('server_ip', i18n('服务器 IP')),
-            {
-                field: 'level',
-                label: '产品名称',
-                format: function (value, row) {
-                    var product = String(value || '').trim();
-                    if (!product || product === '-') product = Number(row && row.level) === 0 ? i18n('专业版') : i18n('企业版');
-                    var expire = String(row && row.expire_date || '').trim() || i18n('未提供');
-                    return product + i18n(' · 到期 ') + expire;
-                }
-            }
-        ],
-        status: [],
-        metrics: [],
-        autoMetrics: false,
-        details: [],
-        actions: {}
-    });
-
-    add({
-        id: 'admin-store-home',
-        title: '应用商店',
-        pageType: 'store-list',
-        match: { routes: ['/admin/store/home'], queryUrls: ['/admin/api/app/plugins'] },
-        primary: [{field: 'plugin_name', label: '软件名称', inlineHtml: true}, field('description', i18n('简介'))],
-        media: media('icon', 'rounded', 'apps'),
-        status: [],
-        metrics: [],
-        autoMetrics: false,
-        cardCta: {
-            label: '获取',
-            title: '应用详情',
-            subtitle: '',
-            show: function (row) {
-                var installed = Number(row && row.install) === 1;
-                var unpurchasedPaidApp = Number(row && row.price) > 0
-                    && !(row && row.has && row.has.has === true)
-                    && !(row && row.owned === true);
-                return !installed || unpurchasedPaidApp;
-            },
-            offer: {
-                field: 'price',
-                label: '应用价格',
-                format: function (value, row) {
-                    var price = Number(row && row.price);
-                    if (!Number.isFinite(price)) return '-';
-                    return price === 0 ? i18n('免费') : '￥' + price.toFixed(2);
-                },
-                benefits: [
-                    {
-                        label: '企业版免费',
-                        tone: 'success',
-                        show: function (row) {
-                            return Number(row && row.price) > 0 && [1, 2].indexOf(Number(row && row.group)) >= 0;
-                        }
-                    },
-                    {
-                        label: '专业版免费',
-                        tone: 'neutral',
-                        show: function (row) {
-                            return Number(row && row.price) > 0 && Number(row && row.group) === 1;
-                        }
-                    }
-                ]
-            }
-        },
-        details: [
-            field('user', i18n('开发商')),
-            field('type', i18n('类型')),
-            {
-                field: 'has.expire',
-                label: '授权',
-                format: function (value, row) {
-                    if (Number(row && row.price) === 0) return i18n('免费使用');
-                    if (!row || !row.has || row.has.has !== true) return row && row.owned === true ? i18n('已购买，可转移授权') : i18n('尚未购买');
-                    if (/^(?:creator|official)$/i.test(String(value || ''))) return i18n('永久授权');
-                    return value || i18n('已授权');
-                }
-            },
-            {
-                field: 'install',
-                label: '当前状态',
-                format: function (value, row) {
-                    var installed = Number(row && row.install) === 1 ? i18n('已安装') : i18n('未安装');
-                    if (Number(row && row.price) === 0) return installed + i18n(' · 免费使用');
-                    if (row && row.has && row.has.has === true) return installed + i18n(' · 已授权');
-                    return installed + (row && row.owned === true ? i18n(' · 已购买') : i18n(' · 未购买'));
-                }
-            },
-            {
-                field: 'version',
-                label: '版本',
-                format: function (value, row) {
-                    var latest = String(row && row.version || '').trim();
-                    var local = String(row && row.local_version || '').trim();
-                    if (!latest && !local) return '-';
-                    if (!local) return i18n('最新 v') + latest;
-                    if (!latest || latest === local) return 'v' + local + i18n(' · 已是最新');
-                    return i18n('本地 v') + local + i18n(' · 最新 v') + latest;
-                }
-            },
-            {
-                field: 'web_site',
-                label: '官网',
-                show: function (row) {
-                    var website = String(row && row.web_site || '').trim();
-                    return Boolean(website && website !== '#');
-                }
-            }
-        ],
-        selection: false,
-        actions: {
-            showPrimary: false,
-            primary: [action('operation:0', i18n('安装'))],
-            more: [
-                action('operation:1', i18n('更新')),
-                action('operation:2', i18n('解绑'), { danger: true }),
-                action('operation:4', i18n('购买')),
-                action('operation:5', i18n('访问官网')),
-                action('operation:3', i18n('卸载'), { danger: true })
-            ],
-            toolbar: [
-                selector('.update-pro', i18n('开通企业版'), {
-                    role: 'primary',
-                    icon: 'workspace_premium',
-                    trailingIcon: 'arrow_forward',
-                    className: 'admin-mobile-store-enterprise-cta admin-mobile-store-enterprise-cta--primary',
-                    description: i18n('全部插件免费 · 专属技术支持')
-                }),
-                selector('.bind-pro', i18n('绑定专业版/企业版'), {
-                    icon: 'link',
-                    trailingIcon: 'arrow_forward',
-                    className: 'admin-mobile-store-enterprise-cta admin-mobile-store-enterprise-cta--secondary',
-                    description: i18n('转移已有授权 · 原设备将解除绑定')
-                })
-            ]
-        },
-        workflow: 'owned-applications'
-    });
-
-    add({
-        id: 'admin-store-developer',
-        title: '开发者中心',
-        pageType: 'store-list',
-        match: { routes: ['/admin/store/developer'], queryUrls: ['/admin/api/app/developerPlugins'] },
-        primary: [{field: 'plugin_name', label: '应用名称', inlineHtml: true}, field('description', i18n('简介'))],
-        media: media('icon', 'rounded', 'developer_mode'),
-        status: [],
-        metrics: [],
-        autoMetrics: false,
-        cardCta: {
-            label: '管理',
-            title: '应用管理',
-            subtitle: '',
-            offer: {
-                field: 'price',
-                label: '市场售价',
-                format: function (value, row) {
-                    var price = Number(row && row.price);
-                    if (!Number.isFinite(price)) return '-';
-                    return price === 0 ? i18n('免费') : '￥' + price.toFixed(2);
-                },
-                benefits: [
-                    {
-                        label: '企业版免费',
-                        tone: 'success',
-                        show: function (row) {
-                            return Number(row && row.price) > 0 && [1, 2].indexOf(Number(row && row.group)) >= 0;
-                        }
-                    },
-                    {
-                        label: '专业版免费',
-                        tone: 'neutral',
-                        show: function (row) {
-                            return Number(row && row.price) > 0 && Number(row && row.group) === 1;
-                        }
-                    }
-                ]
-            }
-        },
-        details: [
-            field('description', i18n('应用简介')),
-            field('status', i18n('发布状态')),
-            field('type', i18n('应用类型')),
-            {
-                field: 'version',
-                label: '当前版本',
-                format: function (value, row) {
-                    var version = String(row && row.version || value || '').trim().replace(/^v/i, '');
-                    return version && version !== '-' ? 'v' + version : '-';
-                }
-            },
-            field('plugin_key', i18n('应用标识')),
-            {
-                field: 'web_site',
-                label: '官网',
-                show: function (row) {
-                    var website = String(row && row.web_site || '').trim();
-                    return Boolean(website && website !== '#');
-                }
-            }
-        ],
-        selection: false,
-        actions: {
-            primary: [action('operation:1', i18n('上传安装包')), action('operation:2', i18n('上传更新包'))],
-            more: [action('operation:0', i18n('设置定价')), action('operation:3', i18n('访问官网'))],
-            toolbar: [selector('.developerCreatePlugin', i18n('发布应用'), { role: 'primary' })]
-        },
-        workflow: 'developer-applications'
     });
 
     add({

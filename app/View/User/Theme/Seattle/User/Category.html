@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-management-page" data-st-page="category" data-st-controller="/assets/user/controller/business/category.js" data-st-table="#category-table">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main st-main--wide">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("目录结构")}</span><h1>#{t("商品分类")}</h1><p>#{t("用清晰的分类层级组织商品，让顾客更快找到目标。")}</p></div>
+            <div class="st-page-header__actions"><button type="button" class="st-button st-button--primary button-add" aria-label="#{t('新建分类')}"><span class="material-icons-outlined">add</span><span>#{t("新建分类")}</span></button></div>
+        </header>
+        <section class="st-panel st-panel--flush" aria-labelledby="st-category-title">
+            <div class="st-panel__header"><div><strong id="st-category-title">#{t("分类列表")}</strong><small>#{t("支持排序、状态管理与快速编辑")}</small></div><span class="st-panel__icon material-icons-outlined">category</span></div>
+            <div class="st-panel__body st-table-wrap"><table id="category-table" aria-label="#{t('商品分类列表')}"></table></div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Management.js'))}
+#{include file="../Common/Footer.html"}

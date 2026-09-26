@@ -1,0 +1,83 @@
+#{*
+  洛杉矶 · 手机端分类列表（/cat/{id}）
+  APP 形态：顶部返回栏 + 二级分类横滑 + 排序条 + 双列商品流。
+*}
+#{assign var=laCrumb value=\App\View\User\Theme\LosAngeles\Support::crumb($category, $laCatId)}
+#{assign var=laTitle value=\App\View\User\Theme\LosAngeles\Support::catalogTitle($category, $laCatId)}
+#{assign var=laKids value=\App\View\User\Theme\LosAngeles\Support::children($category, $laCatId, 24)}
+#{assign var=laKidsAll value=\App\View\User\Theme\LosAngeles\Support::childCount($category, $laCatId)}
+
+<main class="la-app la-app--flat" data-la-app data-la-page-in>
+    #{* 分类名允许带 HTML（站长塞图标/配色，ViewSafe 对 owner==0 的名字不转义）。
+       PC 端照原样渲染，但手机顶栏是 44px 定高的渐变条，塞进一个带色 <b> 会
+       把行高和配色都搞乱 —— 这里只取纯文本。 *}
+    #{include file="../../Common/App/Bar.html" laBack=1 laTitle=$laTitle|strip_tags|trim|default:$title}
+
+    <div class="la-app__scroll" data-la-scroll>
+        <div class="la-refresh" data-la-refresh aria-hidden="true">
+            <span class="la-refresh__spin">#{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}</span>
+            <span class="la-refresh__txt" data-la-refresh-txt>#{t("下拉刷新")}</span>
+        </div>
+
+        <section class="la-view" data-la-catalog data-cat="#{$laCatId|escape:'html'}">
+            #{if $laKids}
+                #{* 子分类多的时候只出前 24 个，剩下的去分类视图找 *}
+                <div class="la-chiprow la-chiprow--kids">
+                    <a class="la-chip is-on" href="/cat/#{$laCatId|escape:'html'}">#{t("全部")}</a>
+                    #{foreach $laKids as $kid}
+                        <a class="la-chip" href="/cat/#{$kid.id}">#{$kid.name}</a>
+                    #{/foreach}
+                    #{if $laKidsAll > $laKids|@count}
+                        <a class="la-chip la-chip--more" href="/#category">#{t("更多")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                    #{/if}
+                </div>
+            #{elseif $laCrumb|@count > 1}
+                <nav class="la-appcrumb">
+                    #{foreach $laCrumb as $node}
+                        #{if !$node@first}#{\App\View\User\Theme\LosAngeles\Icons::svg('right','la-crumb__sep')}#{/if}
+                        <a href="/cat/#{$node.id}"#{if $node@last} class="is-on"#{/if}>#{$node.name}</a>
+                    #{/foreach}
+                </nav>
+            #{/if}
+
+            #{* 搜索：和首页搜索胶囊同一套外形，占位文字带上分类名；清除钮由 App.Shop.js 按有无内容显隐 *}
+            #{* 分类名取不到（编号无效、树里没有这个节点）时退回不带名字的「在本分类中搜索」，
+               绝不能渲染出一个空书名号 *}
+            #{assign var=laFindName value=$laTitle|strip_tags|trim}
+            <form class="la-catsearch" data-la-inner-search role="search">
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('search')}
+                <input type="search" name="keywords" enterkeyhint="search"
+                       placeholder="#{if $laFindName != ''}#{t('在「N」中搜索')|replace:'N':$laFindName|escape:'html'}#{else}#{t('在本分类中搜索')}#{/if}"
+                       aria-label="#{t('在本分类中搜索')}" autocomplete="off">
+                <button type="button" class="la-catsearch__clear" data-la-inner-clear aria-label="#{t('清除')}" hidden>#{\App\View\User\Theme\LosAngeles\Icons::svg('close')}</button>
+            </form>
+
+            #{* 排序栏吸顶。手机列表是 APP 逻辑：一直往下滑、滑到底自动接下一页，不出电脑端的页码条；
+               件数和「有货」收在同一行右侧，不再单独占一行 *}
+            <div class="la-catsort" data-la-catsort>
+                <div class="la-catsort__tabs" role="tablist">
+                    <button type="button" class="la-catsort__tab is-on" data-la-sort="default">#{t("综合")}</button>
+                    <button type="button" class="la-catsort__tab" data-la-sort="sold">#{t("销量")}</button>
+                    <button type="button" class="la-catsort__tab" data-la-sort="price-asc">
+                        #{t("价格")}<span class="la-sortbar__ar" data-la-sort-ar>#{\App\View\User\Theme\LosAngeles\Icons::svg('up')}</span>
+                    </button>
+                </div>
+                <div class="la-catsort__side">
+                    <span class="la-catsort__count" data-la-count></span>
+                    <label class="la-switch la-switch--sm">
+                        <input type="checkbox" data-la-instock>
+                        <span class="la-switch__track"><span class="la-switch__knob"></span></span>
+                        <span class="la-switch__txt">#{t("有货")}</span>
+                    </label>
+                </div>
+            </div>
+            <div class="la-catsort__hint" data-la-sort-hint hidden></div>
+
+            <div class="la-grid2" data-la-slot="catalog" aria-live="polite"></div>
+            <div class="la-fall__foot">
+                <span class="la-fall__sentinel" data-la-catalog-more></span>
+                <div class="la-fall__end" hidden>#{t("已经到底啦")}</div>
+            </div>
+        </section>
+    </div>
+</main>

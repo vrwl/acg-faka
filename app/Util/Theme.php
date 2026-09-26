@@ -88,4 +88,48 @@ class Theme
         }
         return $plug;
     }
+
+    /**
+     * 取模板图标：优先 Config.php 里的 INFO['ICON']，其次模板目录下的
+     * icon.png / icon.svg。都没有就返回空串，由前端用首字母色块占位。
+     *
+     * @param array $theme Theme::getConfig() 的返回值
+     * @return string 站内绝对路径或 HTTP(S) 地址；无图标时为空串
+     */
+    public static function getIcon(array $theme): string
+    {
+        $info = (array)($theme['info'] ?? []);
+        $key = (string)($info['KEY'] ?? '');
+        $candidates = [];
+        //键名两种写法都认：INFO 里其余键都是大写，但小写 icon 更贴近直觉
+        $declared = trim((string)($info['ICON'] ?? $info['icon'] ?? ''));
+        if ($declared !== '') {
+            $candidates[] = $declared;
+        }
+        if ($key !== '') {
+            $candidates[] = "/app/View/User/Theme/{$key}/icon.png";
+            $candidates[] = "/app/View/User/Theme/{$key}/icon.svg";
+        }
+
+        foreach ($candidates as $candidate) {
+            $candidate = trim($candidate);
+            //必须能安全地拼进 <img src="">：站内绝对路径或 HTTP(S) 地址
+            if (
+                $candidate === ''
+                || strlen($candidate) > 255
+                || str_starts_with($candidate, '//')
+                || preg_match('/[\x00-\x20\x7F<>"\']/u', $candidate)
+                || !preg_match('~^(?:/|https?://)~i', $candidate)
+            ) {
+                continue;
+            }
+            //站内路径再确认文件真的在，外链不检查（为一张图发 HEAD 请求不值得）
+            if ($candidate[0] === '/' && !is_file(BASE_PATH . ltrim($candidate, '/'))) {
+                continue;
+            }
+            return $candidate;
+        }
+
+        return '';
+    }
 }

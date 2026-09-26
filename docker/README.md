@@ -71,7 +71,7 @@ docker compose exec mysql cat /secrets/mysql_root
 
 ## 线程管理器插件
 
-在应用商店装好插件后，进容器执行一次（只需一次，二进制会落在数据卷里）：
+在后台「通用插件」里本地上传装好插件后，进容器执行一次（只需一次，二进制会落在数据卷里）：
 
 ```bash
 docker compose exec app ./app/Plugin/ThreadManager/service.sh install

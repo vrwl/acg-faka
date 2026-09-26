@@ -1,0 +1,68 @@
+#{include file=$manage_view_path|cat:"Header.html"}
+<link rel="stylesheet" href="#{Plugin('Blog','View/Css/admin.css')}">
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+    #{include file=$manage_view_path|cat:"Toolbar.html"}
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <div id="kt_content_container" class="container-fluid">
+            <div class="blog-admin">
+
+                <header class="ba-hero">
+                    <div class="ba-hero__inner">
+                        <span class="ba-hero__icon"><i class="blogi blogi-comment"></i></span>
+                        <div class="ba-hero__text">
+                            <h1 class="ba-hero__title">#{t("博客评论")}</h1>
+                            <p class="ba-hero__desc">#{t("点击内容可看全文与上下文；回复读者时会自动通过对方的评论")}</p>
+                        </div>
+                        <div class="ba-hero__actions">
+                            <a class="ba-btn ba-btn--ghost" href="/plugin/Blog/panel/settings#s-comment">
+                                <i class="blogi blogi-settings"></i> #{t("评论设置")}
+                            </a>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="ba-stats" data-admin-mobile-stats="mini">
+                    <div class="ba-stat ba-stat--warning">
+                        <span class="ba-stat__icon"><i class="blogi blogi-pending"></i></span>
+                        <div class="ba-stat__body">
+                            <div class="ba-stat__label">#{t("待审")}</div>
+                            <div class="ba-stat__value is-empty" data-stat="comments_pending">—</div>
+                        </div>
+                    </div>
+                    <div class="ba-stat ba-stat--success">
+                        <span class="ba-stat__icon"><i class="blogi blogi-check-circle"></i></span>
+                        <div class="ba-stat__body">
+                            <div class="ba-stat__label">#{t("全部评论")}</div>
+                            <div class="ba-stat__value is-empty" data-stat="comments_total">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-5 mb-xl-8">
+                    <div class="card-header border-0">
+                        <div class="card-toolbar">
+                            <button class="btn btn-sm btn-light-success btn-app-approve me-3">
+                                <i class="blogi blogi-check"></i>
+                                #{t("批量通过")}
+                            </button>
+                            <button class="btn btn-sm btn-light-warning btn-app-spam me-3">
+                                <i class="blogi blogi-block"></i>
+                                #{t("批量垃圾")}
+                            </button>
+                            <button class="btn btn-sm btn-light-danger btn-app-del me-3">
+                                <i class="blogi blogi-delete"></i>
+                                #{t("删除选中")}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body py-3">
+                        <table id="blog-comments-table"></table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+#{ready("/app/Plugin/Blog/View/Js/comments.js")}
+#{include file=$manage_view_path|cat:"Footer.html"}

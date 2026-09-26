@@ -1,0 +1,73 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-page-shell-recharge">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main ny-topup-main">
+        <div class="uc-topup ny-topup" data-balance="#{$user.balance}" data-energy="#{$user.recharge}" data-min="#{$presets[0]}" data-max="#{$config.recharge_max}">
+
+            <section class="ny-wallet-card">
+                <div class="ny-wallet-card__head">
+                    <span class="ny-wallet-card__kicker">#{t("账户余额")}</span>
+                    <a class="ny-wallet-card__more" href="/user/bill/index">#{t("收支明细")}<span class="material-icons-outlined">chevron_right</span></a>
+                </div>
+                <div class="ny-wallet-card__amount"><span class="ny-wallet-card__cur">#{$config.currency_symbol}</span>#{$user.balance}</div>
+                <div class="ny-wallet-card__level">
+                    <div class="ny-wallet-level__head">
+                        <span class="ny-wallet-level__badge"><img src="#{$user.group.icon}" alt="">#{$user.group.name}</span>
+                        <span class="ny-wallet-level__energy">#{$user.recharge}<small>#{t("元气")}</small></span>
+                    </div>
+                    <div class="ny-wallet-level__bar"><span style="width:#{$progress}%;"></span></div>
+                    <div class="ny-wallet-level__foot">
+                        #{if $groupNext}<span>#{t("距离")} #{$groupNext.name}</span><span>#{t("还需")} <b>#{$groupNext.recharge-$user.recharge}</b> #{t("元气")}</span>#{else}<span>#{t("已达最高等级")}</span><span>#{t("全部会员权益已解锁")}</span>#{/if}
+                    </div>
+                </div>
+            </section>
+
+            <form class="ny-topup-form">
+                <section class="ny-topup-panel">
+                    <div class="ny-topup-panel__head"><span>#{t("充值金额")}</span><small>#{t("点击数字可直接输入")}</small></div>
+                    <label class="ny-amount-hero">
+                        <span class="ny-amount-hero__cur">#{$config.currency_symbol}</span>
+                        <input type="text" name="amount" value="#{$presets[0]}" inputmode="decimal" autocomplete="off" aria-label="#{t('充值金额')}" class="ny-amount-hero__input">
+                    </label>
+                    <div class="ny-topup-preview">
+                        <span>#{t("到账")} <b>#{$config.currency_symbol}<span class="uc-topup-total">#{$presets[0]}</span></b></span>
+                        <span class="ny-topup-preview__gift">#{t("活动赠送")} <b class="uc-topup-gift">+#{$config.currency_symbol}0</b></span>
+                        <span>#{t("获得")} <b><span class="uc-topup-energy">#{$presets[0]}</span></b> #{t("元气")}</span>
+                    </div>
+                    <div class="ny-quick-amounts">
+                        #{foreach $presets as $p}<button type="button" class="uc-topup-preset ny-quick-amount" data-amount="#{$p}"><small>#{$config.currency_symbol}</small>#{$p}</button>#{/foreach}
+                    </div>
+                    #{if $config.recharge_welfare == 1 && count($welfareConfig) > 0}
+                    <div class="ny-topup-bonuses">
+                        #{foreach $welfareConfig as $wc}<span class="uc-topup-bonus" data-threshold="#{$wc.recharge}" data-bonus="#{$wc.amount}"><span class="material-icons-outlined">redeem</span>#{t("满")}#{$config.currency_symbol}#{$wc.recharge} #{t("赠")}#{$config.currency_symbol}#{$wc.amount}</span>#{/foreach}
+                    </div>
+                    #{/if}
+                    <p class="ny-limit-note"><span class="material-icons-outlined">info</span>#{t("单次最低")} <b>#{$config.currency_symbol}#{$presets[0]}</b>#{if $config.recharge_max > 0 && $config.recharge_max > $presets[0]}，#{t("最高")} <b>#{$config.currency_symbol}#{$config.recharge_max}</b>#{else}，#{t("不设上限")}#{/if}</p>
+                </section>
+
+                <section class="ny-topup-panel">
+                    <div class="ny-topup-panel__head"><span>#{t("支付方式")}</span><small class="uc-topup-method-name">#{t("请选择支付渠道")}</small></div>
+                    <div class="pay-list ny-topup-methods"><div class="ny-topup-methods__loading"><span class="material-icons-outlined">progress_activity</span>#{t("正在加载支付方式")}</div></div>
+                </section>
+            </form>
+        </div>
+    </main>
+
+    <div class="ny-topup-dock">
+        <div class="uc-topup-summary__status ny-topup-dock__status is-waiting">
+            <span class="material-icons-outlined">touch_app</span><span class="uc-topup-status-text">#{t("正在加载支付方式")}</span>
+        </div>
+        <div class="ny-topup-dock__bar">
+            <div class="ny-topup-dock__sum">
+                <small>#{t("预计到账")}</small>
+                <strong><span class="ny-topup-dock__cur">#{$config.currency_symbol}</span><span class="uc-topup-total">#{$presets[0]}</span></strong>
+            </div>
+            <button type="button" class="ny-primary-button payButton ny-topup-dock__btn" disabled aria-disabled="true">
+                <span class="uc-topup-submit__label">#{t("正在加载支付方式")}</span>
+                <span class="material-icons-outlined">arrow_forward</span>
+            </button>
+        </div>
+    </div>
+</div>
+#{ready("/assets/user/controller/user/recharge.js")}
+#{include file="../Common/Footer.html"}

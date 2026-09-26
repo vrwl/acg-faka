@@ -419,6 +419,34 @@ if (!function_exists("Plugin")) {
 }
 
 
+if (!function_exists('asset_version')) {
+    /**
+     * 静态资源的缓存版本号：APP_VERSION + 文件指纹。
+     *
+     * DEBUG 关闭时 js/css 只挂 APP_VERSION，而 docker/nginx.conf 又给 css/js 配了
+     * expires 7d：改了前端却没发版，浏览器会在这 7 天里一直跑旧文件，现象就是页面
+     * 已经是新模板、按钮却点不动。这里把文件的 mtime+size 拼进版本号，文件一改 URL
+     * 就变，旧缓存自然失效。
+     *
+     * 取不到本地文件（CDN、插件目录等）时只返回 APP_VERSION，等同于原来的行为。
+     */
+    function asset_version(string $resource): string
+    {
+        static $cache = [];
+        $path = strtok($resource, '?');
+        if ($path === false || $path === '' || $path[0] !== '/' || str_starts_with($path, '//')) {
+            return APP_VERSION;
+        }
+        $file = BASE_PATH . ltrim($path, '/');
+        if (!array_key_exists($file, $cache)) {
+            $mtime = is_file($file) ? @filemtime($file) : false;
+            $size = $mtime === false ? false : @filesize($file);
+            $cache[$file] = $mtime === false ? '' : '.' . dechex($mtime) . '.' . dechex((int)$size);
+        }
+        return $cache[$file] === '' ? APP_VERSION : APP_VERSION . $cache[$file];
+    }
+}
+
 if (!function_exists("css")) {
     function css(array|string $resource, array|string|null $backup = null, bool $cdn = true): string
     {
@@ -430,10 +458,10 @@ if (!function_exists("css")) {
         $cdnSupport = $cdn ? 'class="cdn-support"' : '';
         if (is_array($resource)) {
             foreach ($resource as $item) {
-                $res .= sprintf('<link rel="stylesheet" href="%s" ' . $cdnSupport . '>', $item . '?v=' . APP_VERSION . $debugRandom);
+                $res .= sprintf('<link rel="stylesheet" href="%s" ' . $cdnSupport . '>', $item . '?v=' . asset_version($item) . $debugRandom);
             }
         } else {
-            $res = sprintf('<link rel="stylesheet" href="%s" ' . $cdnSupport . '>', $resource . '?v=' . APP_VERSION . $debugRandom);
+            $res = sprintf('<link rel="stylesheet" href="%s" ' . $cdnSupport . '>', $resource . '?v=' . asset_version($resource) . $debugRandom);
         }
         return $res;
     }
@@ -450,10 +478,10 @@ if (!function_exists("js")) {
         $cdnSupport = $cdn ? ' class="cdn-support"' : '';
         if (is_array($resource)) {
             foreach ($resource as $item) {
-                $res .= sprintf('<script src="%s" ' . $cdnSupport . '></script>', $item . (str_contains($item, "?") ? "&" : "?") . 'v=' . APP_VERSION . $debugRandom);
+                $res .= sprintf('<script src="%s" ' . $cdnSupport . '></script>', $item . (str_contains($item, "?") ? "&" : "?") . 'v=' . asset_version($item) . $debugRandom);
             }
         } else {
-            $res = sprintf('<script src="%s" ' . $cdnSupport . '></script>', $resource . (str_contains($resource, "?") ? "&" : "?") . 'v=' . APP_VERSION . $debugRandom);
+            $res = sprintf('<script src="%s" ' . $cdnSupport . '></script>', $resource . (str_contains($resource, "?") ? "&" : "?") . 'v=' . asset_version($resource) . $debugRandom);
         }
         return $res;
     }
@@ -491,7 +519,7 @@ if (!function_exists("ready")) {
         foreach ($variable as $key => $value) {
             $var .= "setVar('{$key}' , " . _ready_get_value($value) . ");";
         }
-        return '<script>' . $var . 'ready("' . $resource . (str_contains($resource, "?") ? "&" : "?") . 'v=' . APP_VERSION . (DEBUG ? "&debug=" . Str::generateRandStr(8) : '') . '");</script>';
+        return '<script>' . $var . 'ready("' . $resource . (str_contains($resource, "?") ? "&" : "?") . 'v=' . asset_version($resource) . (DEBUG ? "&debug=" . Str::generateRandStr(8) : '') . '");</script>';
     }
 }
 

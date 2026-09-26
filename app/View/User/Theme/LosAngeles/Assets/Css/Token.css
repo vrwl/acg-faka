@@ -1,0 +1,412 @@
+/* ============================================================================
+   洛杉矶 · 设计令牌 —— 烈焰货源 (Blaze Bazaar)
+   ----------------------------------------------------------------------------
+   对标拼多多。三条硬规矩，整套 CSS 都从它们推导：
+
+   1) 红是主色，不是点缀。 按钮、价格、角标、选中态、进度、倒计时，全是红橙。
+      一个货源站上，用户的眼睛应该被"价格"和"下单"抓走，不该被装饰抓走。
+
+   2) 底色是灰，卡片是白。 白底白卡需要靠描边和投影去分层，那是"设计站"的做法；
+      灰底白卡不需要任何投影就自然分层，屏幕上能塞下更多东西还不糊。
+      所以本主题的阴影极轻 —— 只有真正浮起来的东西（弹层、吸底条）才有。
+
+   3) 密度优先。 字号阶梯比通用设计系统整体小一档（正文 13）、间距尺是 3 的倍数
+      而不是 4 的倍数、圆角收到 8px。一屏能看到多少个商品，是货源站的核心指标。
+
+   载入顺序必须在平台 _.css 之后 —— 文件末尾把平台的 --md-* 对齐到本色板，
+   让 layer 弹层 / bootstrap-table / .mcy-card 跟着一起换肤。
+
+   明暗切换靠 <html data-theme="light|dark">（Common/Boot.html 写入）。
+   属性名不能自创：平台 md-tokens.css 正是按它选 --md-* 的明暗值。
+   ========================================================================= */
+
+:root {
+    /* ---------------------------------------------------------- 不随明暗变的量 */
+
+    /* 字体：中文优先系统黑体。价格要用等宽数位，翻页时数字不会左右跳 */
+    --la-font: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei",
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans SC", sans-serif;
+    /* 价格专用：DIN 那类窄体最像电商价签，退回系统无衬线 */
+    --la-font-num: "DIN Alternate", "Bebas Neue", "SF Pro Display", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    /* 字号：正文 13，比通用设计系统小一档。货源站不是读物 */
+    --la-t-2xs: 10px;
+    --la-t-xs: 11px;
+    --la-t-sm: 12px;
+    --la-t-base: 13px;
+    --la-t-md: 14px;
+    --la-t-lg: 16px;
+    --la-t-xl: 18px;
+    --la-t-2xl: 22px;
+    --la-t-3xl: 28px;
+    --la-t-4xl: 36px;
+    --la-t-5xl: 46px;
+
+    --la-lh-tight: 1.15;
+    --la-lh-snug: 1.35;
+    --la-lh: 1.55;
+
+    /* 间距：3 的倍数。4 的倍数在密集列表里会显得松 */
+    --la-s1: 3px;
+    --la-s2: 6px;
+    --la-s3: 9px;
+    --la-s4: 12px;
+    --la-s5: 16px;
+    --la-s6: 20px;
+    --la-s7: 26px;
+    --la-s8: 32px;
+    --la-s9: 40px;
+    --la-s10: 52px;
+    --la-s11: 64px;
+    --la-s12: 80px;
+
+    /* 圆角：厚实但不夸张。按钮一律全圆（胶囊），卡片 8，角标 3 */
+    --la-r-xs: 3px;
+    --la-r-sm: 6px;
+    --la-r-md: 8px;
+    --la-r-lg: 12px;
+    --la-r-xl: 16px;
+    --la-r-2xl: 20px;
+    --la-r-pill: 999px;
+
+    /* 版心：1200 是电商 PC 的通用宽度，六列商品刚好。
+       全站只有这一条版心 —— 页头、正文、页脚、会员中心全部对齐到它。
+       --la-gutter 是版心两侧的留白，也只有这一个值：正文和页头差 8px 就能看出来。 */
+    --la-page: 1200px;
+    --la-page-narrow: 1200px;
+    --la-gutter: 12px;
+
+    /* 带侧栏的页（列表页 / 会员中心）共用一个侧栏宽，主区宽度才一致 */
+    --la-side: 180px;
+
+    /* 吸顶页头高度，以及吸顶元素（侧栏、标签条）应当停在它下面多远 */
+    --la-header-h: 56px;
+    --la-sticky-top: calc(var(--la-header-h) + var(--la-s4));
+
+    /* 缓动：全主题只用这四条 */
+    --la-e-out: cubic-bezier(.22, 1, .36, 1);
+    --la-e-in-out: cubic-bezier(.76, 0, .24, 1);
+    --la-e-spring: cubic-bezier(.34, 1.46, .5, 1);
+    --la-e-smooth: cubic-bezier(.4, 0, .2, 1);
+
+    /* 时长比原来短一档：密集界面里长动画会显得拖 */
+    --la-d1: 100ms;
+    --la-d2: 150ms;
+    --la-d3: 220ms;
+    --la-d4: 320ms;
+    --la-d5: 480ms;
+
+    /* 层级：layui layer 从 19891000 起，我们全部待在它下面 */
+    --la-z-base: 1;
+    --la-z-raise: 10;
+    --la-z-sticky: 100;
+    --la-z-header: 200;
+    --la-z-pop: 300;
+    --la-z-scrim: 900;
+    --la-z-sheet: 910;
+    --la-z-toast: 1000;
+
+    /* 安全区（手机 APP 外壳） */
+    --la-safe-t: env(safe-area-inset-top, 0px);
+    --la-safe-b: env(safe-area-inset-bottom, 0px);
+    --la-safe-l: env(safe-area-inset-left, 0px);
+    --la-safe-r: env(safe-area-inset-right, 0px);
+
+    /* 手机 APP 外壳的固定高度 */
+    --la-bar-h: 44px;      /* 顶部导航栏 */
+    --la-tab-h: 50px;      /* 底部 TabBar */
+    --la-buy-h: 50px;      /* 商详吸底购买栏 */
+
+    /* ---------------------------------------------------------- 浅色 */
+
+    /* 主色三兄弟。c1 是品牌红，c2 是渐变的橙端，c3 是更亮的红（角标/秒杀） */
+    --la-c1: #E22E1F;
+    --la-c2: #FF5000;
+    --la-c3: #FF2442;
+    --la-sea: #1A6EFF;   /* 蓝只用于链接与"信息"语义，货源站里出现得极少 */
+    --la-gold: #FFB100;  /* 补贴/券/会员的金 */
+
+    --la-c1-rgb: 226, 46, 31;
+    --la-c2-rgb: 255, 80, 0;
+    --la-c3-rgb: 255, 36, 66;
+    --la-sea-rgb: 26, 110, 255;
+    --la-gold-rgb: 255, 177, 0;
+
+    /* 主渐变 —— 整站只有这一条。按钮、秒杀条、进度、金刚区选中都用它 */
+    --la-sunset: linear-gradient(90deg, var(--la-c2) 0%, var(--la-c1) 100%);
+    --la-sunset-soft: linear-gradient(90deg, rgba(var(--la-c2-rgb), .10) 0%, rgba(var(--la-c1-rgb), .10) 100%);
+    /* 秒杀条那种更烈的斜向 */
+    --la-blaze: linear-gradient(100deg, #FF2D55 0%, #FF5000 55%, #FFA000 100%);
+    --la-dusk: linear-gradient(180deg, #FF4A2B 0%, #E22E1F 100%);
+
+    /* 底与面：灰底白卡。这是整套视觉的地基 */
+    --la-bg: #F4F5F6;
+    --la-bg-2: #EDEEF0;
+    --la-surface: #FFFFFF;
+    --la-surface-2: #F7F8F9;
+    --la-surface-3: #EFF0F2;
+    --la-surface-inv: #1A1A1A;
+
+    /* 墨：中性灰，不带色温。电商界面要"干净"不要"有味道" */
+    --la-ink: #1A1A1A;
+    --la-ink-2: #565656;
+    --la-ink-3: #909090;
+    --la-ink-4: #BFBFBF;
+    --la-ink-inv: #FFFFFF;
+
+    /* 线：极细极淡，密集列表里线一重就变成牢笼 */
+    --la-line: #EDEDED;
+    --la-line-2: #E0E0E0;
+    --la-line-strong: #CFCFCF;
+
+    /* 语义色 */
+    --la-ok: #00A870;
+    --la-ok-bg: rgba(0, 168, 112, .10);
+    --la-warn: #FF8800;
+    --la-warn-bg: rgba(255, 136, 0, .12);
+    /* 语义色**不跟品牌色走**。站长把强调色切成松绿/靛蓝/墨黑之后，
+       "错误 / 危险 / 快没货了"仍然必须是红的，否则"所剩无几"会显示成绿色的正面信号。 */
+    --la-bad: #E22E1F;
+    --la-bad-rgb: 226, 46, 31;
+    --la-bad-bg: rgba(226, 46, 31, .10);
+    --la-info: var(--la-sea);
+    --la-info-bg: rgba(var(--la-sea-rgb), .10);
+
+    /* 覆盖层 */
+    --la-hover: rgba(0, 0, 0, .035);
+    --la-active: rgba(0, 0, 0, .06);
+    --la-scrim: rgba(0, 0, 0, .5);
+    --la-tint: rgba(var(--la-c1-rgb), .07);
+    --la-tint-2: rgba(var(--la-c1-rgb), .13);
+
+    /* 阴影：极轻。灰底已经在分层了，投影只留给真正浮起来的东西 */
+    --la-sh-1: none;
+    --la-sh-2: 0 1px 3px rgba(0, 0, 0, .06);
+    --la-sh-3: 0 2px 10px rgba(0, 0, 0, .08);
+    --la-sh-4: 0 6px 24px rgba(0, 0, 0, .12);
+    --la-sh-brand: 0 3px 10px rgba(var(--la-c1-rgb), .28);
+    --la-sh-brand-lg: 0 6px 18px rgba(var(--la-c1-rgb), .32);
+    --la-focus: 0 0 0 3px rgba(var(--la-c1-rgb), .20);
+
+    /* 骨架屏扫光 */
+    --la-skeleton: linear-gradient(100deg, var(--la-surface-2) 20%, var(--la-surface-3) 40%, var(--la-surface-2) 60%);
+
+    color-scheme: light;
+}
+
+/* ---------------------------------------------------------- 深色
+
+   深色不是"把灰底调暗"，是把分层关系整个翻过来：
+   底变近黑、卡变深灰、红要提亮一档否则在黑底上会发闷。 */
+
+:root[data-theme="dark"] {
+    --la-c1: #FF4436;
+    --la-c2: #FF6A1F;
+    --la-c3: #FF4863;
+    --la-sea: #4E93FF;
+    --la-gold: #FFC233;
+
+    --la-c1-rgb: 255, 68, 54;
+    --la-c2-rgb: 255, 106, 31;
+    --la-c3-rgb: 255, 72, 99;
+    --la-sea-rgb: 78, 147, 255;
+    --la-gold-rgb: 255, 194, 51;
+
+    --la-blaze: linear-gradient(100deg, #FF4863 0%, #FF6A1F 55%, #FFB733 100%);
+    --la-dusk: linear-gradient(180deg, #FF5B4A 0%, #E23124 100%);
+
+    --la-bg: #0E0E10;
+    --la-bg-2: #08080A;
+    --la-surface: #1B1B1E;
+    --la-surface-2: #232327;
+    --la-surface-3: #2C2C31;
+    --la-surface-inv: #F2F2F2;
+
+    --la-ink: #F2F2F2;
+    --la-ink-2: #A8A8AE;
+    --la-ink-3: #7C7C84;
+    --la-ink-4: #55555C;
+    --la-ink-inv: #0E0E10;
+
+    --la-line: #2A2A2F;
+    --la-line-2: #34343A;
+    --la-line-strong: #45454C;
+
+    --la-ok: #2ED598;
+    --la-ok-bg: rgba(46, 213, 152, .14);
+    --la-warn: #FFA033;
+    --la-warn-bg: rgba(255, 160, 51, .14);
+    --la-bad: #FF4436;
+    --la-bad-rgb: 255, 68, 54;
+    --la-bad-bg: rgba(255, 68, 54, .14);
+
+    --la-hover: rgba(255, 255, 255, .05);
+    --la-active: rgba(255, 255, 255, .09);
+    --la-scrim: rgba(0, 0, 0, .68);
+    --la-tint: rgba(var(--la-c1-rgb), .12);
+    --la-tint-2: rgba(var(--la-c1-rgb), .20);
+
+    --la-sh-1: none;
+    --la-sh-2: 0 1px 3px rgba(0, 0, 0, .5);
+    --la-sh-3: 0 2px 12px rgba(0, 0, 0, .55);
+    --la-sh-4: 0 6px 26px rgba(0, 0, 0, .62);
+    --la-sh-brand: 0 3px 12px rgba(var(--la-c1-rgb), .32);
+    --la-sh-brand-lg: 0 6px 22px rgba(var(--la-c1-rgb), .38);
+    --la-focus: 0 0 0 3px rgba(var(--la-c1-rgb), .32);
+
+    --la-skeleton: linear-gradient(100deg, var(--la-surface-2) 20%, var(--la-surface-3) 40%, var(--la-surface-2) 60%);
+
+    color-scheme: dark;
+}
+
+/* ---------------------------------------------------------- 主色变体
+
+   五个键名保持不变（站长存过的设置不会失效），但取值全部换成
+   电商主色，不是设计感配色 —— 每一个都是真的能卖货的红/橙/蓝/绿/黑。 */
+
+/* 玫红：天猫那一路，比默认红更艳更粉 */
+:root[data-la-accent="magenta"] {
+    --la-c1: #FF0036; --la-c2: #FF3E6C; --la-c3: #FF0036; --la-gold: #FFB100;
+    --la-c1-rgb: 255, 0, 54; --la-c2-rgb: 255, 62, 108; --la-c3-rgb: 255, 0, 54;
+}
+
+:root[data-theme="dark"][data-la-accent="magenta"] {
+    --la-c1: #FF3D63; --la-c2: #FF6A8C; --la-c3: #FF3D63;
+    --la-c1-rgb: 255, 61, 99; --la-c2-rgb: 255, 106, 140; --la-c3-rgb: 255, 61, 99;
+}
+
+/* 靛蓝：做虚拟货源/软件类目的站会想要冷一点的气质 */
+:root[data-la-accent="pacific"] {
+    --la-c1: #2354E6; --la-c2: #4A8CFF; --la-c3: #2354E6; --la-gold: #FFB100;
+    --la-c1-rgb: 35, 84, 230; --la-c2-rgb: 74, 140, 255; --la-c3-rgb: 35, 84, 230;
+}
+
+:root[data-theme="dark"][data-la-accent="pacific"] {
+    --la-c1: #5B8CFF; --la-c2: #7FAAFF; --la-c3: #5B8CFF;
+    --la-c1-rgb: 91, 140, 255; --la-c2-rgb: 127, 170, 255; --la-c3-rgb: 91, 140, 255;
+}
+
+/* 松绿 */
+:root[data-la-accent="palm"] {
+    --la-c1: #00A870; --la-c2: #38C48F; --la-c3: #00A870; --la-gold: #FFB100;
+    --la-c1-rgb: 0, 168, 112; --la-c2-rgb: 56, 196, 143; --la-c3-rgb: 0, 168, 112;
+}
+
+:root[data-theme="dark"][data-la-accent="palm"] {
+    --la-c1: #2ED598; --la-c2: #5FE3B3; --la-c3: #2ED598;
+    --la-c1-rgb: 46, 213, 152; --la-c2-rgb: 95, 227, 179; --la-c3-rgb: 46, 213, 152;
+}
+
+/* 墨黑 */
+:root[data-la-accent="noir"] {
+    --la-c1: #1F1F1F; --la-c2: #4A4A4A; --la-c3: #1F1F1F; --la-gold: #C8A24A;
+    --la-c1-rgb: 31, 31, 31; --la-c2-rgb: 74, 74, 74; --la-c3-rgb: 31, 31, 31;
+}
+
+:root[data-theme="dark"][data-la-accent="noir"] {
+    --la-c1: #EDEDED; --la-c2: #B4B4B4; --la-c3: #EDEDED;
+    --la-c1-rgb: 237, 237, 237; --la-c2-rgb: 180, 180, 180; --la-c3-rgb: 237, 237, 237;
+}
+
+/* 主色上的文字。noir 深色态主色是近白，只有它要反过来。
+   默认值写在变体之前 —— 靠层叠顺序生效，不是靠特异性侥幸。 */
+:root { --la-on-brand: #FFFFFF; }
+:root[data-theme="dark"][data-la-accent="noir"] { --la-on-brand: #141414; }
+
+/* ---------------------------------------------------------- 密度
+
+   cozy 已经比原来紧很多了；compact 是给品类特别多的站用的极限档，
+   PC 一行能到 8 个。 */
+
+:root {
+    --la-card-pad: 8px;
+    --la-card-gap: 8px;
+    --la-grid-cols: 6;        /* PC 商品栅格列数 */
+    --la-grid-cols-2: 5;      /* 带侧栏时的列数 */
+}
+
+:root[data-la-density="compact"] {
+    --la-card-pad: 6px;
+    --la-card-gap: 6px;
+    --la-grid-cols: 8;
+    --la-grid-cols-2: 6;
+}
+
+/* ============================================================================
+   平台组件桥接
+   ----------------------------------------------------------------------------
+   平台 component.css 让 .bootstrap-table / .table-search / .mcy-card 读
+   --acg-component-*，后者又指向 --md-*；md-tokens.css 按 [data-theme] 给
+   --md-* 赋值。这里把 --md-* 覆盖成本主题色板，共享组件不改一行结构就换肤。
+
+   必须在平台 CSS 之后加载才盖得住。
+   ========================================================================= */
+
+:root,
+:root[data-theme="light"] {
+    --md-font: var(--la-font);
+    --md-radius: var(--la-r-sm);
+    --md-radius-lg: var(--la-r-md);
+    --md-radius-pill: var(--la-r-pill);
+
+    --md-primary: var(--la-c1);
+    --md-primary-rgb: var(--la-c1-rgb);
+    --md-primary-hover: var(--la-c2);
+    --md-primary-container: rgba(var(--la-c1-rgb), .12);
+    --md-on-primary: var(--la-on-brand);
+    --md-secondary: var(--la-c2);
+    --md-secondary-rgb: var(--la-c2-rgb);
+    --md-secondary-hover: var(--la-c1);
+    --md-on-secondary: #FFFFFF;
+
+    --md-bg: var(--la-bg);
+    --md-surface: var(--la-surface);
+    --md-surface-2: var(--la-surface-2);
+    --md-on-surface: var(--la-ink);
+    --md-on-surface-med: var(--la-ink-2);
+    --md-on-surface-dis: var(--la-ink-4);
+
+    --md-outline: var(--la-line-2);
+    --md-divider: var(--la-line);
+    --md-hover-overlay: var(--la-hover);
+    --md-selected-overlay: var(--la-tint);
+    --md-scrim: var(--la-scrim);
+    --md-focus-ring: rgba(var(--la-c1-rgb), .22);
+
+    --md-success: var(--la-ok);
+    --md-success-rgb: 0, 168, 112;
+    --md-warning: var(--la-warn);
+    --md-warning-rgb: 255, 136, 0;
+    --md-error: var(--la-bad);
+    --md-error-rgb: var(--la-bad-rgb);
+    --md-info: var(--la-info);
+    --md-info-rgb: var(--la-sea-rgb);
+
+    --md-e0: none;
+    --md-e1: none;
+    --md-e2: var(--la-sh-2);
+    --md-e3: var(--la-sh-2);
+    --md-e4: var(--la-sh-2);
+    --md-e6: var(--la-sh-3);
+    --md-e8: var(--la-sh-3);
+    --md-e12: var(--la-sh-3);
+    --md-e16: var(--la-sh-4);
+    --md-e24: var(--la-sh-4);
+
+    --md-ease: var(--la-e-smooth);
+    --md-ease-out: var(--la-e-out);
+    --md-dur: var(--la-d3);
+    --md-dur-fast: var(--la-d1);
+
+    --md-nav-fg: var(--la-ink-2);
+    --md-nav-active-fg: var(--la-c1);
+    --md-nav-section: var(--la-ink-3);
+}
+
+:root[data-theme="dark"] {
+    --md-success-rgb: 46, 213, 152;
+    --md-warning-rgb: 255, 160, 51;
+    --md-error-rgb: var(--la-bad-rgb);
+}

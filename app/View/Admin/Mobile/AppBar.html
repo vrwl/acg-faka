@@ -2,14 +2,10 @@
     <div class="admin-mobile-appbar__top">
         <div class="admin-mobile-appbar__heading">
             <strong data-admin-mobile-title>#{$title}</strong>
-            <span class="admin-mobile-enterprise-badge" data-admin-mobile-enterprise hidden>#{t("企业版")}</span>
         </div>
         <button type="button" class="admin-mobile-icon-button" data-admin-mobile-appearance aria-label="#{t('外观模式')}" aria-haspopup="dialog" aria-expanded="false" aria-controls="admin-mobile-appearance-sheet">
             <span class="material-icons-outlined" aria-hidden="true">contrast</span>
         </button>
-        <a class="admin-mobile-icon-button admin-mobile-store-button" data-admin-mobile-store href="/admin/store/home" aria-label="#{t('应用商店')}">
-            <span class="material-icons-outlined" aria-hidden="true">storefront</span>
-        </a>
     </div>
     <!-- 全局搜索/筛选入口。renderSearch() 会按当前页改写占位文案、筛选条数徽标，
          以及尾部图标（有页面筛选时是 tune，否则是 apps 打开「全部」导航） -->

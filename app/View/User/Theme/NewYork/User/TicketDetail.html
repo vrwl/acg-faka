@@ -1,0 +1,47 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-ticket-page ny-ticket-focus-page ny-ticket-detail-page" data-ny-ticket-screen="detail" data-ticket-id="#{$ticketId}">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main ny-ticket-detail-main">
+        <header class="ny-ticket-subbar">
+            <a href="/user/ticket/index" aria-label="#{t('返回工单列表')}"><span class="material-icons-outlined">arrow_back</span></a>
+            <div><strong>#{t("工单详情")}</strong><small data-ny-ticket-number>#{t("正在读取")}</small></div>
+            <a href="/user/ticket/create" aria-label="#{t('创建新工单')}"><span class="material-icons-outlined">add_comment</span></a>
+        </header>
+
+        <div class="ny-ticket-detail-loading" data-ny-ticket-detail-loading><span class="material-icons-outlined">forum</span><strong>#{t("正在打开会话")}</strong><small>#{t("正在同步完整沟通记录")}</small></div>
+        <div class="ny-ticket-state ny-ticket-detail-error" data-ny-ticket-detail-error hidden><span class="material-icons-outlined">sentiment_dissatisfied</span><strong>#{t("没有找到这张工单")}</strong><p>#{t("工单可能不存在，或你没有查看权限。")}</p><a href="/user/ticket/index">#{t("返回工单列表")}</a></div>
+
+        <div class="ny-ticket-detail-content" data-ny-ticket-detail-content hidden>
+            <section class="ny-ticket-detail-card">
+                <div class="ny-ticket-detail-card__top"><div><span class="ny-ticket-status" data-ny-ticket-detail-status>#{t("待客服回复")}</span><span class="ny-ticket-live"><i></i>#{t("自动更新")}</span></div><time data-ny-ticket-updated>—</time></div>
+                <h1 data-ny-ticket-title>#{t("工单详情")}</h1>
+                <div class="ny-ticket-detail-tags"><span data-ny-ticket-type>—</span><span data-ny-ticket-priority>—</span></div>
+                <button type="button" class="ny-ticket-context-toggle" data-ny-ticket-context-toggle aria-expanded="false"><span class="material-icons-outlined">info</span><span><strong>#{t("工单信息")}</strong><small>#{t("关联内容、时间与购买凭证")}</small></span><i class="material-icons-outlined">expand_more</i></button>
+                <div class="ny-ticket-context-panel" data-ny-ticket-context hidden>
+                    <div class="ny-ticket-context-rows"><div><span>#{t("创建时间")}</span><strong data-ny-ticket-created>—</strong></div><div><span>#{t("最后更新")}</span><strong data-ny-ticket-context-updated>—</strong></div><div><span>#{t("当前状态")}</span><strong data-ny-ticket-context-status>—</strong></div><div><span>#{t("关联内容")}</span><strong data-ny-ticket-related-label>#{t("未关联")}</strong></div></div>
+                    <div class="ny-ticket-related" data-ny-ticket-related hidden></div>
+                    <button type="button" class="ny-ticket-proof-view" data-ny-ticket-proof-view hidden><img src="" alt="#{t('购买凭证')}"><span><strong>#{t("购买凭证")}</strong><small>#{t("轻触查看大图")}</small></span><i class="material-icons-outlined">zoom_in</i></button>
+                </div>
+            </section>
+
+            <section class="ny-ticket-conversation">
+                <div class="ny-ticket-conversation__head"><div><strong>#{t("沟通记录")}</strong><small>#{t("你与客服的完整对话")}</small></div><span class="material-icons-outlined">lock</span></div>
+                <button type="button" class="ny-ticket-history-more" data-ny-ticket-history hidden><span class="material-icons-outlined">history</span>#{t("查看更早消息")}</button>
+                <div class="ny-ticket-messages" data-ny-ticket-messages aria-live="polite"></div>
+            </section>
+        </div>
+    </main>
+
+    <div class="ny-ticket-composer" data-ny-ticket-composer hidden>
+        <div class="ny-ticket-composer__attachments" data-ny-ticket-reply-attachments hidden></div>
+        <div class="ny-ticket-composer__bar">
+            <input type="file" data-ny-ticket-reply-input accept="image/jpeg,image/png,image/webp" multiple hidden>
+            <button type="button" data-ny-ticket-reply-pick aria-label="#{t('添加图片')}"><span class="material-icons-outlined">add_photo_alternate</span></button>
+            <textarea data-ny-ticket-reply-text rows="1" placeholder="#{t('回复客服…')}"></textarea>
+            <button type="button" class="ny-ticket-composer__send" data-ny-ticket-reply-send disabled aria-label="#{t('发送回复')}"><span class="material-icons-outlined">arrow_upward</span></button>
+        </div>
+        <small>#{t("请勿发送密码或完整卡密")}</small>
+    </div>
+    <div class="ny-ticket-closed-dock" data-ny-ticket-closed hidden><span class="material-icons-outlined">lock</span><span><strong>#{t("工单已结束")}</strong><small>#{t("记录已归档，如有新问题请重新创建")}</small></span><a href="/user/ticket/create">#{t("新建")}</a></div>
+</div>
+#{include file="../Common/Footer.html"}

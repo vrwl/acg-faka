@@ -17,8 +17,7 @@ use Kernel\Exception\JSONException;
 /**
  * MCP 访问秘钥管理（后台会话保护）。
  *
- * 供开发者中心页面读取/重置/开关 MCP 接入秘钥。秘钥存于 config/mcp.php，
- * 与 config/store.php 同构、同在被 git 忽略的 /config 目录。
+ * 读取/重置/开关 MCP 接入秘钥。秘钥存于 config/mcp.php（被 git 忽略的 /config 目录）。
  *
  * @package App\Controller\Admin\Api
  */

@@ -180,13 +180,6 @@
         var account = document.createElement('section');
         account.className = 'admin-mobile-menu-group admin-mobile-menu-group--account';
         account.innerHTML = '<h3>' + i18n('账户与系统') + '</h3>';
-        var store = document.querySelector('#kt_header a[href="/admin/store/home"]');
-        if (store && isSourceMenuLinkAllowed(store, document.getElementById('kt_header'))) {
-            var storeLink = document.createElement('a');
-            storeLink.className = 'admin-mobile-menu-link'; storeLink.href = '/admin/store/home';
-            storeLink.innerHTML = '<span class="menu-icon material-icons-outlined" aria-hidden="true">storefront</span><span class="menu-title">' + i18n('应用商店') + '</span>';
-            account.appendChild(storeLink);
-        }
         var personal = document.querySelector('#kt_header a[href="/admin/manage/set"]');
         if (personal && isSourceMenuLinkAllowed(personal, document.getElementById('kt_header'))) {
             var personalLink = document.createElement('a');
@@ -194,34 +187,17 @@
             personalLink.innerHTML = '<span class="menu-icon material-icons-outlined" aria-hidden="true">manage_accounts</span><span class="menu-title">' + i18n('个人设置') + '</span>';
             account.appendChild(personalLink);
         }
-        //检查更新：复用桌面 Header 里 global.js 那套版本弹窗（元素在手机上只是被隐藏，绑定仍然活着）。
-        //有新版时图标挂小红点；latest 状态由 global.js 异步填充，未就绪时不误报。
-        var latestText = ((document.querySelector('.latest-version') || {}).textContent || '').trim();
-        var hasUpdate = latestText !== '' && latestText.indexOf('Latest') === -1;
-        var updateEntry = document.createElement('a');
-        updateEntry.className = 'admin-mobile-menu-link';
-        updateEntry.href = 'javascript:;';
-        updateEntry.setAttribute('data-admin-mobile-update', '');
-        updateEntry.innerHTML = '<span class="menu-icon material-icons-outlined" aria-hidden="true">system_update_alt'
-            + (hasUpdate ? '<span class="admin-mobile-update-dot" aria-hidden="true"></span>' : '')
-            + '</span><span class="menu-title">' + i18n('检查更新') + '</span>';
-        account.appendChild(updateEntry);
         var logout = document.createElement('a');
         logout.className = 'admin-mobile-menu-link is-danger'; logout.href = '/admin/authentication/logout'; logout.setAttribute('data-admin-mobile-logout', '');
         logout.innerHTML = '<span class="menu-icon material-icons-outlined" aria-hidden="true">logout</span><span class="menu-title">' + i18n('退出登录') + '</span>';
         account.appendChild(logout);
         container.appendChild(account);
-        //面板收尾的版本行：当前版本一目了然，点它同样进入版本弹窗
+        //面板收尾的版本行：当前版本一目了然
         var versionLine = document.createElement('button');
         versionLine.type = 'button';
         versionLine.className = 'admin-mobile-menu-version';
-        versionLine.setAttribute('data-admin-mobile-update', '');
         var localVersion = ((document.querySelector('.local-version') || {}).textContent || '').trim();
-        var newVersion = hasUpdate ? (latestText.match(/v[\d.]+/) || [''])[0] : '';
-        versionLine.innerHTML = '<span class="menu-version-current">' + i18n('当前版本') + ' v' + (localVersion || '-') + '</span>'
-            + (hasUpdate
-                ? '<span class="menu-version-state is-new">' + i18n('发现新版本') + (newVersion ? ' ' + newVersion : '') + '</span>'
-                : (latestText.indexOf('Latest') > -1 ? '<span class="menu-version-state">' + i18n('已是最新') + '</span>' : ''));
+        versionLine.innerHTML = '<span class="menu-version-current">' + i18n('当前版本') + ' v' + (localVersion || '-') + '</span>';
         container.appendChild(versionLine);
         var empty = document.createElement('div');
         empty.className = 'admin-mobile-empty admin-mobile-menu-empty';
@@ -255,16 +231,6 @@
     function handleClick(event) {
         var logout = event.target.closest('[data-admin-mobile-logout]');
         var primaryNavigation = event.target.closest('a[data-admin-mobile-nav][href]');
-        var updater = event.target.closest('[data-admin-mobile-update]');
-        if (updater) {
-            event.preventDefault();
-            if (api.closeAll) api.closeAll({silentHistory: true});
-            //复用桌面 global.js 绑好的版本弹窗；元素被隐藏不影响触发
-            var updateTrigger = document.querySelector('.latest-update');
-            if (updateTrigger) updateTrigger.click();
-            else api.navigate('/admin/store/home');
-            return;
-        }
         if (logout) {
             event.preventDefault();
             var messageApi = typeof message !== 'undefined' ? message : window.message;

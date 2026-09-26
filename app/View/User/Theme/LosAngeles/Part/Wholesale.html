@@ -1,0 +1,42 @@
+#{*
+  洛杉矶 · 批发价阶梯
+  config.wholesale          = {数量档: 单价}
+  config.category_wholesale = {种类名: {数量档: 单价}}
+  种类批发按 data-race 分组，选中哪个种类就显示哪张表（JS 切换）。
+*}
+#{if $item.config.wholesale|default:false || $item.config.category_wholesale|default:false}
+    <div class="la-ladder" data-la-ladder>
+        <div class="la-ladder__head">
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('truck')}
+            <span>#{t("批发价·买得越多越便宜")}</span>
+        </div>
+
+        #{if $item.config.wholesale|default:false}
+            <div class="la-ladder__table" data-race="">
+                #{foreach $item.config.wholesale as $num => $price}
+                    #{if !is_array($price)}
+                    <div class="la-ladder__cell">
+                        <b class="la-num">#{$config.currency_symbol}#{$price|escape:'html'}</b>
+                        <span>≥ #{$num|escape:'html'} #{t("件")}</span>
+                    </div>
+                    #{/if}
+                #{/foreach}
+            </div>
+        #{/if}
+
+        #{foreach $item.config.category_wholesale|default:[] as $race => $ladder}
+            #{if $ladder}
+                <div class="la-ladder__table" data-race="#{$race|escape:'html'}" hidden>
+                    #{foreach $ladder as $num => $price}
+                        #{if !is_array($price)}
+                        <div class="la-ladder__cell">
+                            <b class="la-num">#{$config.currency_symbol}#{$price|escape:'html'}</b>
+                            <span>≥ #{$num|escape:'html'} #{t("件")}</span>
+                        </div>
+                        #{/if}
+                    #{/foreach}
+                </div>
+            #{/if}
+        #{/foreach}
+    </div>
+#{/if}

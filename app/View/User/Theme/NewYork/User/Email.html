@@ -1,0 +1,25 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-page-shell-security">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("邮箱设置")}</h1><p>#{t("更新用于登录与安全通知的邮箱地址。")}</p></div>
+            <span class="ny-page-intro__icon material-icons-outlined">alternate_email</span>
+        </section>
+        <section class="ny-panel ny-security-panel">
+            #{include file="../Common/SecurityNav.html"}
+            <div class="ny-security-form-layout">
+                <form class="layui-form form-data ny-compact-form">
+                    <div class="ny-form-section__head"><span class="material-icons-outlined">mail</span><div><strong>#{t("更换邮箱")}</strong><small>#{t("验证码将发送到新的邮箱地址")}</small></div></div>
+                    <label class="ny-field"><span>#{t("当前邮箱")}</span><input type="text" value="#{$user.email}" autocomplete="off" class="layui-input" placeholder="#{t('未绑定')}" disabled></label>
+                    <label class="ny-field"><span>#{t("新邮箱")}</span><input type="text" name="email" autocomplete="email" class="layui-input" placeholder="#{t('请输入新邮箱')}"></label>
+                    <label class="ny-field"><span>#{t("邮箱验证码")}</span><span class="ny-code-field"><input type="text" name="email_captcha" autocomplete="one-time-code" class="layui-input" placeholder="#{t('6 位验证码')}"><button type="button" class="send-captcha">#{t("获取验证码")}</button></span></label>
+                    <div class="ny-form-actions"><button type="button" class="ny-button ny-button--primary save-data"><span class="material-icons-outlined">save</span>#{t("保存修改")}</button></div>
+                </form>
+                <aside class="ny-security-guide"><span class="material-icons-outlined">mark_email_read</span><strong>#{t("收不到邮件？")}</strong><ul><li>#{t("检查地址是否输入正确")}</li><li>#{t("查看垃圾邮件文件夹")}</li><li>#{t("一分钟后可重新发送")}</li></ul></aside>
+            </div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/security/email.js")}
+#{include file="../Common/Footer.html"}

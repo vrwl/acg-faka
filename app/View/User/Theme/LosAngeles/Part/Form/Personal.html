@@ -1,0 +1,80 @@
+#{*
+  洛杉矶 · 个人资料（两端共用）
+
+  两个面板由 security/personal.js 用 .uc-tabpanel[data-panel="security"|"profile"]
+  + .active 切换，类名与 data 属性是控制器写死的契约，只能换皮不能改名。
+  头像/微信二维码的上传靠 util.bindButtonUpload(".avatar-input" / ".wechat-input")。
+*}
+#{include file="../SecurityNav.html"}
+
+<div class="uc-tabpanel la-panelbox active" data-panel="security">
+    <div class="la-card la-infocard">
+        <div class="la-infocard__head">
+            <img class="la-infocard__avatar avatar-img" src="#{$user.avatar|default:$favicon|escape:'html'}" alt="" width="72" height="72">
+            <div class="la-infocard__id">
+                <strong>#{$user.username|escape:'html'}</strong>
+                #{if $group && $group.name}
+                    <span class="la-mnav__lv">#{if $group.icon}<img src="#{$group.icon}" alt="" width="12" height="12">#{/if}#{lang($group.name, 'dyn')|escape:'html'}</span>
+                #{/if}
+            </div>
+        </div>
+
+        <dl class="la-info">
+            <div class="la-info__row"><dt>#{t("会员 ID")}</dt><dd class="la-num">#{$user.id|escape:'html'}</dd></div>
+            <div class="la-info__row"><dt>#{t("邮箱")}</dt><dd>#{if $user.email}#{$user.email|escape:'html'}#{else}<span class="la-faint">#{t("未绑定")}</span>#{/if}</dd></div>
+            <div class="la-info__row"><dt>#{t("手机号")}</dt><dd>#{if $user.phone}#{$user.phone|escape:'html'}#{else}<span class="la-faint">#{t("未绑定")}</span>#{/if}</dd></div>
+            <div class="la-info__row"><dt>#{t("累计充值")}</dt><dd class="la-num">#{$config.currency_symbol}#{$user.recharge|escape:'html'}</dd></div>
+            <div class="la-info__row"><dt>#{t("注册时间")}</dt><dd>#{$user.create_time|escape:'html'}</dd></div>
+            <div class="la-info__row"><dt>#{t("上次登录")}</dt><dd>#{$user.last_login_time|default:'-'|escape:'html'} <span class="la-faint">#{$user.last_login_ip|default:''|escape:'html'}</span></dd></div>
+            <div class="la-info__row">
+                <dt>#{t("对接密钥")}</dt>
+                <dd class="la-info__key">
+                    <code class="app-key">#{$user.app_key|escape:'html'}</code>
+                    <button type="button" class="la-btn la-btn--line la-btn--sm reset-key">#{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}<span>#{t("重置")}</span></button>
+                </dd>
+            </div>
+        </dl>
+        <p class="la-info__warn">#{\App\View\User\Theme\LosAngeles\Icons::svg('shield')}<span>#{t("对接密钥等同于账号密码，请勿泄露给任何人。")}</span></p>
+    </div>
+</div>
+
+<div class="uc-tabpanel la-panelbox" data-panel="profile">
+    <form class="layui-form form-data la-form la-form--card">
+        <div class="la-field">
+            <label class="la-label">#{t("头像")}</label>
+            <div class="la-upload">
+                <img class="la-upload__preview avatar-img" src="#{$user.avatar|default:$favicon|escape:'html'}" alt="" width="64" height="64">
+                <button type="button" class="la-btn la-btn--line la-btn--sm avatar-input">#{\App\View\User\Theme\LosAngeles\Icons::svg('image')}<span>#{t("更换头像")}</span></button>
+                <input type="hidden" name="avatar" value="#{$user.avatar|escape:'html'}">
+            </div>
+        </div>
+        <div class="la-field">
+            <label class="la-label">#{t("真实姓名")}</label>
+            <input class="la-input" type="text" name="nicename" value="#{$user.nicename|escape:'html'}" autocomplete="off" placeholder="#{t('提现时用于核对收款人')}">
+        </div>
+        <div class="la-field">
+            <label class="la-label">#{t("QQ")}</label>
+            <input class="la-input" type="text" name="qq" value="#{$user.qq|escape:'html'}" autocomplete="off" placeholder="#{t('选填')}">
+        </div>
+        <div class="la-field">
+            <label class="la-label">#{t("支付宝账号")}</label>
+            <input class="la-input" type="text" name="alipay" value="#{$user.alipay|escape:'html'}" autocomplete="off" placeholder="#{t('提现到支付宝时需要')}">
+        </div>
+        <div class="la-field">
+            <label class="la-label">#{t("USDT 钱包地址")}</label>
+            <input class="la-input" type="text" name="wallet_address" value="#{$user.wallet_address|escape:'html'}" autocomplete="off" placeholder="#{t('TRC20 地址，提现到 USDT 时需要')}">
+        </div>
+        <div class="la-field">
+            <label class="la-label">#{t("微信收款码")}</label>
+            <div class="la-upload">
+                <div class="wx_qrcode la-upload__qr"></div>
+                <button type="button" class="la-btn la-btn--line la-btn--sm wechat-input">#{\App\View\User\Theme\LosAngeles\Icons::svg('image')}<span>#{t("上传收款码")}</span></button>
+                <input type="hidden" name="wechat" value="#{$user.wechat|escape:'html'}">
+                <span class="wx_qrcode_temp la-sr"></span>
+            </div>
+        </div>
+        <button type="button" class="la-btn la-btn--brand la-btn--lg save-data">
+            #{\App\View\User\Theme\LosAngeles\Icons::svg('check')}<span>#{t("保存修改")}</span>
+        </button>
+    </form>
+</div>

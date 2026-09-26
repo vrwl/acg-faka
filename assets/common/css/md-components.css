@@ -1704,7 +1704,7 @@
   top: 0; transform: translateY(-50%) scale(.82); max-width: calc((100% / .82) - 22px);
 }
 :root[data-theme] .table-search .mui-sf:focus-within > .mui-sf__label { color: var(--md-primary); }
-/* Bootstrap `.alert-*` (e.g. the app-store password popup's warning) — Metronic ships them light-mode-
+/* Bootstrap `.alert-*` (e.g. a password prompt's warning) — Metronic ships them light-mode-
    only (dark text `rgb(102,80,0)` on a pale cream tint) → in dark mode that's dark-on-dark = UNREADABLE.
    Re-skin with the semantic tokens: soft tint + matching border + the semantic colour as text/icon,
    which contrasts BOTH themes (dark → light accent on dark tint; light → dark accent on light tint).

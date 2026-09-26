@@ -1,0 +1,104 @@
+{
+  "group": "injection",
+  "name": "SQL 注入与命令执行",
+  "rules": [
+    {
+      "id": "sqli.union",
+      "name": "SQL 注入 · UNION 查询",
+      "surface": ["query", "body", "path", "cookie"],
+      "re": "union[\\s/*!+()]+(all[\\s/*!+()]+)?select",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "sqli.sleep",
+      "name": "SQL 注入 · 时间盲注",
+      "surface": ["query", "body", "cookie"],
+      "re": "(?:sleep|benchmark|pg_sleep|waitfor[\\s]+delay)[\\s]*\\(",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "sqli.schema",
+      "name": "SQL 注入 · 探测库结构",
+      "surface": ["query", "body", "cookie"],
+      "re": "(?:information_schema|mysql\\.user|pg_catalog|sysobjects|sqlite_master)",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "sqli.error",
+      "name": "SQL 注入 · 报错注入",
+      "surface": ["query", "body", "cookie"],
+      "re": "(?:extractvalue|updatexml|exp\\s*\\(\\s*~|floor\\s*\\(\\s*rand)\\s*\\(",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "sqli.file",
+      "name": "SQL 注入 · 读写文件",
+      "surface": ["query", "body", "cookie"],
+      "re": "(?:load_file\\s*\\(|into\\s+(?:out|dump)file|\\bloaddata\\b)",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "sqli.stack",
+      "name": "SQL 注入 · 堆叠语句",
+      "surface": ["query", "body", "cookie"],
+      "re": ";[\\s]*(?:drop|alter|truncate|create|rename)[\\s]+(?:table|database|schema|user)",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "sqli.tautology",
+      "name": "SQL 注入 · 恒真条件",
+      "surface": ["query", "cookie"],
+      "re": "(?:'|%27|\"|\\))[\\s]*(?:or|and)[\\s]*(?:'?\\d+'?[\\s]*(?:=|<>|like)[\\s]*'?\\d+'?|'[^']*'[\\s]*=[\\s]*'[^']*')",
+      "action": "score", "level": "warn", "score": 6, "fp": "medium"
+    },
+    {
+      "id": "sqli.comment",
+      "name": "SQL 注入 · 注释截断",
+      "surface": ["query", "cookie"],
+      "re": "(?:/\\*!\\d{5}|--[\\s]+[a-z]|\\x23\\s*$)",
+      "action": "score", "level": "warn", "score": 4, "fp": "medium"
+    },
+    {
+      "id": "rce.exec",
+      "name": "命令执行函数",
+      "surface": ["query", "body", "cookie"],
+      "re": "(?:system|shell_exec|passthru|popen|proc_open|pcntl_exec)\\s*\\(",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "rce.eval",
+      "name": "动态代码执行",
+      "surface": ["query", "body", "cookie"],
+      "re": "(?:\\beval\\s*\\(|assert\\s*\\(|create_function\\s*\\(|preg_replace\\s*\\(\\s*[\"'][^\"']*/e)",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "rce.webshell",
+      "name": "WebShell 特征",
+      "surface": ["query", "body"],
+      "re": "(?:base64_decode\\s*\\(\\s*\\$|array_map\\s*\\(\\s*[\"']ass|call_user_func\\s*\\(\\s*\\$_|\\$_(?:POST|GET|REQUEST|COOKIE)\\s*\\[[^\\]]*\\]\\s*\\()",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "rce.jndi",
+      "name": "JNDI 注入（Log4Shell）",
+      "surface": ["query", "body", "cookie", "header"],
+      "re": "\\$\\{[\\s]*(?:jndi|env|sys|lower|upper|date)[\\s]*:",
+      "action": "ban", "level": "critical", "score": 12, "fp": "low"
+    },
+    {
+      "id": "rce.template",
+      "name": "模板注入",
+      "surface": ["query", "cookie"],
+      "re": "\\{\\{[\\s]*[\\w.]+[\\s]*[\\(\\|][^}]*\\}\\}|\\{php\\}|<\\?php",
+      "action": "block", "level": "critical", "score": 10, "fp": "medium"
+    },
+    {
+      "id": "rce.serialize",
+      "name": "反序列化载荷",
+      "surface": ["query", "body", "cookie"],
+      "re": "(?:O:\\d+:\"[a-z_\\\\]+\":\\d+:\\{|a:\\d+:\\{[si]:\\d+)",
+      "action": "score", "level": "warn", "score": 6, "fp": "medium"
+    }
+  ]
+}

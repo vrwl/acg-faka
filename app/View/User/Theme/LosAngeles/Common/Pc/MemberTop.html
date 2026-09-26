@@ -1,0 +1,26 @@
+#{*
+  洛杉矶 · 会员中心页头（电脑端）
+  参数：laPage / laTitle / laIcon / laSub / laActions(HTML)
+*}
+#{assign var=laIcon value=$laIcon|default:'chart'}
+#{assign var=laSub value=$laSub|default:''}
+#{assign var=laActions value=$laActions|default:''}
+#{include file="./Head.html" laArea="member" laPage=$laPage|default:'member'}
+#{include file="./Header.html" laSearch=0}
+
+<div class="la-member la-wrap">
+    #{include file="./MemberNav.html"}
+
+    <main class="la-member__main">
+        <header class="la-mhead">
+            <div class="la-mhead__title">
+                <span class="la-mhead__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg($laIcon)}</span>
+                <div>
+                    <h1>#{$laTitle|default:$title|escape:'html'}</h1>
+                    #{if $laSub}<p>#{$laSub|escape:'html'}</p>#{/if}
+                </div>
+            </div>
+            #{if $laActions}<div class="la-mhead__acts">#{$laActions}</div>#{/if}
+        </header>
+
+        <div class="la-member__body">

@@ -1,0 +1,23 @@
+#{include file="./Header.html"}
+<main class="ny-auth-main">
+    <section class="ny-auth-brand"><span class="ny-brand-mark ny-brand-mark--large"><img src="#{$favicon}" alt=""></span><span class="ny-route-mark">NY</span><h1>#{t("创建账号")}</h1><p>#{t("注册后可保存订单并享受会员价格。")}</p></section>
+    <form method="post" class="needs-validation ny-auth-form">
+        <label class="ny-outlined-field"><span>#{t("用户名")}</span><input type="text" class="form-control" name="username" placeholder="#{t('支持中文')}" autocomplete="username" required></label>
+        <label class="ny-outlined-field"><span>#{t("登录密码")}</span><input type="password" class="form-control" name="password" placeholder="#{t('至少 6 位')}" autocomplete="new-password" minlength="6" required></label>
+        #{if $config.registered_type == 2}
+            <label class="ny-outlined-field"><span>#{t("邮箱")}</span><input type="email" class="form-control" name="email" placeholder="#{t('请输入邮箱')}" autocomplete="email" required></label>
+            #{if $config.registered_email_verification == 1}<div class="ny-code-field"><label class="ny-outlined-field"><span>#{t("邮箱验证码")}</span><input type="text" class="form-control" id="email_captcha" name="email_captcha" placeholder="#{t('6 位验证码')}" autocomplete="one-time-code"></label><button type="button" class="send-email-code">#{t("获取验证码")}</button></div>#{/if}
+        #{/if}
+        #{if $config.registered_type == 1}
+            <label class="ny-outlined-field"><span>#{t("手机号")}</span><input type="number" class="form-control" name="phone" placeholder="#{t('请输入手机号')}" autocomplete="tel" required></label>
+            #{if $config.registered_phone_verification == 1}<div class="ny-code-field"><label class="ny-outlined-field"><span>#{t("短信验证码")}</span><input type="text" class="form-control" id="phone_captcha" name="phone_captcha" placeholder="#{t('6 位验证码')}" autocomplete="one-time-code"></label><button type="button" class="send-phone-captcha">#{t("获取验证码")}</button></div>#{/if}
+        #{/if}
+        #{if $config.registered_verification == 1}<div class="ny-captcha-field"><label class="ny-outlined-field"><span>#{t("图形验证码")}</span><input type="text" class="form-control" id="image-captcha" name="captcha" placeholder="#{t('输入图中字符')}" autocomplete="off"></label><img src="/user/captcha/image?action=register" data-acg-refresh="/user/captcha/image?action=register" class="image-code" alt="#{t('更换验证码')}"></div>#{/if}
+        <button type="submit" class="ny-primary-button ny-auth-submit">#{t("注册")}</button>
+    </form>
+    #{if getHookNum(\App\Consts\Hook::USER_VIEW_AUTH_REGISTER_BUTTON) > 0}<div class="ny-divider"><span>#{t("其他方式")}</span></div>#{/if}
+    <div class="ny-auth-hooks">#{hook(\App\Consts\Hook::USER_VIEW_AUTH_REGISTER_BUTTON)}</div>
+    <p class="ny-auth-switch">#{t("已有账号？")}<a href="/user/authentication/login">#{t("前往登录")}</a></p>
+</main>
+#{ready("/assets/user/controller/auth/register.js")}
+#{include file="./Footer.html"}

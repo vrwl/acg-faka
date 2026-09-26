@@ -1,0 +1,55 @@
+#{include file="./Layout/Header.html"}
+
+<div class="blog-container">
+    <header class="blog-hero blog-hero--section">
+        <h1 class="blog-largetitle">#{t("搜索")}</h1>
+    </header>
+
+    <form class="blog-searchbar" action="#{$blog.urls.search}" method="get" role="search" data-blog-searchbar>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input type="search" name="q" value="#{$q|escape:'html'}" maxlength="60" autocomplete="off"
+               placeholder="#{t('搜索教程、文章…')}" #{if !$q}data-blog-autofocus#{/if}>
+        <button type="submit">#{t("搜索")}</button>
+        <div class="blog-searchbar__suggest" data-blog-suggest hidden></div>
+    </form>
+
+    #{if $q}
+        <div class="blog-search-result-head">
+            #{t("找到")} <b>#{$total}</b> #{t("篇与")} “<mark>#{$q|escape:'html'}</mark>” #{t("相关的文章")}
+        </div>
+        <div class="blog-layout">
+            <section class="blog-flow">
+                #{if $posts}
+                    #{foreach $posts as $post}
+                        #{include file="./Partial/PostCard.html" post=$post hl=1}
+                    #{/foreach}
+                #{else}
+                    <div class="blog-empty">
+                        <div class="blog-empty__icon">🔍</div>
+                        <p>#{t("没有找到相关文章，换个关键词试试")}</p>
+                    </div>
+                #{/if}
+            </section>
+        </div>
+        #{include file="./Partial/Pagination.html"}
+    #{else}
+        <div class="blog-search-home">
+            <div class="blog-search-home__block" data-blog-history hidden>
+                <div class="blog-rail__title">#{t("最近搜索")} <button type="button" class="blog-search-home__clear" data-blog-history-clear>#{t("清除")}</button></div>
+                <div class="blog-chiprow" data-blog-history-list></div>
+            </div>
+            #{if $hot_tags}
+                <div class="blog-search-home__block">
+                    <div class="blog-rail__title">#{t("热门标签")}</div>
+                    <div class="blog-chiprow">
+                        #{foreach $hot_tags as $tag}
+                            <a class="blog-chip blog-chip--tag" href="#{$tag.url}">##{$tag.name|escape:'html'}</a>
+                        #{/foreach}
+                    </div>
+                </div>
+            #{/if}
+        </div>
+    #{/if}
+</div>
+
+#{include file="./Layout/Footer.html"}

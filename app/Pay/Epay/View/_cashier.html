@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <title>#{$name|escape:'html'}付款</title>
+    <link rel="stylesheet" href="/app/Pay/Epay/View/Assets/cashier.css?v=1.0.9">
+    <script src="/assets/static/jquery.min.js"></script>
+    <script src="/assets/static/jquery.qrcode.min.js"></script>
+</head>
+#{if $order.gateway_amount !== null && $order.gateway_amount !== ''}#{assign var="payAmount" value=$order.gateway_amount}#{else}#{assign var="payAmount" value=$order.amount}#{/if}
+#{assign var="returnUrl" value=$option.returnUrl|default:'/'}
+<body data-state="#{if $order.status == 1}paid#{else}pending#{/if}" style="--ac:#{$accent};--deep:#{$deep};--soft:#{$soft};">
+<div class="bg"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+        <symbol id="lg-alipay" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="32" fill="#1677FF"/>
+            <text x="32" y="43.5" text-anchor="middle" font-size="31" font-weight="700" fill="#fff" font-family="PingFang SC, Microsoft YaHei, Noto Sans CJK SC, sans-serif">支</text>
+        </symbol>
+        <symbol id="lg-wxpay" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="32" fill="#07C160"/>
+            <path fill="#fff" d="M26.5 15C17.9 15 11 20.8 11 28c0 4 2.2 7.6 5.6 10l-1.4 4.6 5.3-2.8c1.9.6 3.9.9 6 .9h.9c-.3-1-.4-2-.4-3 0-7.1 6.8-12.9 15.2-12.9h.8C41.9 18.9 34.9 15 26.5 15z"/>
+            <circle cx="21.5" cy="25.5" r="2.2" fill="#07C160"/>
+            <circle cx="31.5" cy="25.5" r="2.2" fill="#07C160"/>
+            <path fill="#fff" d="M53 37.6c0-5.9-5.9-10.7-13.1-10.7s-13.1 4.8-13.1 10.7 5.9 10.7 13.1 10.7c1.6 0 3.1-.2 4.5-.7l4.3 2.3-1.1-3.8c3.3-1.9 5.4-5 5.4-8.5z"/>
+            <circle cx="35.3" cy="35.6" r="1.9" fill="#07C160"/>
+            <circle cx="44.3" cy="35.6" r="1.9" fill="#07C160"/>
+        </symbol>
+        <symbol id="lg-qqpay" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="32" fill="#12B7F5"/>
+            <ellipse cx="32" cy="35" rx="13" ry="17" fill="#1a1a1a"/>
+            <ellipse cx="32" cy="40" rx="9" ry="11" fill="#fff"/>
+            <rect x="20.5" y="31" width="23" height="4.2" rx="2.1" fill="#E5302C"/>
+            <circle cx="27.8" cy="24" r="2.7" fill="#fff"/>
+            <circle cx="36.2" cy="24" r="2.7" fill="#fff"/>
+            <circle cx="28.4" cy="24.4" r="1.2" fill="#1a1a1a"/>
+            <circle cx="35.6" cy="24.4" r="1.2" fill="#1a1a1a"/>
+            <ellipse cx="32" cy="28.6" rx="3.3" ry="1.8" fill="#F5A623"/>
+            <ellipse cx="26.8" cy="52" rx="4.2" ry="1.8" fill="#F5A623"/>
+            <ellipse cx="37.2" cy="52" rx="4.2" ry="1.8" fill="#F5A623"/>
+        </symbol>
+        <symbol id="ic-copy" viewBox="0 0 24 24">
+            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2M4 10a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>
+        </symbol>
+        <symbol id="ic-check" viewBox="0 0 24 24">
+            <path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.5 5 5 10-11"/>
+        </symbol>
+        <symbol id="ic-info" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2zm0-8h-2V7h2z"/>
+        </symbol>
+        <symbol id="ic-down" viewBox="0 0 24 24">
+            <path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m5 9 7 7 7-7"/>
+        </symbol>
+        <symbol id="ic-open" viewBox="0 0 24 24">
+            <path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>
+        </symbol>
+    </defs>
+</svg>
+
+<div class="wrap" id="app"
+     data-trade="#{$order.trade_no|escape:'html'}"
+     data-qr="#{$order.pay_url|escape:'html'}"
+     data-return="#{$returnUrl|escape:'html'}"
+     data-channel="#{$code|escape:'html'}"
+     data-state="#{if $order.status == 1}paid#{else}pending#{/if}">
+
+    <div class="card">
+        <div class="head">
+            <div class="brand">
+                <svg class="logo" aria-hidden="true"><use href="#lg-#{$code}" xlink:href="#lg-#{$code}"></use></svg>
+                <div>
+                    <div class="name">#{$name|escape:'html'}</div>
+                    <span class="way">#{$way|escape:'html'}</span>
+                </div>
+            </div>
+            <div class="state"><span class="dot"></span>等待付款</div>
+        </div>
+
+        <div class="amount">
+            <div class="lbl">支付金额</div>
+            <div class="amt-row">
+                <span class="cur">¥</span>
+                <b>#{$payAmount|string_format:"%.2f"}</b>
+            </div>
+            #{if !\App\Util\Currency::isBypass()}
+            <div class="fiat">订单金额 #{\App\Util\Currency::format($order.amount)|escape:'html'}</div>
+            #{/if}
+        </div>
+
+        <div class="qrzone">
+            <div class="qr">
+                <div id="qrcode" data-alt="#{$name|escape:'html'}付款二维码"></div>
+                <div class="chip"><svg aria-hidden="true"><use href="#lg-#{$code}" xlink:href="#lg-#{$code}"></use></svg></div>
+            </div>
+            <div class="scan-hint" id="scanHint" data-inapp="#{$inapp|escape:'html'}" data-mobile="#{$mobile|escape:'html'}">#{$scan|escape:'html'}</div>
+        </div>
+
+        #{if $appBtn}
+        <div class="app-open">
+            <a class="btn btn-primary" id="openApp" href="#" rel="noopener">
+                <svg aria-hidden="true"><use href="#ic-open" xlink:href="#ic-open"></use></svg>#{$appBtn|escape:'html'}
+            </a>
+        </div>
+        #{/if}
+
+        <div class="tipline">
+            <svg aria-hidden="true"><use href="#ic-info" xlink:href="#ic-info"></use></svg>
+            <div>#{if $option.notice}#{$option.notice|escape:'html'|nl2br}#{else}付款完成前请不要关闭本页，支付成功后会自动跳转。#{/if}</div>
+        </div>
+
+        <div class="foot">
+            <div class="listen">
+                <span class="dot"></span>
+                <span>付款后本页会自动确认，无需手动刷新</span>
+            </div>
+
+            <details class="detail">
+                <summary>订单详情
+                    <svg aria-hidden="true"><use href="#ic-down" xlink:href="#ic-down"></use></svg>
+                </summary>
+                <div class="rows">
+                    <div class="row"><s>订单号</s>
+                        <span class="val">#{$order.trade_no|escape:'html'}
+                            <button class="cbtn" id="copyTrade" type="button" data-done="订单号已复制"><svg aria-hidden="true"><use href="#ic-copy" xlink:href="#ic-copy"></use></svg>复制</button>
+                        </span>
+                    </div>
+                    <div class="row"><s>支付方式</s><span>#{$name|escape:'html'}</span></div>
+                    <div class="row"><s>支付金额</s><span>¥ #{$payAmount|string_format:"%.2f"}</span></div>
+                    #{if !\App\Util\Currency::isBypass()}
+                    <div class="row"><s>订单金额</s><span>#{\App\Util\Currency::format($order.amount)|escape:'html'}</span></div>
+                    #{/if}
+                    <div class="row"><s>创建时间</s><span>#{$order.create_time|escape:'html'}</span></div>
+                </div>
+            </details>
+        </div>
+
+        <div class="overlay paid">
+            <svg class="mark" viewBox="0 0 92 92" aria-hidden="true">
+                <circle class="ok-bg" cx="46" cy="46" r="46"></circle>
+                <circle class="ok-ring" cx="46" cy="46" r="42"></circle>
+                <path class="tick" d="M30 47.5 41.5 59 63 35"></path>
+            </svg>
+            <h2>支付成功</h2>
+            <div class="paid-amt">¥ #{$payAmount|string_format:"%.2f"}</div>
+            <p id="paidText" data-leaving="正在返回商户…">订单已完成付款</p>
+            <a class="btn ok" href="#{$returnUrl|escape:'html'}">返回商户</a>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"><svg aria-hidden="true"><use href="#ic-check" xlink:href="#ic-check"></use></svg><span id="toastText"></span></div>
+
+<script src="/app/Pay/Epay/View/Assets/cashier.js?v=1.0.9"></script>
+</body>
+</html>

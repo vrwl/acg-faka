@@ -1,0 +1,105 @@
+#{*
+  洛杉矶 · 硬币兑现（两端共用）
+
+  user/cash.js 的契约：
+    .uc-cash[data-coin][data-min][data-fee]
+    .cash-wallet-btn[data-id][data-ready][data-name][data-speed]（.checked = 选中）
+      data-id：0=支付宝 1=微信 2=钱包余额(即时到账) 3=USDT(TRC20)
+    input[name=amount] / .uc-cash-all / .payButton
+    文案位：.uc-cash-method-name .uc-cash-method-note .uc-cash-gross .uc-cash-net
+            .uc-cash-fee .uc-cash-status-text .uc-cash-submit__label
+            .uc-cash-receipt__status（内含 .material-icons-outlined，同样只做读屏用）
+*}
+<div class="uc-cash la-cash" data-coin="#{$user.coin|escape:'html'}" data-min="#{$config.cash_min|default:0}" data-fee="#{$config.cash_cost|default:0}">
+    <div class="la-cash__left">
+        <div class="la-card la-cash__box">
+            <div class="la-topup__balance">
+                <span class="la-topup__ico">#{\App\View\User\Theme\LosAngeles\Icons::svg('coin','la-i--lg')}</span>
+                <div>
+                    <span class="la-faint">#{t("可兑现硬币")}</span>
+                    <b class="la-num">#{$user.coin|escape:'html'}</b>
+                </div>
+                <a class="la-btn la-btn--line la-btn--sm" href="/user/cash/record">#{t("兑现记录")}</a>
+            </div>
+
+            #{if $processing > 0}
+                <div class="la-note la-note--warn">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('clock')}
+                    <span>#{t("你有")} <b>#{$processing}</b> #{t("笔兑现正在处理中")}</span>
+                </div>
+            #{/if}
+
+            <div class="la-field">
+                <label class="la-label">#{t("到账方式")}</label>
+                <div class="pay-list la-paylist la-paylist--wallet">
+                    #{if $config.cash_type_alipay == 1}
+                        <button type="button" class="la-wallet button-click cash-wallet-btn#{if $user.alipay == ''} is-off#{/if}"
+                                data-id="0" data-name="#{t('支付宝')}" data-speed="manual" data-ready="#{if $user.alipay == ''}0#{else}1#{/if}">
+                            #{\App\View\User\Theme\LosAngeles\Icons::svg('wallet')}
+                            <span class="la-wallet__name">#{t("支付宝")}</span>
+                            <span class="la-wallet__note">#{if $user.alipay == ''}#{t("未填写账号")}#{else}#{t("人工审核")}#{/if}</span>
+                        </button>
+                    #{/if}
+                    #{if $config.cash_type_wechat == 1}
+                        <button type="button" class="la-wallet button-click cash-wallet-btn#{if $user.wechat == ''} is-off#{/if}"
+                                data-id="1" data-name="#{t('微信')}" data-speed="manual" data-ready="#{if $user.wechat == ''}0#{else}1#{/if}">
+                            #{\App\View\User\Theme\LosAngeles\Icons::svg('message')}
+                            <span class="la-wallet__name">#{t("微信")}</span>
+                            <span class="la-wallet__note">#{if $user.wechat == ''}#{t("未上传收款码")}#{else}#{t("人工审核")}#{/if}</span>
+                        </button>
+                    #{/if}
+                    #{if $config.cash_type_usdt == 1}
+                        <button type="button" class="la-wallet button-click cash-wallet-btn#{if $user.wallet_address == ''} is-off#{/if}"
+                                data-id="3" data-name="USDT (TRC20)" data-speed="manual" data-ready="#{if $user.wallet_address == ''}0#{else}1#{/if}">
+                            #{\App\View\User\Theme\LosAngeles\Icons::svg('coin')}
+                            <span class="la-wallet__name">USDT (TRC20)</span>
+                            <span class="la-wallet__note">#{if $user.wallet_address == ''}#{t("未填写地址")}#{else}#{t("人工审核")}#{/if}</span>
+                        </button>
+                    #{/if}
+                    #{if $config.cash_type_balance == 1}
+                        <button type="button" class="la-wallet button-click cash-wallet-btn checked"
+                                data-id="2" data-name="#{t('钱包余额')}" data-speed="instant" data-ready="1">
+                            #{\App\View\User\Theme\LosAngeles\Icons::svg('flash')}
+                            <span class="la-wallet__name">#{t("钱包余额")}</span>
+                            <span class="la-wallet__note">#{t("即时到账")}</span>
+                        </button>
+                    #{/if}
+                </div>
+                <p class="la-faint la-cash__tip">#{t("收款信息在「个人资料 · 修改资料」里维护")}</p>
+            </div>
+
+            <div class="la-field">
+                <label class="la-label">#{t("兑现数量")}</label>
+                <div class="la-amountbox">
+                    <input class="la-amountbox__input" type="number" name="amount" inputmode="decimal" min="0" step="0.01"
+                           placeholder="#{t('请输入要兑现的硬币数量')}" autocomplete="off">
+                    <button type="button" class="la-amountbox__all uc-cash-all">#{t("全部")}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside class="la-cash__right">
+        <div class="la-card la-topup__summary">
+            <h3>#{t("兑现确认")}</h3>
+            <dl class="la-sumlist">
+                <div><dt>#{t("兑现数量")}</dt><dd class="la-num uc-cash-gross">0</dd></div>
+                <div><dt>#{t("手续费")}</dt><dd class="la-num la-sumlist__fee uc-cash-fee">-0</dd></div>
+                <div><dt>#{t("到账方式")}</dt><dd class="uc-cash-method-name">#{t("未选择")}</dd></div>
+                <div class="la-sumlist__total"><dt>#{t("预计到账")}</dt><dd class="la-price la-price--md"><span class="la-price__sym">#{$config.currency_symbol}</span><span class="uc-cash-net">0</span></dd></div>
+            </dl>
+            <p class="la-faint uc-cash-method-note"></p>
+
+            <div class="uc-cash-receipt__status la-status is-waiting">
+                <span class="la-status__ok">#{\App\View\User\Theme\LosAngeles\Icons::svg('check')}</span>
+                <span class="la-status__wait">#{\App\View\User\Theme\LosAngeles\Icons::svg('clock')}</span>
+                <span class="material-icons-outlined la-sr"></span>
+                <span class="uc-cash-status-text">#{t("请输入兑现数量")}</span>
+            </div>
+
+            <button type="button" class="la-btn la-btn--brand la-btn--lg la-btn--block payButton" disabled>
+                <span class="uc-cash-submit__label">#{t("确认兑现")}</span>
+            </button>
+        </div>
+    </aside>
+</div>

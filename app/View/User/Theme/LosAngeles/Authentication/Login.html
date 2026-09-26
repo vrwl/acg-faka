@@ -1,0 +1,2 @@
+#{* 洛杉矶 · 登录 —— 设备分流路由 *}
+#{if \App\Util\Client::isMobile()}#{include file="./App/Login.html"}#{else}#{include file="./Pc/Login.html"}#{/if}

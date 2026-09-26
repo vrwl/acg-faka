@@ -1,0 +1,8 @@
+#{* 洛杉矶 · 会员中心页尾（电脑端）。参数：laCtrl=平台控制器路径 laJs=主题脚本 *}
+#{assign var=laCtrl value=$laCtrl|default:''}
+        </div>
+    </main>
+</div>
+
+#{include file="./Footer.html"}
+#{include file="./Foot.html" laArea="member" laJs=$laJs|default:'Center.js' laCtrl=$laCtrl laVars=$laVars|default:[]}

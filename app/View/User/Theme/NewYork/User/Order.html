@@ -1,0 +1,14 @@
+#{include file="../Common/Header.html"}
+<div class="ny-page-shell ny-list-page" data-ny-page="order">
+    #{include file="../Common/Nav.html"}
+    <main class="ny-main">
+        <section class="ny-page-intro">
+            <div><h1>#{t("商家订单")}</h1><p>#{t("优先处理待发货的订单")}</p></div>
+        </section>
+        <section class="ny-panel">
+            <div class="ny-panel-body ny-table-wrap"><table id="order-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/order.js")}
+#{include file="../Common/Footer.html"}

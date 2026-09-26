@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell" data-mf-controller="/assets/user/controller/business/order.js" data-mf-table="#order-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">ORDER OPERATIONS</span><h1>#{t("商品订单")}</h1><p>#{t("聚合付款与交付状态，优先处理需要关注的订单。")}</p></div>
+            <span class="mf-page-intro__icon material-icons-outlined">local_shipping</span>
+        </section>
+        <section class="mf-panel">
+            <div class="mf-panel-heading"><div><span class="material-icons-outlined">list_alt</span><div><strong>#{t("订单列表")}</strong><small>#{t("搜索订单并完成发货处理")}</small></div></div></div>
+            <div class="mf-panel-body mf-table-wrap"><table id="order-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/business/order.js")}
+#{include file="../Common/Footer.html"}

@@ -40,7 +40,7 @@
         header.hidden = true;
         header.className = 'admin-wiki-menu-source';
         header.setAttribute('aria-hidden', 'true');
-        ['/admin/store/home', '/admin/manage/set'].forEach(function (href) {
+        ['/admin/manage/set'].forEach(function (href) {
             var link = source.querySelector('a[href="' + href + '"]');
             if (link) header.appendChild(document.importNode(link, true));
         });

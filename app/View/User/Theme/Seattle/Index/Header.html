@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="#{lang_code()}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="keywords" content="#{$config.keywords|escape:'html'}">
+    <meta name="description" content="#{$config.description|escape:'html'}">
+    <meta name="color-scheme" content="light dark">
+    <link href="#{$favicon|escape:'html'}?v=#{$app.version|escape:'html'}" rel="icon">
+    <title>#{$title|escape:'html'} - #{$config.shop_name|escape:'html'}</title>
+    #{include file="../Common/ThemeBoot.html"}
+    #{css(
+    [
+    "/assets/common/css/bootstrap.min.css",
+    "/assets/common/css/_.css",
+    "/assets/user/css/index.css",
+    "/assets/common/css/md-tokens.css",
+    "/assets/common/css/md-components.css",
+    "/assets/common/fonts/material-icons.css"
+    ],
+    [
+    "/assets/common/css/font.min.css",
+    "/assets/common/js/layui/css/layui.css",
+    "/assets/common/css/select2.min.css",
+    "/assets/common/css/component.css",
+    "/assets/common/js/table/bootstrap-table.css",
+    "/assets/common/js/layer/theme/default/layer.css",
+    "/assets/common/css/bootstrap.min.css",
+    "/assets/common/css/toastr.min.css",
+    "/assets/user/css/index.css",
+    "/assets/common/css/md-tokens.css",
+    "/assets/common/css/md-components.css",
+    "/assets/common/fonts/material-icons.css"
+    ])}
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Variables.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Base.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Components.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Pages.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Responsive.css')}">
+    #{js("/assets/common/js/ready.js")}
+    #{index_var()}
+    <!--start::HOOK-->
+    #{hook(\App\Consts\Hook::USER_GLOBAL_VIEW_HEADER)}
+    #{hook(\App\Consts\Hook::USER_VIEW_INDEX_HEADER)}
+    <!--end::HOOK-->
+</head>
+<body class="st-body st-store-body" data-st-shell="store" data-st-role="#{if !$user}guest#{elseif $user.businessLevel}merchant#{else}member#{/if}">
+<a class="st-skip-link" href="#pjax-container">#{t("跳到主要内容")}</a>
+<div class="st-store-shell">
+    <header class="st-topbar st-store-topbar">
+        <a class="st-brand" href="/" aria-label="#{t('返回')} #{$config.shop_name|escape:'html'} #{t('商城首页')}">
+            <img class="st-brand-icon" src="#{$favicon|escape:'html'}" alt="">
+            <span class="st-brand-copy"><strong>#{$config.shop_name|escape:'html'}</strong><small>Seattle</small></span>
+        </a>
+
+        <nav class="st-topnav" aria-label="#{t('商城导航')}">
+            #{foreach user_header_nav(['shop' => ['name' => t('商城')]]) as $nav}
+                <a href="#{$nav.url}" target="#{$nav.target}" #{if $nav.match && active($nav.match)}aria-current="page"#{/if}>#{$nav.name}</a>
+            #{/foreach}
+            #{if $config.service_url}<a href="#{$config.service_url|escape:'html'}" target="_blank" rel="noopener noreferrer">#{t("在线客服")}</a>#{/if}
+        </nav>
+
+        <div class="st-topbar-actions">
+            #{if $config.notice && active('/user/index/index')}
+                <button type="button" class="st-icon-button" data-st-notice-open aria-label="#{t('查看店铺公告')}" title="#{t('店铺公告')}"><span class="material-icons-outlined" aria-hidden="true">campaign</span></button>
+            #{/if}
+            <details class="st-theme-menu st-lang-menu">
+                <summary class="st-icon-button" aria-label="#{t('切换语言')}" title="#{t('语言')}" aria-haspopup="menu"><span class="material-icons-outlined" aria-hidden="true">language</span></summary>
+                <div class="st-theme-options" role="menu" aria-label="#{t('语言')}">
+                    #{foreach $langs as $l}
+                        <button type="button" data-lang-value="#{$l.code}" role="menuitem"><span><strong>#{$l.name}</strong></span><i class="material-icons-outlined" aria-hidden="true">check</i></button>
+                    #{/foreach}
+                </div>
+            </details>
+            <details class="st-theme-menu">
+                <summary class="st-icon-button" aria-label="#{t('切换外观模式')}" title="#{t('外观模式')}"><span class="material-icons-outlined" aria-hidden="true">contrast</span></summary>
+                <div class="st-theme-options" role="group" aria-label="#{t('外观模式')}">
+                    <button type="button" data-theme-toggle="light"><span class="material-icons-outlined" aria-hidden="true">light_mode</span><span>#{t("浅色")}</span></button>
+                    <button type="button" data-theme-toggle="auto"><span class="material-icons-outlined" aria-hidden="true">brightness_auto</span><span>#{t("自动")}</span></button>
+                    <button type="button" data-theme-toggle="dark"><span class="material-icons-outlined" aria-hidden="true">dark_mode</span><span>#{t("深色")}</span></button>
+                </div>
+            </details>
+
+            #{if $user}
+                <details class="st-account-menu">
+                    <summary class="st-account-trigger" aria-label="#{t('打开账号菜单')}">
+                        <img src="#{$user.avatar}" alt="">
+                        <span><strong>#{$user.username}</strong><small>#{t("余额")} #{$config.currency_symbol}#{$user.balance}</small></span>
+                        <span class="material-icons-outlined" aria-hidden="true">expand_more</span>
+                    </summary>
+                    <div class="st-account-popover">
+                        <a href="/user/dashboard/index"><span class="material-icons-outlined" aria-hidden="true">person</span>#{t("会员中心")}</a>
+                        <a href="/user/personal/purchaseRecord"><span class="material-icons-outlined" aria-hidden="true">receipt_long</span>#{t("购买记录")}</a>
+                        <a href="/user/recharge/index"><span class="material-icons-outlined" aria-hidden="true">account_balance_wallet</span>#{t("余额充值")}</a>
+                        <a href="/user/authentication/logout"><span class="material-icons-outlined" aria-hidden="true">logout</span>#{t("退出登录")}</a>
+                    </div>
+                </details>
+            #{else}
+                <a class="st-button st-button-quiet st-topbar-login" href="/user/authentication/login">#{t("登录")}</a>
+                #{if $config.registered_state == 1}<a class="st-button st-button-primary st-topbar-register" href="/user/authentication/register">#{t("注册")}</a>#{/if}
+            #{/if}
+        </div>
+    </header>
+    <div id="pjax-container" class="st-pjax">

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="#{lang_code()}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="keywords" content="#{$config.keywords|escape:'html'}">
+    <meta name="description" content="#{$config.description|escape:'html'}">
+    <meta name="color-scheme" content="light dark">
+    <link href="#{$favicon|escape:'html'}?v=#{$app.version|escape:'html'}" rel="icon">
+    <title>#{$title|escape:'html'} - #{$config.shop_name|escape:'html'}</title>
+    #{include file="./ThemeBoot.html"}
+    #{css(
+    [
+    "/assets/common/css/bootstrap.min.css",
+    "/assets/common/css/_.css",
+    "/assets/user/css/_user.css",
+    "/assets/static/codemirror/lib/codemirror.css",
+    "/assets/common/css/_material.css",
+    "/assets/common/fonts/material-icons.css"
+    ],
+    [
+    "/assets/common/css/font.min.css",
+    "/assets/common/js/layui/css/layui.css",
+    "/assets/common/css/select2.min.css",
+    "/assets/common/css/toastr.min.css",
+    "/assets/common/js/table/bootstrap-table.css",
+    "/assets/common/js/layer/theme/default/layer.css",
+    "/assets/common/css/component.css",
+    "/assets/user/css/global_2.css",
+    "/assets/static/codemirror/lib/codemirror.css",
+    "/assets/common/css/md-tokens.css",
+    "/assets/common/css/md-components.css",
+    "/assets/common/fonts/material-icons.css"
+    ])}
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Variables.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Base.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Components.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Pages.css')}">
+    <link rel="stylesheet" href="#{\App\Util\Helper::themeUrl('Assets/Css/Responsive.css')}">
+    #{js("/assets/common/js/ready.js")}
+    #{index_var()}
+    <!--start::HOOK-->
+    #{hook(\App\Consts\Hook::USER_VIEW_HEADER)}
+    <!--end::HOOK-->
+</head>
+<body class="st-body st-member-body" data-st-role="#{if $user.businessLevel}merchant#{else}member#{/if}">
+<div class="net-loading" style="display:none;"><div class="loading-view"><div class="loading-image"></div></div></div>
+<div class="st-app">
+    <header class="st-topbar">
+        <div class="st-topbar__inner">
+            <a class="st-brand" href="/user/dashboard/index" aria-label="#{t('会员主页')}">
+                <img src="#{$favicon|escape:'html'}" alt="">
+                <span><strong>#{$config.shop_name|escape:'html'}</strong><small>#{$title|escape:'html'}</small></span>
+            </a>
+            <div class="st-topbar__actions">
+                <a class="st-icon-button st-desktop-shop-link" href="/" target="_blank" rel="noopener noreferrer" aria-label="#{t('前往商城')}"><span class="material-icons-outlined">storefront</span></a>
+                <details class="st-theme-menu st-lang-menu">
+                    <summary class="st-icon-button" aria-label="#{t('切换语言')}" title="#{t('语言')}" aria-haspopup="menu"><span class="material-icons-outlined" aria-hidden="true">language</span></summary>
+                    <div class="st-theme-options" role="menu" aria-label="#{t('语言')}">
+                        #{foreach $langs as $l}
+                            <button type="button" data-lang-value="#{$l.code}" role="menuitem"><span><strong>#{$l.name}</strong></span><i class="material-icons-outlined" aria-hidden="true">check</i></button>
+                        #{/foreach}
+                    </div>
+                </details>
+                <details class="st-theme-menu st-member-theme-menu">
+                    <summary class="st-icon-button" aria-label="#{t('切换外观')}" aria-haspopup="menu"><span class="material-icons-outlined">contrast</span></summary>
+                    <div class="st-theme-options" role="menu" aria-label="#{t('外观模式')}">
+                        <button type="button" data-theme-toggle="light" role="menuitem"><span class="material-icons-outlined" aria-hidden="true">light_mode</span><span><strong>#{t("白天")}</strong><small>#{t("明亮清晰")}</small></span><i class="material-icons-outlined" aria-hidden="true">check</i></button>
+                        <button type="button" data-theme-toggle="auto" role="menuitem"><span class="material-icons-outlined" aria-hidden="true">brightness_auto</span><span><strong>#{t("自动")}</strong><small>#{t("跟随系统")}</small></span><i class="material-icons-outlined" aria-hidden="true">check</i></button>
+                        <button type="button" data-theme-toggle="dark" role="menuitem"><span class="material-icons-outlined" aria-hidden="true">dark_mode</span><span><strong>#{t("黑夜")}</strong><small>#{t("柔和低亮")}</small></span><i class="material-icons-outlined" aria-hidden="true">check</i></button>
+                    </div>
+                </details>
+                <button type="button" class="st-icon-button st-member-theme-sheet-trigger" data-st-sheet-open="appearance" aria-label="#{t('切换外观')}" aria-expanded="false"><span class="material-icons-outlined">contrast</span></button>
+                <div class="st-message-center">
+                    <button type="button" class="st-icon-button st-message-btn" data-st-message-toggle aria-label="#{t('消息通知')}" aria-expanded="false">
+                        <span class="material-icons-outlined">notifications_none</span><em class="st-badge st-message-badge is-empty">0</em>
+                    </button>
+                    <section class="st-popover st-message-popover" data-st-message-popover aria-hidden="true" aria-label="#{t('最近消息')}">
+                        <header><div><strong>#{t("消息通知")}</strong><small>#{t("最近的店铺动态")}</small></div><a href="/user/message/index">#{t("查看全部")}</a></header>
+                        <div class="st-message-recent" aria-live="polite"><div class="st-empty-compact">#{t("正在同步消息…")}</div></div>
+                    </section>
+                </div>
+                <a class="st-user-chip" href="/user/security/personal">
+                    <img src="#{$user.avatar|escape:'html'}" alt="#{$user.username|escape:'html'}" data-acg-fallback="#{$favicon|escape:'html'}">
+                    <span><strong>#{$user.username|escape:'html'}</strong><small>#{if $group.name}#{$group.name|escape:'html'}#{else}#{t("会员")}#{/if}</small></span>
+                </a>
+                <button type="button" class="st-icon-button logout" aria-label="#{t('退出登录')}"><span class="material-icons-outlined">logout</span></button>
+            </div>
+        </div>
+    </header>
+    <div id="pjax-container" class="st-pjax">

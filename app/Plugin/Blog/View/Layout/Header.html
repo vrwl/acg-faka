@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="#{lang_code()}" data-blog-style="#{$blog.style}" data-theme="light" data-theme-pref="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>#{$page.title_full|escape:'html'}</title>
+    #{if $page.description}<meta name="description" content="#{$page.description|escape:'html'}">#{/if}
+    #{if $page.keywords}<meta name="keywords" content="#{$page.keywords|escape:'html'}">#{/if}
+    #{if $page.noindex}<meta name="robots" content="noindex,follow">#{/if}
+    #{if $page.canonical}<link rel="canonical" href="#{$page.canonical|escape:'html'}">#{/if}
+    <meta property="og:type" content="#{$page.og_type}">
+    <meta property="og:title" content="#{$page.title|escape:'html'}">
+    <meta property="og:site_name" content="#{$blog.name|escape:'html'}">
+    #{if $page.description}<meta property="og:description" content="#{$page.description|escape:'html'}">#{/if}
+    #{if $page.og_image}<meta property="og:image" content="#{$page.og_image|escape:'html'}">#{/if}
+    <meta name="twitter:card" content="#{if $page.og_image}summary_large_image#{else}summary#{/if}">
+    #{if $page.published_iso}<meta property="article:published_time" content="#{$page.published_iso}">#{/if}
+    #{if $page.modified_iso}<meta property="article:modified_time" content="#{$page.modified_iso}">#{/if}
+    <meta name="theme-color" content="#f5f6fa" data-blog-themecolor>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/favicon.ico">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="/plugin/Blog/meta/manifest">
+    #{if $blog.feed_enabled}
+        <link rel="alternate" type="application/rss+xml" title="#{$blog.name|escape:'html'} RSS" href="#{$blog.urls.feed}">
+    #{/if}
+    <script>
+        /* FOUC guard：双维度（风格 × 明暗）首帧定型 + i18n 极简垫片（必须先于 lang_dict_script 的经典脚本） */
+        (function () {
+            var e = document.documentElement;
+            try {
+                var s = localStorage.getItem('blog-style');
+                if (s && ['glass', 'paper', 'mag', 'neon'].indexOf(s) > -1) e.setAttribute('data-blog-style', s);
+                var p = localStorage.getItem('blog-theme') || '#{$blog.dark}';
+                if (['light', 'dark', 'auto'].indexOf(p) < 0) p = 'auto';
+                var d = p === 'dark' || (p === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+                e.setAttribute('data-theme', d ? 'dark' : 'light');
+                e.setAttribute('data-theme-pref', p);
+            } catch (x) { e.setAttribute('data-theme', 'light'); }
+        })();
+        window._data_var = window._data_var || {};
+        function setVar(n, d) { window._data_var[n] = d; }
+        function getVar(n) { return window._data_var[n]; }
+        function i18n(t) {
+            if (typeof t !== 'string' || !t) return t;
+            var l = getVar('LANG');
+            if (!l || l === 'zh-cn') return t;
+            var d = getVar('I18N');
+            if (d && Object.prototype.hasOwnProperty.call(d, t)) return d[t];
+            var s = t.trim();
+            if (d && s !== t && Object.prototype.hasOwnProperty.call(d, s)) return t.replace(s, d[s]);
+            return t;
+        }
+        setVar('LANG', '#{\Kernel\Util\Lang::get()}');
+    </script>
+    #{lang_dict_script()}
+    <link rel="stylesheet" href="#{Plugin('Blog','View/Css/base.css')}">
+    <link rel="stylesheet" href="#{Plugin('Blog','View/Css/themes.css')}">
+    <!--prose.css 常驻：pjax 切页不再动 <head>，详情页样式必须提前就位（gzip 后 ~6KB）-->
+    <link rel="stylesheet" href="#{Plugin('Blog','View/Css/prose.css')}">
+    #{if isset($page.jsonld_json)}<script type="application/ld+json">#{$page.jsonld_json}</script>#{/if}
+    <script>
+        window.__BLOG__ = {
+            api: '#{$blog.api}',
+            name: '#{$blog.name|escape:'javascript'}',
+            urls: {
+                index: '#{$blog.urls.index}', category: '#{$blog.urls.category}', tag: '#{$blog.urls.tag}',
+                archive: '#{$blog.urls.archive}', search: '#{$blog.urls.search}', feed: '#{$blog.urls.feed}'
+            },
+            login: '/user/authentication/login?goto=' + encodeURIComponent(location.pathname + location.search),
+            user: #{if $user}{name: '#{$user.username|escape:'javascript'}', avatar: '#{$user.avatar|escape:'javascript'}'}#{else}null#{/if},
+            like: #{$blog.like_enabled},
+            comment: {enabled: #{$blog.comment_enabled}, audit: #{$blog.comment_audit}, maxlen: #{$blog.comment_maxlen}, maxDepth: #{$blog.comment_max_depth}},
+            lazyload: #{$blog.lazyload},
+            hljs: '#{Plugin('Blog','View/Vendor/hljs/highlight.min.js')}',
+            t: {
+                copied: '#{t("已复制")}', copyFail: '#{t("复制失败")}', copy: '#{t("复制")}',
+                expand: '#{t("展开全部")}', collapse: '#{t("收起")}',
+                send: '#{t("发送")}', sending: '#{t("发送中…")}', cancel: '#{t("取消")}',
+                replyTo: '#{t("回复")}', loginToComment: '#{t("登录后参与讨论")}', toLogin: '#{t("去登录")}',
+                pendingTip: '#{t("已提交，审核通过后对所有人可见")}', commentOk: '#{t("评论成功")}',
+                pendingTag: '#{t("待审核")}', commentClosed: '#{t("评论已关闭")}',
+                loadFail: '#{t("加载失败，点击重试")}', noMore: '#{t("没有更多了")}',
+                expandReplies: '#{t("展开全部回复")}', collapseReplies: '#{t("收起回复")}',
+                justNow: '#{t("刚刚")}', minutesAgo: '#{t("分钟前")}', hoursAgo: '#{t("小时前")}', daysAgo: '#{t("天前")}',
+                linkCopied: '#{t("链接已复制")}', needLogin: '#{t("需要登录后才能继续")}',
+                admin: '#{t("管理员")}', author: '#{t("作者")}',
+                tip: '#{t("提示")}', info: '#{t("信息")}', warning: '#{t("注意")}', danger: '#{t("危险")}', note: '#{t("笔记")}',
+                charsLeft: '#{t("还能输入")}', pinned: '#{t("置顶")}', minutes: '#{t("分钟")}',
+                commentPlaceholder: '#{t("写下你的评论…")}',
+                noComments: '#{t("还没有评论，来说点什么吧")}'
+            }
+        };
+    </script>
+</head>
+<body class="blog-body#{if $page.body_class} #{$page.body_class}#{/if}#{if $page.tab} blog-has-tab#{/if}#{if $page.is_sub} blog-is-sub#{/if}">
+<div class="blog-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="blog-noise" aria-hidden="true"></div>
+<a class="blog-skip" href="#blog-main">#{t("跳到主要内容")}</a>
+
+<!--#blog-shell 是 pjax 的替换单元：导航 + 正文 + 页脚 + TabBar + Sheet 一整块换掉，
+    氛围光斑与 <html> 上的主题属性留在外面，切页时不闪、动画不重启-->
+<div id="blog-shell">
+<header class="blog-nav" data-blog-nav>
+    <div class="blog-nav__inner">
+        <button class="blog-nav__back" data-blog-back aria-label="#{t('返回')}">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <a class="blog-nav__brand" href="#{$blog.urls.index}">
+            <img src="/favicon.ico" alt="">
+            <b>#{$blog.name|escape:'html'}</b>
+        </a>
+        <span class="blog-nav__pagetitle" data-blog-smalltitle>#{$page.title|escape:'html'}</span>
+        <nav class="blog-nav__links" aria-label="#{t('博客导航')}">
+            <a href="#{$blog.urls.index}" #{if $page.active == 'home'}aria-current="page"#{/if}>#{t("首页")}</a>
+            <a href="#{$blog.urls.category}" #{if $page.active == 'category'}aria-current="page"#{/if}>#{t("分类")}</a>
+            <a href="#{$blog.urls.archive}" #{if $page.active == 'archive'}aria-current="page"#{/if}>#{t("归档")}</a>
+            #{if $blog.about_url}
+                <a href="#{$blog.about_url}" #{if $page.active == 'about'}aria-current="page"#{/if}>#{t("关于")}</a>
+            #{/if}
+        </nav>
+        <div class="blog-nav__actions">
+            <a class="blog-iconbtn blog-nav__search" href="#{$blog.urls.search}" aria-label="#{t('搜索')}">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            </a>
+            <button class="blog-iconbtn" data-blog-appearance-btn aria-label="#{t('外观')}" aria-haspopup="dialog">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01a1.5 1.5 0 0 1 1.12-2.49H16a5 5 0 0 0 5-5c0-4.42-4.03-8-9-8z"/><circle cx="7.5" cy="11.5" r="1" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1" fill="currentColor"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor"/></svg>
+            </button>
+            #{if $user}
+                <a class="blog-avatar" href="/user/dashboard/index" title="#{$user.username|escape:'html'}">
+                    <img src="#{$user.avatar|escape:'html'}" alt="#{$user.username|escape:'html'}">
+                </a>
+            #{else}
+                #{if $blog.login_visible}
+                    <a class="blog-nav__login" href="/user/authentication/login?goto=#{$smarty.server.REQUEST_URI|escape:'url'}">#{t("登录")}</a>
+                #{/if}
+            #{/if}
+        </div>
+    </div>
+</header>
+
+<main id="blog-main" class="blog-main">

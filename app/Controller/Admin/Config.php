@@ -49,29 +49,11 @@ class Config extends Manage
         }
 
         $themes = Theme::getThemes();
-        $cacheFile = BASE_PATH . "/runtime/plugin/store.cache";
 
-        if (file_exists($cacheFile)) {
-            $appStore = (array)json_decode((string)file_get_contents($cacheFile), true) ?: [];
-            foreach ($themes as &$theme) {
-                $key = $theme['info']['KEY'];
-
-                if (isset($appStore[$key])) {
-                    $plugin = $appStore[$key];
-
-                    if (!empty($plugin['icon'])) {
-                        $theme['icon'] = \App\Service\App::APP_URL . '/' . ltrim((string)$plugin['icon'], '/');
-                    }
-                    if ($theme['info']['VERSION'] !== $plugin['version']) {
-                        $theme['have_update'] = true;
-                        $theme['update_content'] = $plugin['update_content'];
-                        $theme['update_version'] = $plugin['version'];
-
-                        $theme['plugin_id'] = $plugin['id'] ?? 0;
-                        $theme['plugin_type'] = $plugin['type'] ?? 2;
-                    }
-                }
-            }
+        //模板图标随包走：Config.php 里写 INFO['ICON']，或直接往模板目录里放
+        //icon.png / icon.svg。两样都没有时前端用首字母色块占位。
+        foreach ($themes as $index => $theme) {
+            $themes[$index]['icon'] = Theme::getIcon($theme);
         }
 
         $themesJson = json_encode(

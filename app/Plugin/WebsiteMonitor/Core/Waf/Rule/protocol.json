@@ -1,0 +1,60 @@
+{
+  "group": "protocol",
+  "name": "UA、协议与上传",
+  "rules": [
+    {
+      "id": "ua.tool",
+      "name": "恶意工具 UA",
+      "surface": ["header"],
+      "re": "UserAgent=[^&]*(?:sqlmap|nmap|nikto|dirbuster|dirsearch|gobuster|wfuzz|hydra|havij|w3af|acunetix|netsparker|nessus|openvas|arachni|zgrab|masscan|nuclei|xray|goby|httrack|antsword|behinder|godzilla|pangolin|zmeu|morfeus|libwww-perl|python-httplib)",
+      "action": "ban", "level": "critical", "score": 12, "fp": "low"
+    },
+    {
+      "id": "ua.empty",
+      "name": "空 User-Agent",
+      "surface": ["header"],
+      "action": "score", "level": "info", "score": 3, "fp": "high",
+      "enabled": false
+    },
+    {
+      "id": "ua.fake_spider",
+      "name": "伪装搜索引擎蜘蛛",
+      "surface": ["header"],
+      "action": "block", "level": "warn", "score": 8, "fp": "low"
+    },
+    {
+      "id": "method.disallowed",
+      "name": "不允许的 HTTP 方法",
+      "surface": [],
+      "action": "block", "level": "warn", "score": 6, "fp": "low", "status": 405
+    },
+    {
+      "id": "host.mismatch",
+      "name": "Host 头与站点域名不符",
+      "surface": [],
+      "action": "block", "level": "warn", "score": 6, "fp": "high",
+      "enabled": false
+    },
+    {
+      "id": "upload.ext",
+      "name": "上传可执行文件",
+      "surface": ["files"],
+      "re": "=[^&]*\\.(?:php\\d?|phtml|phar|pht|shtml|jsp|jspx|asp|aspx|ashx|cer|exe|sh|bat|cgi|pl)(?:[.\\s]|$)",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "upload.double_ext",
+      "name": "上传双后缀绕过",
+      "surface": ["files"],
+      "re": "=[^&]*\\.(?:jpe?g|png|gif|webp|bmp|txt|pdf)\\.(?:php\\d?|phtml|jsp|asp)",
+      "action": "block", "level": "critical", "score": 10, "fp": "low"
+    },
+    {
+      "id": "ref.spam",
+      "name": "垃圾来源刷量",
+      "surface": ["header"],
+      "action": "score", "level": "info", "score": 3, "fp": "high",
+      "enabled": false
+    }
+  ]
+}

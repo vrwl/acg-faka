@@ -1,0 +1,11 @@
+{
+    "require": {
+        "amphp/amp": "^2.6",
+        "amphp/parallel": "^1.4"
+    },
+    "autoload": {
+        "classmap": [
+            "Command"
+        ]
+    }
+}

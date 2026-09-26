@@ -1,0 +1,21 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-list-page" data-st-page="cash-record" data-st-table="#cash-table">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main">
+        <nav class="st-tabs" aria-label="#{t('兑现中心')}">
+            <a href="/user/cash/index"><span class="material-icons-outlined">currency_exchange</span>#{t("硬币兑现")}</a>
+            <a href="/user/cash/record" class="is-active"><span class="material-icons-outlined">history</span>#{t("兑现记录")}</a>
+        </nav>
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("到账进度")}</span><h1>#{t("兑现记录")}</h1><p>#{t("查看每笔申请的处理进度、费用与到账时间。")}</p></div>
+        </header>
+        <section class="st-panel" aria-labelledby="st-cash-record-title">
+            <div class="st-panel__header">
+                <div><span class="st-panel__icon material-icons-outlined">history</span><div><h2 id="st-cash-record-title">#{t("申请明细")}</h2><p>#{t("支持按到账钱包、申请类型和时间筛选")}</p></div></div>
+            </div>
+            <div class="st-panel__body st-table-wrap"><table id="cash-table" data-st-mobile-record="cash-record"></table></div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/CashRecord.js'))}
+#{include file="../Common/Footer.html"}

@@ -1,0 +1,34 @@
+#{*
+  洛杉矶 · 递归分类树（只用来预渲染「当前所在的那一支」）
+
+  参数：nodes（分类数组）depth（当前深度）activeId（高亮的分类 id）
+
+  其余分支不走这里 —— 它们在列表页是折叠的，点开由 Pc.Shop.js 从
+  缓存的整棵树现建，DOM 结构与这里保持一致。
+*}
+#{strip}
+#{foreach $nodes as $node}
+    #{assign var=laKids value=$node.children|default:[]}
+    #{assign var=laOpen value=\App\View\User\Theme\LosAngeles\Support::onPath($node, $activeId)}
+    <div class="la-tree__node#{if $laOpen} is-open#{/if}" data-node="#{$node.id}" data-kids="#{$laKids|@count}">
+        <div class="la-tree__row#{if $node.id == $activeId} is-on#{/if}" style="--d:#{$depth}">
+            #{if $laKids|@count > 0}
+                <button type="button" class="la-tree__toggle" data-la-tree-toggle aria-expanded="#{if $laOpen}true#{else}false#{/if}" aria-label="#{t('展开')}"><span class="la-tree__arr" aria-hidden="true"></span></button>
+            #{else}
+                <span class="la-tree__toggle is-leaf" aria-hidden="true"></span>
+            #{/if}
+            <a class="la-tree__link" href="/cat/#{$node.id|escape:'html'}">
+                <span class="la-ellipsis">#{$node.name}</span>
+                #{if $laKids|@count > 0}<em class="la-tree__num">#{$laKids|@count}</em>#{/if}
+            </a>
+        </div>
+        #{if $laKids|@count > 0}
+            <div class="la-tree__kids"#{if !$laOpen} hidden#{/if} data-la-tree-kids#{if $laOpen} data-built="1"#{/if}>
+                #{if $laOpen}
+                    #{include file="./CategoryTree.html" nodes=$laKids depth=$depth+1 activeId=$activeId}
+                #{/if}
+            </div>
+        #{/if}
+    </div>
+#{/foreach}
+#{/strip}

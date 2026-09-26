@@ -1,0 +1,123 @@
+#{*
+  洛杉矶 · 下单表单字段（电脑端与手机端共用）
+
+  两端外观差别很大，但提交给 /user/api/order/trade 的字段必须一模一样，
+  所以字段本体只写这一份 —— 类名沿用平台契约（.switch-race / .switch-sku /
+  .change-num-add 等），主题自己的 JS 与平台控制器都能认。
+
+  参数：laDense=1 时用手机端的紧凑排布。
+*}
+#{assign var=laDense value=$laDense|default:0}
+
+#{* ---------------------------------------------------------- 种类（每种一个单价） *}
+#{if $item.config.category|default:false}
+    <div class="la-buy__row">
+        <div class="la-buy__label">#{t("选择种类")}</div>
+        <div class="la-optgrid">
+            #{foreach $item.config.category as $race => $price}
+                #{if !is_array($price)}
+                <button type="button" class="la-opt switch-race#{if $price@first} is-primary#{/if}"
+                        data-sku="#{$race|escape:'html'}" data-price="#{$price|escape:'html'}">
+                    <span class="la-opt__name">#{$race|strip_tags|strip|escape:'html'}</span>
+                    <span class="la-opt__price">#{$config.currency_symbol}#{$price|escape:'html'}</span>
+                </button>
+                #{/if}
+            #{/foreach}
+        </div>
+    </div>
+#{/if}
+
+#{* ---------------------------------------------------------- 多规格（组 → 选项 → 加价） *}
+#{if $item.config.sku|default:false}
+    #{foreach $item.config.sku as $group => $options}
+        <div class="la-buy__row">
+            <div class="la-buy__label">#{$group|strip_tags|strip|escape:'html'}</div>
+            <div class="la-optgrid">
+                #{foreach $options as $key => $price}
+                    #{if !is_array($price)}
+                    <button type="button" class="la-opt switch-sku#{if $price@first} is-primary#{/if}"
+                            data-sku="#{$group|escape:'html'}" data-value="#{$key|escape:'html'}" data-price="#{$price|escape:'html'}">
+                        <span class="la-opt__name">#{$key|strip_tags|strip|escape:'html'}</span>
+                        #{if $price > 0}<span class="la-opt__price">+#{$config.currency_symbol}#{$price|escape:'html'}</span>#{/if}
+                    </button>
+                    #{/if}
+                #{/foreach}
+            </div>
+        </div>
+    #{/foreach}
+#{/if}
+
+#{* ---------------------------------------------------------- 数量 *}
+<div class="la-buy__row la-buy__row--inline">
+    <div class="la-buy__label">#{t("购买数量")}</div>
+    <div class="la-stepper">
+        <button type="button" class="la-stepper__btn change-num-sub" aria-label="#{t('减少')}">#{\App\View\User\Theme\LosAngeles\Icons::svg('minus')}</button>
+        <input class="la-stepper__input" type="number" name="num" value="#{if $item.minimum > 0}#{$item.minimum}#{else}1#{/if}"
+               min="#{if $item.minimum > 0}#{$item.minimum}#{else}1#{/if}"
+               #{if $item.maximum > 0}max="#{$item.maximum}"#{/if} inputmode="numeric" autocomplete="off">
+        <button type="button" class="la-stepper__btn change-num-add" aria-label="#{t('增加')}">#{\App\View\User\Theme\LosAngeles\Icons::svg('plus')}</button>
+    </div>
+    <div class="la-buy__hint">
+        #{if $item.minimum > 0}<span>#{t("起购")} #{$item.minimum}</span>#{/if}
+        #{if $item.maximum > 0}<span>#{t("单次最多")} #{$item.maximum}</span>#{/if}
+        #{if $item.purchase_count > 0}<span>#{t("限购")} #{$item.purchase_count}</span>#{/if}
+    </div>
+</div>
+
+#{* ---------------------------------------------------------- 指定卡密 *}
+#{if $item.draft_status == 1}
+    <div class="la-buy__row">
+        <div class="la-buy__label">#{t("指定宝贝")}</div>
+        <div class="la-draft">
+            <button type="button" class="la-btn la-btn--line la-btn--sm optional-card" data-la-pick-card>
+                #{\App\View\User\Theme\LosAngeles\Icons::svg('card')}<span>#{t("挑选指定卡密")}</span>
+            </button>
+            <input type="hidden" name="card_id" value="0">
+            <span class="la-draft__picked" data-la-card-picked hidden></span>
+            #{if $item.draft_premium > 0}
+                <span class="la-draft__fee">#{t("指定加价")} #{$config.currency_symbol}#{$item.draft_premium|escape:'html'}</span>
+            #{/if}
+        </div>
+    </div>
+#{/if}
+
+#{* ---------------------------------------------------------- 联系方式 *}
+<div class="la-buy__row">
+    <div class="la-buy__label">#{contact_type_msg($item.contact_type)}</div>
+    <input class="la-input" type="text" name="contact" autocomplete="off"
+           placeholder="#{t('用于查询订单与接收发货信息')}">
+</div>
+
+#{* ---------------------------------------------------------- 自定义控件 *}
+#{if $item.widget|default:false}
+    <div class="la-buy__row la-buy__widgets">
+        #{widget_render($item.widget)}
+    </div>
+#{/if}
+
+#{* ---------------------------------------------------------- 优惠券 / 订单密码 *}
+#{if $item.coupon == 1}
+    <div class="la-buy__row">
+        <div class="la-buy__label">#{t("优惠券")}</div>
+        <input class="la-input" type="text" name="coupon" autocomplete="off" placeholder="#{t('有优惠券可在此填写，没有请留空')}">
+    </div>
+#{/if}
+
+#{if $item.password_status == 1}
+    <div class="la-buy__row">
+        <div class="la-buy__label">#{t("订单密码")}</div>
+        <input class="la-input" type="text" name="password" autocomplete="off" placeholder="#{t('设置一个密码，查询订单时需要它')}">
+    </div>
+#{/if}
+
+#{* ---------------------------------------------------------- 验证码 *}
+#{if $item.trade_captcha == 1}
+    <div class="la-buy__row">
+        <div class="la-buy__label">#{t("验证码")}</div>
+        <div class="la-captcha">
+            <input class="la-input" type="text" name="captcha" autocomplete="off" inputmode="numeric" placeholder="#{t('请输入右侧验证码')}">
+            <img class="la-captcha__img captcha-img" src="/user/captcha/image?action=trade" alt="#{t('验证码')}"
+                 title="#{t('点击刷新')}" data-la-captcha>
+        </div>
+    </div>
+#{/if}

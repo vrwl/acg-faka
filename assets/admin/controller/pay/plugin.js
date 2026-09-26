@@ -28,74 +28,6 @@
         if (controllerActive) controllerLayers.add(index); else layer.close(index);
         return index;
     };
-    const pluginUpdate = {
-        items: null,
-        updateNum: 0,
-        countedKeys: new Set(),
-        init() {
-            if (!this.items) {
-                let items = localStorage.getItem("pluginVersions");
-                if (items) {
-                    try {
-                        const parsed = JSON.parse(items);
-                        this.items = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-                    } catch (error) {
-                        this.items = {};
-                    }
-                } else {
-                    this.items = {};
-                }
-            }
-        },
-        getPlugin(key) {
-            this.init();
-            if (!this.items || !Object.prototype.hasOwnProperty.call(this.items, key)) {
-                return null;
-            }
-            return this.items[key];
-        },
-        getAvailable(key, version) {
-            const plugin = this.getPlugin(key);
-            return plugin && version != plugin.version ? plugin : null;
-        },
-        renderButton(key, version) {
-            const plugin = this.getAvailable(key, version);
-            if (!plugin) {
-                return "";
-            }
-
-            if (!this.countedKeys.has(key)) {
-                this.countedKeys.add(key);
-                this.updateNum++;
-            }
-
-            $('#updateNum').html('<b class="text-danger">[' + this.updateNum + ']' + i18n('个插件需要更新') + '</b>');
-
-            return ' <span style="cursor: pointer;" class="badge badge-light-success updatePlugin">' + i18n('更新-&gt;') + escapeHtml(plugin.version) + '</span>';
-        }
-    }
-
-    const runPluginUpdate = row => {
-        const plugin = pluginUpdate.getPlugin(row.id);
-        if (!plugin) {
-            message.error("初始化更新失败，请刷新页面重试");
-            return;
-        }
-        const updateContent = escapeHtml(plugin?.update_content || i18n('该更新没有提供说明')).replace(/\n/g, '<br>');
-        message.ask(updateContent, () => {
-            if (!controllerActive) return;
-            util.post('/admin/api/app/upgrade', {
-                plugin_key: row.id,
-                type: plugin.type,
-                plugin_id: plugin.id
-            }, res => {
-                if (!controllerActive) return;
-                message.info(res.msg);
-                if (res.code == 200) window.location.reload();
-            });
-        }, `<b class="text-primary"><i class="fa-duotone fa-regular fa-sparkles"></i> ${escapeHtml(row?.info?.name)}</b> <span class="text-primary" style="font-size:14px;">${escapeHtml(row?.info?.version)}</span> <i class="fa-duotone fa-regular fa-right-long text-danger"></i> <span class="text-success" style="font-size:14px;">${escapeHtml(plugin.version)}</span>`, i18n("立即更新"));
-    };
-
     //这几个插件的验签密钥归属于 app/Plugin 那一侧的通用插件（手机App配对、自己的表和队列都在那边），
     //pay 这一侧配多套也只能换验签用的 key，换不了收款的那台设备，界面上要说清楚免得站长白配。
     //UsdtPay 2.0 起多套配置就是多个收款钱包，已经不是"只能区分验签密钥"的形态，从名单里摘掉
@@ -489,31 +421,16 @@
                             });
                         });
                     }
-                },
-                {
-                    icon: 'fa-duotone fa-regular fa-arrows-rotate text-success',
-                    class: 'admin-mobile-operation-only text-success',
-                    title: '更新插件',
-                    show: row => {
-                        return mobileAdminEnabled() && Boolean(pluginUpdate.getAvailable(row.id, row?.info?.version));
-                    },
-                    click: (event, value, row) => runPluginUpdate(row)
                 }
             ]
         }
         , {
             field: 'version',
             class: "nowrap",
-            title: '<span id="updateNum">' + i18n('版本号') + '</span>',
+            title: i18n('版本号'),
             formatter: function (val, item) {
                 const currentVersion = item?.info?.version;
-                return '<span class="md-version">v' + escapeHtml(currentVersion) + '</span>' + pluginUpdate.renderButton(item.id, currentVersion);
-            }
-            ,
-            events: {
-                'click .updatePlugin': function (event, value, row, index) {
-                    runPluginUpdate(row);
-                }
+                return '<span class="md-version">v' + escapeHtml(currentVersion) + '</span>';
             }
         }
         , {
@@ -574,7 +491,7 @@
                     click: (event, value, row, index) => {
                         message.ask(`${i18n('你想要卸载')} <b class="text-danger">${escapeHtml(row?.info?.name ?? row.id)}</b> ${i18n('吗，该操作会清空插件所有数据，且无法恢复，请慎重操作！')}`, () => {
                             if (!controllerActive) return;
-                            util.post('/admin/api/app/uninstall', {
+                            util.post('/admin/api/plugin/uninstall', {
                                 plugin_key: row.id,
                                 type: 1
                             }, res => {
@@ -589,23 +506,50 @@
         }
     ]);
 
-    table.onResponse(response => {
-        pluginUpdate.updateNum = 0;
-        pluginUpdate.countedKeys.clear();
-        $(`#updateNum`).html(i18n("版本号"));
-        (response?.data?.list ?? []).forEach(item => {
-            const available = pluginUpdate.getAvailable(item.id, item?.info?.version);
-            item.__adminMobilePayUpdateVersion = available?.version ?? '';
-        });
-    });
-
     table.disablePagination();
     table.render();
+
+    // 工具栏：本地安装支付插件。上传 zip 后由后端按「插件标识/...」的单层目录结构落盘。
+    $('#pay-plugin-install-input').off('change').on('change', function () {
+        if (!this.files || !this.files.length) return;
+        const input = this;
+        const formdata = new FormData();
+        formdata.append('file', input.files[0]);
+        formdata.append('type', '1');
+        Loading.show();
+        $.ajax({
+            type: 'POST',
+            url: '/admin/api/plugin/install',
+            data: formdata,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: res => {
+                Loading.hide();
+                if (input.isConnected) $(input).val('');
+                if (!controllerActive) return;
+                if (res.code == 200) {
+                    message.success(res.msg || i18n('安装完成'));
+                    table.refresh();
+                } else {
+                    layer.msg(res.msg);
+                }
+            },
+            error: () => {
+                Loading.hide();
+                if (input.isConnected) $(input).val('');
+                layer.msg(i18n('网络错误'));
+            }
+        });
+    });
+    $('.pay-plugin-install').off('click').on('click', () => $('#pay-plugin-install-input').click());
 
     function destroy() {
         if (!controllerActive) return;
         controllerActive = false;
         _LogPid = null;
+        $('#pay-plugin-install-input').off('change');
+        $('.pay-plugin-install').off('click');
         $(document).off('pjax:beforeReplace' + namespace);
         controllerLayers.forEach(index => layer.close(index));
         controllerLayers.clear();

@@ -1,0 +1,16 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell" data-mf-controller="/assets/user/controller/user/child.js" data-mf-table="#member-table">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro">
+            <div><span class="mf-eyebrow">GROWTH NETWORK</span><h1>#{t("我的下级")}</h1><p>#{t("查看推广关系与成员贡献，清楚掌握团队成长。")}</p></div>
+            <span class="mf-page-intro__icon material-icons-outlined">groups</span>
+        </section>
+        <section class="mf-panel">
+            <div class="mf-panel-heading"><div><span class="material-icons-outlined">group_work</span><div><strong>#{t("成员列表")}</strong><small>#{t("搜索、筛选并查看下级详情")}</small></div></div></div>
+            <div class="mf-panel-body mf-table-wrap"><table id="member-table"></table></div>
+        </section>
+    </main>
+</div>
+#{ready("/assets/user/controller/user/child.js")}
+#{include file="../Common/Footer.html"}

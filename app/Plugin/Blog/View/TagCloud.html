@@ -1,0 +1,21 @@
+#{include file="./Layout/Header.html"}
+
+<div class="blog-container">
+    <header class="blog-hero blog-hero--section">
+        <h1 class="blog-largetitle">#{t("标签")}</h1>
+    </header>
+
+    <div class="blog-tagcloud">
+        #{if $tags}
+            #{foreach $tags as $tag}
+                <a class="blog-chip blog-chip--tag blog-chip--s#{$tag.size}" href="#{$tag.url}">
+                    ##{$tag.name|escape:'html'} <em>#{$tag.post_count}</em>
+                </a>
+            #{/foreach}
+        #{else}
+            <div class="blog-empty"><div class="blog-empty__icon">🏷</div><p>#{t("暂无标签")}</p></div>
+        #{/if}
+    </div>
+</div>
+
+#{include file="./Layout/Footer.html"}

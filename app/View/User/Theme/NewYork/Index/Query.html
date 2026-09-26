@@ -1,0 +1,15 @@
+#{include file="./Header.html"}
+<main class="ny-page ny-query-page">
+    <section class="ny-page-heading"><span class="ny-route-mark">Q</span><div><h1>#{t("订单查询")}</h1><p>#{t("输入订单号或下单时填写的联系方式。")}</p></div></section>
+    <section class="ny-panel ny-query-panel">
+        <form class="order-query-form">
+            <label class="ny-outlined-field"><span>#{t("订单号 / 联系方式")}</span><input type="text" name="keywords" value="#{$tradeNo}" placeholder="#{t('请输入查询内容')}" autocomplete="off"></label>
+            <button type="submit" class="ny-primary-button btn-search-query"><span class="material-icons-outlined">search</span>#{t("查询订单")}</button>
+        </form>
+    </section>
+    <div class="loading-state ny-state-card" style="display:none;"><span class="material-icons-outlined ny-spin">progress_activity</span><strong>#{t("正在查询")}</strong><p>#{t("请稍候")}</p></div>
+    <div class="no-results ny-state-card" style="display:none;"><span class="material-icons-outlined">search_off</span><strong>#{t("没有找到订单")}</strong><p>#{t("请检查订单号或联系方式是否正确。")}</p></div>
+    <section class="order-results" style="display:none;"><div class="ny-section-title"><div><h2>#{t("查询结果")}</h2><p>#{t("订单信息与交付状态")}</p></div></div><div class="order-list"></div></section>
+</main>
+#{ready("/assets/user/controller/index/query.js")}
+#{include file="./Footer.html"}

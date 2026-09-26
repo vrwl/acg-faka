@@ -1,0 +1,20 @@
+<!--SSR 真分页（SEO/无 JS 兜底；JS 无限滚动接管后自动隐藏）-->
+#{if $pagination && $pagination.pages > 1}
+    <nav class="blog-pagination" data-blog-pagination aria-label="#{t('分页')}">
+        #{if $pagination.has_prev}
+            <a class="blog-pagination__nav" href="#{$pagination.prev_url}" rel="prev">‹ #{t("上一页")}</a>
+        #{/if}
+        #{foreach $pagination.window as $item}
+            #{if $item.gap}
+                <span class="blog-pagination__gap">…</span>
+            #{elseif $item.current}
+                <span class="blog-pagination__page is-current" aria-current="page">#{$item.n}</span>
+            #{else}
+                <a class="blog-pagination__page" href="#{$item.url}">#{$item.n}</a>
+            #{/if}
+        #{/foreach}
+        #{if $pagination.has_next}
+            <a class="blog-pagination__nav" href="#{$pagination.next_url}" rel="next" data-blog-next>#{t("下一页")} ›</a>
+        #{/if}
+    </nav>
+#{/if}

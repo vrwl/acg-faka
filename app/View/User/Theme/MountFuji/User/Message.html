@@ -1,0 +1,40 @@
+#{include file="../Common/Header.html"}
+<div class="mf-page-shell mf-page-shell-message mf-message-page uc-message-page">
+    #{include file="../Common/Nav.html"}
+    <main class="mf-main">
+        <section class="mf-page-intro mf-message-intro">
+            <div>
+                <span class="mf-eyebrow"><span class="material-icons-outlined">mark_email_unread</span>MESSAGE CONCIERGE</span>
+                <h1>#{t("消息中心")}</h1>
+                <p>#{t("重要通知、服务进度与专属消息，都在这里安静归档，随时清晰回看。")}</p>
+            </div>
+            <span class="mf-page-intro__icon mf-message-intro__icon material-icons-outlined" aria-hidden="true">notifications_active</span>
+        </section>
+
+        <section class="mf-panel uc-message-board">
+            <div class="mf-panel-heading uc-card__head">
+                <div>
+                    <span class="material-icons-outlined">inbox</span>
+                    <div class="uc-message-board__heading">
+                        <strong>#{t("全部消息")}</strong>
+                        <small class="uc-card__sub">#{t("打开消息后自动标记为已读")}</small>
+                    </div>
+                </div>
+                <div class="uc-message-actions">
+                    <button type="button" class="uc-message-action uc-message-action--delete" data-message-action="delete-selected">
+                        <span class="material-icons-outlined">delete_sweep</span><span>#{t("删除选中")}</span>
+                    </button>
+                    <button type="button" class="uc-message-action uc-message-action--clear" data-message-action="clear">
+                        <span class="material-icons-outlined">cleaning_services</span><span>#{t("清空全部")}</span>
+                    </button>
+                </div>
+            </div>
+            <div class="mf-panel-body mf-table-wrap uc-card__body">
+                <table id="message-table"></table>
+            </div>
+        </section>
+    </main>
+</div>
+
+#{ready("/assets/user/controller/user/message.js")}
+#{include file="../Common/Footer.html"}

@@ -1,0 +1,38 @@
+#{include file="./Header.html"}
+<main class="st-auth-layout">
+    <aside class="st-auth-intro" aria-label="#{t('登录说明')}">
+        <span class="st-auth-mark">S</span>
+        <span class="st-kicker">Member access</span>
+        <h1>#{t("欢迎回来")}</h1>
+        <p>#{t("登录后可集中查看购买记录、余额和会员权益。")}</p>
+        <ul class="st-auth-points">
+            <li><span class="material-icons-outlined" aria-hidden="true">receipt_long</span><span>#{t("随时查看订单与卡密")}</span></li>
+            <li><span class="material-icons-outlined" aria-hidden="true">sell</span><span>#{t("自动应用会员价格")}</span></li>
+            <li><span class="material-icons-outlined" aria-hidden="true">shield</span><span>#{t("保护账号和交易信息")}</span></li>
+        </ul>
+    </aside>
+
+    <section class="st-auth-panel" aria-labelledby="st-login-title">
+        <header><span class="st-kicker">Sign in</span><h2 id="st-login-title">#{t("登录账号")}</h2><p>#{t("继续使用")} #{$config.shop_name}</p></header>
+        <form method="post" class="needs-validation st-auth-form" data-st-auth="login" novalidate>
+            <p class="st-auth-error" data-st-auth-error role="alert" hidden></p>
+            <label class="st-field"><span>#{t("账号")}</span><input type="text" class="form-control" name="username" placeholder="#{t('用户名 / 手机号 / 邮箱')}" autocomplete="username" required></label>
+            <div class="st-field"><label for="st-login-password">#{t("密码")}</label><div class="st-input-with-action"><input id="st-login-password" type="password" class="form-control" name="password" placeholder="#{t('请输入密码')}" autocomplete="current-password" minlength="6" required><button type="button" class="st-password-toggle" aria-label="#{t('显示密码')}" aria-pressed="false" title="#{t('显示密码')}"><span class="material-icons-outlined" aria-hidden="true">visibility</span></button></div></div>
+            #{if $config.login_verification == 1}
+                <div class="st-field st-captcha-field"><label for="image-captcha">#{t("图形验证码")}</label><span class="st-captcha-input"><input type="text" class="form-control" id="image-captcha" name="captcha" placeholder="#{t('输入图中字符')}" autocomplete="off" maxlength="16" required><button type="button" class="st-inline-captcha" data-st-captcha-action="login" aria-label="#{t('更换图形验证码')}"><img src="/user/captcha/image?action=login" class="image-code" alt="#{t('图形验证码')}"></button></span></div>
+            #{/if}
+            <div class="st-form-meta">
+                <label class="st-check"><input id="rememberMe" name="remember" type="checkbox" value="1"><span>#{t("保持登录")}</span></label>
+                <a href="#{if $config.forget_type == 0}/user/authentication/emailForget#{else}/user/authentication/phoneForget#{/if}">#{t("忘记密码？")}</a>
+            </div>
+            <button type="submit" class="st-button st-button-primary st-auth-submit" aria-busy="false"><span class="st-auth-button-spinner" data-st-auth-button-spinner aria-hidden="true" hidden></span><span data-st-auth-button-label>#{t("登录")}</span></button>
+        </form>
+
+        #{if getHookNum(\App\Consts\Hook::USER_VIEW_AUTH_LOGIN_BUTTON) > 0}<div class="st-divider"><span>#{t("其他登录方式")}</span></div>#{/if}
+        <div class="st-auth-hooks">#{hook(\App\Consts\Hook::USER_VIEW_AUTH_LOGIN_BUTTON)}</div>
+        #{if $config.registered_state == 1}<p class="st-auth-switch">#{t("还没有账号？")}<a href="/user/authentication/register">#{t("创建账号")}</a></p>#{/if}
+    </section>
+</main>
+<script src="#{\App\Util\Helper::themeUrl('Assets/Js/Page/Auth.js')}"></script>
+#{ready("/assets/user/controller/auth/login.js")}
+#{include file="./Footer.html"}

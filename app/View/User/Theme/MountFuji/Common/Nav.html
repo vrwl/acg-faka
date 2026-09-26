@@ -1,0 +1,104 @@
+<aside class="mf-sidebar" aria-label="#{t('会员中心导航')}">
+    <div class="mf-sidebar-inner">
+        <section class="mf-sidebar-profile">
+            <div class="mf-sidebar-profile__main">
+                <img src="#{$user.avatar}" alt="#{$user.username}" data-acg-fallback="#{$favicon}">
+                <div>
+                    <strong>#{$user.username}</strong>
+                    <span>#{if $group.name}#{$group.name}#{else}#{t("会员用户")}#{/if} · UID #{$user.id}</span>
+                </div>
+            </div>
+            <div class="mf-sidebar-wallet">
+                <div><span>#{t("余额")}</span><strong>#{$config.currency_symbol}#{$user.balance}</strong></div>
+                <span class="mf-sidebar-wallet__line"></span>
+                <div><span>#{t("硬币")}</span><strong>#{$user.coin}</strong></div>
+            </div>
+            <a class="mf-sidebar-recharge" href="/user/recharge/index">
+                <span class="material-icons-outlined">add_card</span><span>#{t("充值余额")}</span><span class="material-icons-outlined">arrow_forward</span>
+            </a>
+        </section>
+
+        <nav class="mf-side-nav">
+            <div class="mf-nav-group">
+                <div class="mf-nav-group-label">#{t("概览")}</div>
+                <a class="mf-nav-item #{active('/user/dashboard','is-active')}" href="/user/dashboard/index">
+                    <span class="material-icons-outlined">space_dashboard</span><span>#{t("我的主页")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/message','is-active')}" href="/user/message/index">
+                    <span class="material-icons-outlined">notifications</span><span>#{t("消息中心")}</span>
+                    <em class="mf-message-nav-badge is-empty" aria-label="#{t('没有未读消息')}">0</em>
+                </a>
+            </div>
+
+            <div class="mf-nav-group">
+                <div class="mf-nav-group-label">#{t("消费与财务")}</div>
+                <a class="mf-nav-item #{active('/user/recharge','is-active')}" href="/user/recharge/index">
+                    <span class="material-icons-outlined">account_balance_wallet</span><span>#{t("充值中心")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/personal/purchaseRecord','is-active')}" href="/user/personal/purchaseRecord">
+                    <span class="material-icons-outlined">shopping_bag</span><span>#{t("购买记录")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/ticket','is-active')}" href="/user/ticket/index">
+                    <span class="material-icons-outlined">support_agent</span><span>#{t("我的工单")}</span>
+                    <em class="mf-ticket-nav-badge is-empty" aria-label="#{t('没有未读工单消息')}">0</em>
+                </a>
+                <a class="mf-nav-item #{active('/user/cash','is-active')}" href="/user/cash/index">
+                    <span class="material-icons-outlined">currency_exchange</span><span>#{t("硬币兑现")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/bill','is-active')}" href="/user/bill/index">
+                    <span class="material-icons-outlined">receipt_long</span><span>#{t("我的账单")}</span>
+                </a>
+            </div>
+
+            <div class="mf-nav-group">
+                <div class="mf-nav-group-label">#{t("店铺经营")}</div>
+                <a class="mf-nav-item #{active('/user/business','is-active')}" href="/user/business/index">
+                    <span class="material-icons-outlined">storefront</span><span>#{t("我的店铺")}</span>
+                    #{if $user.businessLevel}<em>#{$user.businessLevel.name}</em>#{/if}
+                </a>
+                #{if $user.businessLevel and $user.businessLevel.supplier == 1}
+                <a class="mf-nav-item #{active('/user/category','is-active')}" href="/user/category/index">
+                    <span class="material-icons-outlined">category</span><span>#{t("商品分类")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/commodity','is-active')}" href="/user/commodity/index">
+                    <span class="material-icons-outlined">inventory_2</span><span>#{t("我的商品")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/card','is-active')}" href="/user/card/index">
+                    <span class="material-icons-outlined">vpn_key</span><span>#{t("卡密管理")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/coupon','is-active')}" href="/user/coupon/index">
+                    <span class="material-icons-outlined">local_offer</span><span>#{t("代券管理")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/order','is-active')}" href="/user/order/index">
+                    <span class="material-icons-outlined">local_shipping</span><span>#{t("商品订单")}</span>
+                </a>
+                #{/if}
+            </div>
+
+            <div class="mf-nav-group">
+                <div class="mf-nav-group-label">#{t("账户")}</div>
+                <a class="mf-nav-item #{active('/user/agent/promote','is-active')}" href="/user/agent/promote">
+                    <span class="material-icons-outlined">campaign</span><span>#{t("推广中心")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/agent/member','is-active')}" href="/user/agent/member">
+                    <span class="material-icons-outlined">groups</span><span>#{t("我的下级")}</span>
+                </a>
+                <a class="mf-nav-item #{active('/user/security','is-active')}" href="/user/security/personal">
+                    <span class="material-icons-outlined">shield</span><span>#{t("安全中心")}</span>
+                </a>
+            </div>
+
+            <!--start::HOOK-->
+            #{* 插件入口（如博客）按 Cartoon 的 <li><a> 结构输出：先接住，有内容才排成一组，样式与原生菜单项一致 *}
+            #{capture assign="mfPluginMenu"}#{hook(\App\Consts\Hook::USER_VIEW_MENU)}#{/capture}
+            #{if $mfPluginMenu|trim != ''}
+            <div class="mf-nav-group mf-nav-hook">
+                <div class="mf-nav-group-label">#{t("其他")}</div>
+                <ul class="mf-nav-hook__list">#{$mfPluginMenu}</ul>
+            </div>
+            #{/if}
+            <!--end::HOOK-->
+        </nav>
+    </div>
+</aside>
+<button type="button" class="mf-sidebar-shade" data-mf-sidebar-close aria-label="#{t('关闭导航')}"></button>

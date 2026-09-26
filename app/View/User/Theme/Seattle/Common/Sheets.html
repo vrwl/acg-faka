@@ -1,0 +1,28 @@
+<div class="st-sheet-backdrop" data-st-sheet-close aria-hidden="true"></div>
+
+<section class="st-sheet" data-st-sheet="appearance" aria-hidden="true" aria-label="#{t('外观模式')}" role="dialog" aria-modal="true">
+    <div class="st-sheet__handle" aria-hidden="true"></div>
+    <header><div><strong>#{t("外观模式")}</strong><small>#{t("选择适合当前环境的显示方式")}</small></div><button type="button" class="st-icon-button" data-st-sheet-close aria-label="#{t('关闭')}"><span class="material-icons-outlined">close</span></button></header>
+    <div class="st-theme-options">
+        <button type="button" data-theme-toggle="light"><span class="material-icons-outlined" aria-hidden="true">light_mode</span><span><strong>#{t("白天")}</strong><small>#{t("明亮清晰")}</small></span><i class="material-icons-outlined" aria-hidden="true">check</i></button>
+        <button type="button" data-theme-toggle="auto"><span class="material-icons-outlined" aria-hidden="true">brightness_auto</span><span><strong>#{t("自动")}</strong><small>#{t("跟随系统")}</small></span><i class="material-icons-outlined" aria-hidden="true">check</i></button>
+        <button type="button" data-theme-toggle="dark"><span class="material-icons-outlined" aria-hidden="true">dark_mode</span><span><strong>#{t("黑夜")}</strong><small>#{t("柔和低亮")}</small></span><i class="material-icons-outlined" aria-hidden="true">check</i></button>
+    </div>
+</section>
+
+#{if $user && $user.businessLevel}
+<section class="st-sheet st-workbench-sheet" id="st-workbench-sheet" data-st-sheet="workbench" aria-hidden="true" aria-label="#{t('经营工作台')}" role="dialog" aria-modal="true">
+    <div class="st-sheet__handle" aria-hidden="true"></div>
+    <header><div><strong>#{t("经营工作台")}</strong><small>#{$user.businessLevel.name}</small></div><button type="button" class="st-icon-button" data-st-sheet-close aria-label="#{t('关闭经营工作台')}"><span class="material-icons-outlined">close</span></button></header>
+    <nav class="st-workbench-grid" aria-label="#{t('经营功能')}">
+        <a href="/user/business/index"><span class="material-icons-outlined" aria-hidden="true">storefront</span><strong>#{t("店铺设置")}</strong><small>#{t("资料、商品和域名")}</small></a>
+        #{if $user.businessLevel.supplier == 1}
+            <a href="/user/category/index"><span class="material-icons-outlined" aria-hidden="true">category</span><strong>#{t("商品分类")}</strong><small>#{t("整理售卖目录")}</small></a>
+            <a href="/user/commodity/index"><span class="material-icons-outlined" aria-hidden="true">inventory_2</span><strong>#{t("我的商品")}</strong><small>#{t("价格、库存和状态")}</small></a>
+            <a href="/user/card/index"><span class="material-icons-outlined" aria-hidden="true">vpn_key</span><strong>#{t("卡密管理")}</strong><small>#{t("库存与批量入库")}</small></a>
+            <a href="/user/coupon/index"><span class="material-icons-outlined" aria-hidden="true">local_offer</span><strong>#{t("代券管理")}</strong><small>#{t("创建和查看代券")}</small></a>
+            <a href="/user/order/index"><span class="material-icons-outlined" aria-hidden="true">local_shipping</span><strong>#{t("商品订单")}</strong><small>#{t("查看付款与发货")}</small></a>
+        #{/if}
+    </nav>
+</section>
+#{/if}

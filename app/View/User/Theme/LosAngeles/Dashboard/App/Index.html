@@ -1,0 +1,124 @@
+#{*
+  洛杉矶 · 我的（手机端 APP 形态）
+  这是底部 TabBar 的「我的」页，不是电脑端仪表盘的缩小版：
+  渐变头卡 + 钱包双格 + 宫格入口 + 分组列表，就是一个 APP 的个人中心。
+*}
+#{include file="../../Common/App/Head.html" laArea="member" laPage="dashboard"}
+
+<main class="la-app" data-la-app data-la-page-in>
+    <div class="la-app__scroll" data-la-scroll>
+        <div class="la-refresh" data-la-refresh aria-hidden="true">
+            <span class="la-refresh__spin">#{\App\View\User\Theme\LosAngeles\Icons::svg('refresh')}</span>
+            <span class="la-refresh__txt" data-la-refresh-txt>#{t("下拉刷新")}</span>
+        </div>
+
+        <section class="la-view la-view--flush">
+            <header class="la-mehero">
+                <span class="la-mehero__glow" aria-hidden="true"></span>
+                <div class="la-mehero__bar">
+                    <button type="button" class="la-mehero__btn" data-la-theme="cycle" aria-label="#{t('切换外观')}">
+                        #{\App\View\User\Theme\LosAngeles\Icons::svg('auto')}
+                    </button>
+                    <button type="button" class="la-mehero__btn" data-la-pop-trigger data-la-appmenu aria-label="#{t('更多')}">
+                        #{\App\View\User\Theme\LosAngeles\Icons::svg('more')}
+                    </button>
+                </div>
+
+                <a class="la-mehero__me" href="/user/security/personal">
+                    <img class="la-mehero__avatar" src="#{$user.avatar|default:$favicon|escape:'html'}" alt="" width="60" height="60">
+                    <span class="la-mehero__id">
+                        <strong class="la-ellipsis">#{$user.username|escape:'html'}</strong>
+                        #{if $group && $group.name}
+                            <em class="la-mehero__lv">#{if $group.icon}<img src="#{$group.icon}" alt="" width="12" height="12">#{/if}#{lang($group.name, 'dyn')|escape:'html'}</em>
+                        #{/if}
+                    </span>
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('right')}
+                </a>
+
+                <div class="la-mehero__wallet">
+                    <a class="la-mehero__cell" href="/user/recharge/index">
+                        <b class="la-num">#{$config.currency_symbol}#{$user.balance|escape:'html'}</b><span>#{t("余额")}</span>
+                    </a>
+                    <a class="la-mehero__cell" href="/user/cash/index">
+                        <b class="la-num">#{$user.coin|escape:'html'}</b><span>#{t("硬币")}</span>
+                    </a>
+                    <a class="la-mehero__cell" href="/user/bill/index">
+                        <b class="la-num">#{$buy_count|escape:'html'}</b><span>#{t("订单")}</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="la-mebody">
+                <div class="la-mesum">
+                    <div><span class="la-faint">#{t("本月消费")}</span><b class="la-num">#{$config.currency_symbol}#{$buy_month|escape:'html'}</b></div>
+                    <div><span class="la-faint">#{t("累计消费")}</span><b class="la-num">#{$config.currency_symbol}#{$buy_total|escape:'html'}</b></div>
+                </div>
+
+                <nav class="la-megrid" aria-label="#{t('常用功能')}">
+                    <a href="/user/personal/purchaseRecord"><span>#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}</span>#{t("购买记录")}</a>
+                    <a href="/user/recharge/index"><span>#{\App\View\User\Theme\LosAngeles\Icons::svg('wallet')}</span>#{t("充值")}</a>
+                    <a href="/user/bill/index"><span>#{\App\View\User\Theme\LosAngeles\Icons::svg('coin')}</span>#{t("账单")}</a>
+                    <a href="/user/ticket/index"><span>#{\App\View\User\Theme\LosAngeles\Icons::svg('headset')}</span>#{t("工单")}</a>
+                    <a href="/user/message/index"><span>#{\App\View\User\Theme\LosAngeles\Icons::svg('bell')}</span>#{t("消息")}</a>
+                    <a href="/user/agent/promote"><span>#{\App\View\User\Theme\LosAngeles\Icons::svg('megaphone')}</span>#{t("推广")}</a>
+                    <a href="/user/cash/index"><span>#{\App\View\User\Theme\LosAngeles\Icons::svg('coin')}</span>#{t("兑现")}</a>
+                    <a href="/user/index/query"><span>#{\App\View\User\Theme\LosAngeles\Icons::svg('search')}</span>#{t("查订单")}</a>
+                </nav>
+
+                #{if $user.business_level}
+                    <section class="la-mecard2">
+                        <div class="la-mecard2__head">
+                            #{\App\View\User\Theme\LosAngeles\Icons::svg('store')}
+                            <strong>#{t("我的店铺")}</strong>
+                            <a href="/user/business/index">#{t("管理")}#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                        </div>
+                        <div class="la-mecard2__stats">
+                            <div><b class="la-num">#{$config.currency_symbol}#{$today_income|escape:'html'}</b><span>#{t("今日收入")}</span></div>
+                            <div><b class="la-num">#{$today_orders|escape:'html'}</b><span>#{t("今日订单")}</span></div>
+                            <div><b class="la-num">#{$pending_delivery|escape:'html'}</b><span>#{t("待发货")}</span></div>
+                            <div><b class="la-num">#{$card_unsold|escape:'html'}</b><span>#{t("待售卡密")}</span></div>
+                        </div>
+                        <nav class="la-melist">
+                            <a href="/user/commodity/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('box')}<span>#{t("我的商品")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                            <a href="/user/card/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('card')}<span>#{t("卡密管理")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                            <a href="/user/order/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('truck')}<span>#{t("订单管理")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                            <a href="/user/category/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('grid')}<span>#{t("商品分类")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                            <a href="/user/coupon/index">#{\App\View\User\Theme\LosAngeles\Icons::svg('gift')}<span>#{t("优惠券")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                        </nav>
+                    </section>
+                #{/if}
+
+                <section class="la-mecard2">
+                    <div class="la-mecard2__head">#{\App\View\User\Theme\LosAngeles\Icons::svg('shield')}<strong>#{t("账号安全")}</strong></div>
+                    <nav class="la-melist">
+                        <a href="/user/security/personal">#{\App\View\User\Theme\LosAngeles\Icons::svg('user')}<span>#{t("个人资料")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                        <a href="/user/security/email">#{\App\View\User\Theme\LosAngeles\Icons::svg('mail')}<span>#{t("邮箱绑定")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                        <a href="/user/security/phone">#{\App\View\User\Theme\LosAngeles\Icons::svg('phone')}<span>#{t("手机绑定")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                        <a href="/user/security/password">#{\App\View\User\Theme\LosAngeles\Icons::svg('lock')}<span>#{t("登录密码")}</span>#{\App\View\User\Theme\LosAngeles\Icons::svg('right')}</a>
+                    </nav>
+                </section>
+
+                <!--start::HOOK-->
+                #{* 插件入口（如博客）按 Cartoon 的 <li><a> 结构输出：先接住，有内容才排成「其他」分组，样式与原生菜单项一致 *}
+                #{capture assign="laPluginMenu"}#{hook(\App\Consts\Hook::USER_VIEW_MENU)}#{/capture}
+                #{if $laPluginMenu|trim != ''}
+                    <section class="la-mecard2 la-mehook">
+                        <div class="la-mecard2__head">#{\App\View\User\Theme\LosAngeles\Icons::svg('more')}<strong>#{t("其他")}</strong></div>
+                        <ul class="la-melist la-mehook__list">#{$laPluginMenu}</ul>
+                    </section>
+                #{/if}
+                <!--end::HOOK-->
+
+                <a class="la-btn la-btn--line la-btn--block la-melogout" href="/user/authentication/logout">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('logout')}<span>#{t("退出登录")}</span>
+                </a>
+
+                <div class="la-tablecard la-tablecard--app la-sr">
+                    <table id="recent-buy-table"></table>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+#{include file="../../Common/App/Foot.html" laArea="member" laJs="Center.js" laCtrl="/assets/user/controller/dashboard/index.js"}

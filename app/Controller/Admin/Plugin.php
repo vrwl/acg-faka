@@ -6,7 +6,6 @@ namespace App\Controller\Admin;
 
 use App\Controller\Base\View\Manage;
 use App\Interceptor\ManageSession;
-use App\Service\App;
 use App\Util\File;
 use App\Util\Html;
 use Kernel\Annotation\Interceptor;
@@ -89,7 +88,6 @@ HTML;
             throw new NotFoundException("错误的插件");
         }
 
-        $appStore = (array)json_decode((string)file_get_contents(BASE_PATH . "/runtime/plugin/store.cache"), true);
         $plg = \Kernel\Util\Plugin::getPlugin($plugin);
 
         if (!$plg) {
@@ -144,12 +142,7 @@ HTML;
         }
 
 
-        $iconPath = $appStore[$plugin]['icon'] ?? null;
-        if (!is_string($iconPath) || !preg_match('#^/[A-Za-z0-9._~%/-]+$#D', $iconPath)) {
-            $icon = "/favicon.ico";
-        } else {
-            $icon = App::APP_URL . $iconPath;
-        }
+        $icon = "/favicon.ico";
 
         $pluginName = strip_tags((string)$plg['NAME']);
         $pluginNameHtml = htmlspecialchars($pluginName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

@@ -1,0 +1,18 @@
+#{include file="../Common/Header.html"}
+<div class="st-page-shell st-list-page" data-st-page="bill" data-st-table="#bill-table">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main">
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{t("账户流水")}</span><h1>#{t("我的账单")}</h1><p>#{t("查询余额与硬币的每一笔收入和支出。")}</p></div>
+            <a class="st-button st-button--secondary" href="/user/recharge/index"><span class="material-icons-outlined" aria-hidden="true">add_card</span>#{t("充值余额")}</a>
+        </header>
+        <section class="st-panel" aria-labelledby="st-bill-title">
+            <div class="st-panel__header">
+                <div><span class="st-panel__icon material-icons-outlined">receipt_long</span><div><h2 id="st-bill-title">#{t("账单明细")}</h2><p>#{t("支持按类型、钱包和时间筛选")}</p></div></div>
+            </div>
+            <div class="st-panel__body st-table-wrap"><table id="bill-table" data-st-mobile-record="bill"></table></div>
+        </section>
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Bill.js'))}
+#{include file="../Common/Footer.html"}

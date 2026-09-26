@@ -1,0 +1,18 @@
+#{include file="./Header.html"}
+<main class="ny-auth-main">
+    <section class="ny-auth-brand"><span class="ny-brand-mark ny-brand-mark--large"><img src="#{$favicon}" alt=""></span><span class="ny-route-mark">NY</span><h1>#{t("欢迎回来")}</h1><p>#{t("登录后查看订单、余额和会员权益。")}</p></section>
+    <form method="post" class="needs-validation ny-auth-form">
+        <label class="ny-outlined-field"><span>#{t("账号")}</span><input type="text" class="form-control" name="username" placeholder="#{t('用户名 / 手机号 / 邮箱')}" autocomplete="username" required></label>
+        <label class="ny-outlined-field"><span>#{t("密码")}</span><input type="password" class="form-control" name="password" placeholder="#{t('请输入密码')}" autocomplete="current-password" minlength="6" required></label>
+        #{if $config.login_verification == 1}
+        <div class="ny-captcha-field"><label class="ny-outlined-field"><span>#{t("图形验证码")}</span><input type="text" class="form-control" id="image-captcha" name="captcha" placeholder="#{t('输入图中字符')}" autocomplete="off"></label><img src="/user/captcha/image?action=login" data-acg-refresh="/user/captcha/image?action=login" class="image-code" alt="#{t('更换验证码')}"></div>
+        #{/if}
+        <div class="ny-form-meta"><label class="ny-check"><input id="rememberMe" name="remember" type="checkbox" value="1"><span></span>#{t("保持登录")}</label><a href="#{if $config.forget_type == 0}/user/authentication/emailForget#{else}/user/authentication/phoneForget#{/if}">#{t("忘记密码")}</a></div>
+        <button type="submit" class="ny-primary-button ny-auth-submit">#{t("登录")}</button>
+    </form>
+    #{if getHookNum(\App\Consts\Hook::USER_VIEW_AUTH_LOGIN_BUTTON) > 0}<div class="ny-divider"><span>#{t("其他方式")}</span></div>#{/if}
+    <div class="ny-auth-hooks">#{hook(\App\Consts\Hook::USER_VIEW_AUTH_LOGIN_BUTTON)}</div>
+    #{if $config.registered_state == 1}<p class="ny-auth-switch">#{t("还没有账号？")}<a href="/user/authentication/register">#{t("创建账号")}</a></p>#{/if}
+</main>
+#{ready("/assets/user/controller/auth/login.js")}
+#{include file="./Footer.html"}

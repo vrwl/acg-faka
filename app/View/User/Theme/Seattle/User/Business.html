@@ -1,0 +1,181 @@
+#{include file="../Common/Header.html"}
+#{set_script_var(["_business_notice_var" => $business.notice])}
+<div class="st-page-shell st-business-page" data-st-page="business" data-st-business-state="#{if !$business || $purchase == 1 && $business}plan#{elseif $user.businessLevel.substation == 1}config#{else}locked#{/if}">
+    #{include file="../Common/Nav.html"}
+    <main class="st-main st-main--wide">
+        #{if !$business || $purchase == 1 && $business}
+        <header class="st-page-header">
+            <div><span class="st-kicker">#{if !$business}#{t("开通店铺")}#{else}#{t("等级升级")}#{/if}</span><h1>#{if !$business}#{t("建立你的线上店铺")}#{else}#{t("升级店铺等级")}#{/if}</h1><p>#{if !$business}#{t("选择适合的套餐，获得独立的经营入口。")}#{else}#{t("解锁更完整的域名、供货与经营能力。")}#{/if}</p></div>
+            #{if $purchase == 1 && $business}<div class="st-page-header__actions"><a class="st-button st-button--secondary" href="/user/business/index" aria-label="#{t('返回店铺设置')}"><span class="material-icons-outlined">arrow_back</span><span>#{t("返回店铺")}</span></a></div>#{/if}
+        </header>
+
+        <section class="st-panel" aria-labelledby="st-plan-title">
+            <div class="st-panel__header"><div><strong id="st-plan-title">#{t("选择店铺套餐")}</strong><small>#{t("一次开通，永久有效；点击方案后确认支付")}</small></div><span class="st-panel__icon material-icons-outlined">workspace_premium</span></div>
+            <div class="st-panel__body">
+                #{if count($level) > 0}
+                <form class="layui-form">
+                    <div class="st-plan-grid">
+                        #{foreach $level as $le}
+                        <button type="button" class="business-group st-plan" data-id="#{$le.id|escape:'html'}" data-name="#{$le.name|strip_tags|strip|escape:'html'}" data-price="#{$le.price|escape:'html'}" aria-pressed="false">
+                            <span class="st-stream-row">
+                                <span class="st-stream-row__icon"><img src="#{$le.icon|escape:'html'}" width="32" height="32" alt=""></span>
+                                <span class="st-stream-row__content"><strong>#{$le.name|strip_tags|strip|escape:'html'}</strong><small>#{t("终身可用")}#{if $le@last && $le@total > 1} · #{t("推荐方案")}#{/if}</small></span>
+                                <span class="st-chip st-chip--primary"><small>#{$config.currency_symbol}</small>#{$le.price|escape:'html'}</span>
+                            </span>
+                            <span class="st-detail-list">
+                                <span><span>#{t("分站功能")}</span><strong>#{if $le.substation == 1}#{t("支持")}#{else}#{t("不支持")}#{/if}</strong></span>
+                                <span><span>#{t("独立域名")}</span><strong>#{if $le.top_domain == 1}#{t("支持")}#{else}#{t("不支持")}#{/if}</strong></span>
+                                <span><span>#{t("供货权限")}</span><strong>#{if $le.supplier == 1}#{t("支持")}#{else}#{t("不支持")}#{/if}</strong></span>
+                                <span><span>#{t("供货手续费")}</span><strong>#{if $le.supplier == 1}#{$le.cost*100}%#{else}—#{/if}</strong></span>
+                            </span>
+                        </button>
+                        #{/foreach}
+                    </div>
+                    <div class="st-stat-grid">
+                        <div class="st-stat"><span><span class="material-icons-outlined">hub</span>#{t("分站返佣")}</span><strong>#{t("价差收益")}</strong><small>#{t("主站商品成交后按售价与拿货价结算")}</small></div>
+                        <div class="st-stat"><span><span class="material-icons-outlined">language</span>#{t("独立域名")}</span><strong>#{t("品牌入口")}</strong><small>#{t("绑定自己的顶级域名")}</small></div>
+                        <div class="st-stat"><span><span class="material-icons-outlined">inventory_2</span>#{t("供货权限")}</span><strong>#{t("自主上架")}</strong><small>#{t("创建分类、商品和卡密")}</small></div>
+                        <div class="st-stat"><span><span class="material-icons-outlined">receipt_long</span>#{t("服务费用")}</span><strong>#{t("按成交收取")}</strong><small>#{t("费率以所选套餐为准")}</small></div>
+                    </div>
+                    <div class="st-form-actions"><button type="button" class="st-button st-button--primary payButton" disabled aria-disabled="true"><span class="material-icons-outlined">rocket_launch</span><span class="st-business-purchase-label">#{if !$business}#{t("立即开通店铺")}#{else}#{t("确认升级店铺")}#{/if}</span></button></div>
+                </form>
+                #{else}
+                <div class="st-empty"><span class="material-icons-outlined">workspace_premium</span><strong>#{t("暂无可升级套餐")}</strong><p>#{t("当前没有可购买的更高等级，请稍后再查看。")}</p>#{if $business}<a class="st-button st-button--secondary" href="/user/business/index">#{t("返回店铺")}</a>#{/if}</div>
+                #{/if}
+            </div>
+        </section>
+        #{else}
+            #{if $user.businessLevel.substation == 1}
+            <header class="st-page-header st-business-app-header">
+                <div class="st-business-app-title"><span class="st-kicker">#{t("经营设置")}</span><h1>#{t("我的店铺")}</h1><p>#{t("维护店铺信息、主站商品展示和访问域名。")}</p></div>
+                #{if count($level) > 0}<div class="st-page-header__actions"><a href="/user/business/index?purchase=1" class="st-button st-button--secondary" aria-label="#{t('升级店铺等级')}"><span class="material-icons-outlined">upgrade</span><span>#{t("升级店铺")}</span></a></div>#{/if}
+            </header>
+
+            <section class="st-panel st-business-level-card" aria-labelledby="st-business-level-title">
+                <div class="st-panel__header">
+                    <div class="st-stream-row"><span class="st-stream-row__icon"><img src="#{$user.businessLevel.icon|escape:'html'}" width="32" height="32" alt=""></span><span class="st-stream-row__content"><strong id="st-business-level-title">#{$user.businessLevel.name|strip_tags|strip|escape:'html'}</strong><small>#{t("当前商户等级 · 店铺运行正常")}</small></span></div>
+                    <span class="st-chip st-chip--success">#{t("正常运行")}</span>
+                </div>
+                <div class="st-panel__body">
+                    <div class="st-stat-grid st-stat-grid--three">
+                        <div class="st-stat"><span><span class="material-icons-outlined">language</span>#{t("独立域名")}</span><strong>#{if $user.businessLevel.top_domain == 1}#{t("已支持")}#{else}#{t("不支持")}#{/if}</strong></div>
+                        <div class="st-stat"><span><span class="material-icons-outlined">inventory_2</span>#{t("供货权限")}</span><strong>#{if $user.businessLevel.supplier == 1}#{t("已支持")}#{else}#{t("不支持")}#{/if}</strong></div>
+                        <div class="st-stat"><span><span class="material-icons-outlined">percent</span>#{t("供货手续费")}</span><strong>#{if $user.businessLevel.supplier == 1}#{$user.businessLevel.cost*100}%#{else}—#{/if}</strong></div>
+                    </div>
+                </div>
+            </section>
+
+            <form class="layui-form form-data st-form st-business-config-form" data-st-business-config data-st-business-active="basic">
+                <nav class="st-business-tabs" role="tablist" aria-label="#{t('店铺设置')}">
+                    <button type="button" class="is-active" id="st-business-tab-basic" data-st-business-tab="basic" role="tab" aria-selected="true" aria-controls="st-business-panel-basic"><span class="material-icons-outlined">storefront</span><span class="st-business-tab-label"><span>#{t("店铺信息")}</span><small>#{t("店铺")}</small></span></button>
+                    <button type="button" id="st-business-tab-product" data-st-business-tab="product" role="tab" aria-selected="false" aria-controls="st-business-panel-product"><span class="material-icons-outlined">inventory_2</span><span class="st-business-tab-label"><span>#{t("商品设置")}</span><small>#{t("商品")}</small></span></button>
+                    <button type="button" id="st-business-tab-domain" data-st-business-tab="domain" role="tab" aria-selected="false" aria-controls="st-business-panel-domain"><span class="material-icons-outlined">language</span><span class="st-business-tab-label"><span>#{t("域名绑定")}</span><small>#{t("域名")}</small></span></button>
+                </nav>
+                <div class="st-business-save-shortcut" data-st-business-save-dock aria-label="#{t('保存店铺设置')}">
+                    <span class="st-business-save-context"><small>#{t("当前设置")}</small><strong data-st-business-save-context>#{t("店铺信息")}</strong></span>
+                    <button type="button" class="st-button st-button--primary save-config"><span class="material-icons-outlined">save</span><span class="st-business-save-label">#{t("保存店铺设置")}</span></button>
+                </div>
+
+                <section class="st-panel st-business-tab-panel st-business-app-screen is-active" id="st-business-panel-basic" data-st-business-panel="basic" role="tabpanel" aria-labelledby="st-business-tab-basic">
+                    <div class="st-panel__header"><div><strong id="st-business-basic-title">#{t("店铺信息")}</strong><small>#{t("顾客进入店铺时看到的名称、标题和公告")}</small></div><span class="st-panel__icon material-icons-outlined">storefront</span></div>
+                    <div class="st-panel__body">
+                        <div class="st-form-grid st-form-grid--2">
+                            <label class="st-field"><span>#{t("店铺名称")}</span><input type="text" value="#{$business.shop_name|strip_tags|strip|escape:'html'}" name="shop_name" required autocomplete="off" placeholder="#{t('请输入店铺名称')}" class="layui-input"></label>
+                            <label class="st-field"><span>#{t("网站标题")}</span><input type="text" value="#{$business.title|strip_tags|strip|escape:'html'}" name="title" required autocomplete="off" placeholder="#{t('用于浏览器标题')}" class="layui-input"></label>
+                            <label class="st-field"><span>#{t("客服 QQ")}</span><input type="text" value="#{$business.service_qq|strip_tags|strip|escape:'html'}" name="service_qq" autocomplete="off" inputmode="numeric" pattern="[1-9][0-9]{4,11}" placeholder="#{t('用于顾客联系店铺')}" class="layui-input"></label>
+                            <label class="st-field"><span>#{t("客服链接")}</span><input type="url" value="#{$business.service_url|strip_tags|strip|escape:'html'}" name="service_url" autocomplete="url" placeholder="#{t('例如 https://example.com/support')}" class="layui-input"></label>
+                        </div>
+                        <section class="st-form-section">
+                            <div class="st-section-header"><span class="st-panel__icon material-icons-outlined">campaign</span><div><h2>#{t("店铺公告")}</h2><p>#{t("支持 Markdown，可切换预览与 HTML 源码")}</p></div></div>
+                            <div class="notice-editor"></div>
+                        </section>
+                        <label class="st-stream-row st-setting-row">
+                            <span class="st-stream-row__icon"><span class="material-icons-outlined">store</span></span>
+                            <span class="st-stream-row__content"><strong>#{t("显示主站商品")}</strong><small>#{t("开启后，你的店铺会同时展示主站商品")}</small></span>
+                            <span class="st-switch-control">
+                                <input type="checkbox" name="master_display" lay-ignore value="1" #{if $business.master_display == 1}checked#{/if} aria-label="#{t('显示主站商品')}">
+                                <span aria-hidden="true"></span>
+                            </span>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="st-panel st-business-tab-panel st-business-app-screen" id="st-business-panel-product" data-st-business-panel="product" role="tabpanel" aria-labelledby="st-business-tab-product" aria-hidden="true">
+                    <div class="st-panel__header"><div><strong id="st-master-catalog-title">#{t("主站商品设置")}</strong><small>#{t("选择分类，并设置商品名称、显示状态与加价比例")}</small></div><span class="st-panel__icon material-icons-outlined">inventory_2</span></div>
+                    <div class="st-panel__body">
+                        <div class="st-business-live-note" role="status"><span class="material-icons-outlined" aria-hidden="true">bolt</span><span><strong>#{t("修改即时生效")}</strong><small>#{t("分类与商品调整无需另行保存")}</small></span></div>
+                        <section class="st-form-section st-business-product-index">
+                            <div class="st-section-header">
+                                <span class="st-panel__icon material-icons-outlined">category</span>
+                                <div><h2 tabindex="-1">#{t("主站分类")}</h2><p>#{t("选择分类后可继续管理其中的商品")}</p></div>
+                                <button type="button" class="st-business-more-trigger" data-st-business-actions-open="category" aria-label="#{t('分类批量操作')}" aria-haspopup="dialog" aria-expanded="false"><span class="material-icons-outlined">more_horiz</span></button>
+                                <div class="st-page-header__actions st-business-desktop-actions"><button type="button" class="st-tool-button category-show" data-state="1"><span class="material-icons-outlined">visibility</span>#{t("全部显示")}</button><button type="button" class="st-tool-button st-button--danger category-show" data-state="0"><span class="material-icons-outlined">visibility_off</span>#{t("全部隐藏")}</button></div>
+                            </div>
+                            <div class="st-table-wrap"><table id="master_category" lay-filter="master_category" data-st-mobile-record="master-category" aria-label="#{t('主站分类设置')}"></table></div>
+                        </section>
+                        <section class="st-form-section st-business-product-detail" data-st-business-product-detail>
+                            <a id="commodity"></a>
+                            <div class="st-section-header">
+                                <button type="button" class="st-business-product-back" data-st-business-product-back aria-label="#{t('返回主站分类')}"><span class="material-icons-outlined">arrow_back</span></button>
+                                <span class="st-panel__icon material-icons-outlined">inventory_2</span>
+                                <div><h2 id="st-master-commodity-title" tabindex="-1">#{t("主站商品")}</h2><p>#{t("按分类设置显示状态、名称与加价比例")}</p></div>
+                                <button type="button" class="st-business-more-trigger" data-st-business-actions-open="commodity" aria-label="#{t('商品批量操作')}" aria-haspopup="dialog" aria-expanded="false"><span class="material-icons-outlined">more_horiz</span></button>
+                                <div class="st-page-header__actions st-business-desktop-actions"><button type="button" class="st-tool-button commodity-show" data-state="1"><span class="material-icons-outlined">visibility</span>#{t("全部显示")}</button><button type="button" class="st-tool-button st-button--danger commodity-show" data-state="0"><span class="material-icons-outlined">visibility_off</span>#{t("全部隐藏")}</button><button type="button" class="st-tool-button commodity-premium"><span class="material-icons-outlined">percent</span>#{t("批量加价")}</button></div>
+                            </div>
+                            <div class="st-table-wrap"><table id="master_commodity" lay-filter="master_commodity" data-st-mobile-record="master-commodity" aria-label="#{t('主站商品设置')}"></table></div>
+                        </section>
+                    </div>
+                </section>
+
+                <section class="st-panel st-business-tab-panel st-business-app-screen" id="st-business-panel-domain" data-st-business-panel="domain" role="tabpanel" aria-labelledby="st-business-tab-domain" aria-hidden="true">
+                    <div class="st-panel__header"><div><strong id="st-domain-title">#{t("店铺访问域名")}</strong><small>#{t("绑定状态清楚可见，解绑后旧地址会立即失效")}</small></div><span class="st-panel__icon material-icons-outlined">language</span></div>
+                    <div class="st-panel__body">
+                        <div class="st-domain-grid">
+                            <section class="st-domain-card">
+                                <div class="st-section-header"><span class="st-panel__icon material-icons-outlined">link</span><div><h2>#{t("系统子域名")}</h2><p>#{t("使用平台提供的域名快速访问")}</p></div>#{if $business.subdomain}<span class="st-chip st-chip--success">#{t("已绑定")}</span>#{/if}</div>
+                                <div class="st-inline-field">
+                                    <label class="st-field"><span>#{t("子域名前缀")}</span><input type="text" value="#{$business.subdomain|strip_tags|strip|escape:'html'}" name="subdomain" autocomplete="off" placeholder="#{t('例如 myshop')}" class="layui-input" #{if $business.subdomain}disabled#{/if}></label>
+                                    <label class="st-field"><span>#{t("域名后缀")}</span><select name="suffix" class="st-input" lay-ignore #{if $business.subdomain}disabled#{/if}>#{foreach $domain as $d}<option value="#{$d|strip_tags|strip|escape:'html'}">.#{$d|strip_tags|strip|escape:'html'}</option>#{/foreach}</select></label>
+                                </div>
+                                #{if $business.subdomain}<button type="button" class="st-text-button st-button--danger unbind-subdomain"><span class="material-icons-outlined">link_off</span>#{t("解绑当前子域名")}</button>#{/if}
+                            </section>
+
+                            #{if $user.businessLevel.top_domain == 1}
+                            <section class="st-domain-card">
+                                <div class="st-section-header"><span class="st-panel__icon material-icons-outlined">public</span><div><h2>#{t("独立域名")}</h2><p>#{t("请先将域名完成 CNAME 解析")}</p></div>#{if $business.topdomain}#{if gethostbyname($config.cname) == gethostbyname($business.topdomain)}<span class="st-chip st-chip--success">#{t("解析正常")}</span>#{else}<span class="st-chip st-chip--warning">#{t("等待解析")}</span>#{/if}#{/if}</div>
+                                <label class="st-field"><span>#{t("完整域名")}</span><input type="text" value="#{$business.topdomain|strip_tags|strip|escape:'html'}" name="topdomain" autocomplete="off" placeholder="#{t('例如 shop.yourdomain.com')}" class="layui-input" #{if $business.topdomain}disabled#{/if}></label>
+                                <div class="st-domain-cname">
+                                    <span class="st-panel__icon material-icons-outlined" aria-hidden="true">dns</span>
+                                    <span class="st-domain-cname__copy"><small>#{t("CNAME 指向")}</small><button type="button" class="st-text-button clipboard" data-text="#{$config.cname|strip_tags|strip|escape:'html'}"><code>#{$config.cname|strip_tags|strip|escape:'html'}</code><span class="material-icons-outlined" aria-hidden="true">content_copy</span><span class="visually-hidden">#{t("复制 CNAME 地址")}</span></button></span>
+                                </div>
+                                #{if $business.topdomain}<button type="button" class="st-text-button st-button--danger unbind-topdomain"><span class="material-icons-outlined">link_off</span>#{t("解绑当前独立域名")}</button>#{/if}
+                            </section>
+                            #{/if}
+                        </div>
+                    </div>
+                </section>
+                <button type="button" class="st-business-action-backdrop" data-st-business-actions-close aria-label="#{t('关闭批量操作')}" hidden></button>
+                <section class="st-business-action-sheet" data-st-business-action-sheet role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="st-business-action-title" tabindex="-1" hidden>
+                    <span class="st-business-action-handle" aria-hidden="true"></span>
+                    <header><div><strong id="st-business-action-title" data-st-business-action-title>#{t("批量操作")}</strong><small data-st-business-action-subtitle>#{t("选择要执行的操作")}</small></div><button type="button" data-st-business-actions-close aria-label="#{t('关闭')}"><span class="material-icons-outlined">close</span></button></header>
+                    <div class="st-business-action-options" data-st-business-action-options="category">
+                        <button type="button" data-st-business-proxy="category" data-state="1"><span class="material-icons-outlined">visibility</span><span><strong>#{t("全部显示")}</strong><small>#{t("显示所有主站分类")}</small></span></button>
+                        <button type="button" class="is-danger" data-st-business-proxy="category" data-state="0"><span class="material-icons-outlined">visibility_off</span><span><strong>#{t("全部隐藏")}</strong><small>#{t("隐藏所有主站分类")}</small></span></button>
+                    </div>
+                    <div class="st-business-action-options" data-st-business-action-options="commodity" hidden>
+                        <button type="button" data-st-business-proxy="commodity" data-state="1"><span class="material-icons-outlined">visibility</span><span><strong>#{t("全部显示")}</strong><small>#{t("显示当前范围的商品")}</small></span></button>
+                        <button type="button" class="is-danger" data-st-business-proxy="commodity" data-state="0"><span class="material-icons-outlined">visibility_off</span><span><strong>#{t("全部隐藏")}</strong><small>#{t("隐藏当前范围的商品")}</small></span></button>
+                        <button type="button" data-st-business-proxy="premium"><span class="material-icons-outlined">percent</span><span><strong>#{t("批量加价")}</strong><small>#{t("设置当前范围的加价比例")}</small></span></button>
+                    </div>
+                </section>
+                <div class="st-form-actions st-business-save-actions"><button type="button" class="st-button st-button--primary save-config"><span class="material-icons-outlined">save</span><span class="st-business-save-label">#{t("保存店铺设置")}</span></button></div>
+            </form>
+            #{else}
+            <header class="st-page-header"><div><span class="st-kicker">#{t("经营权限")}</span><h1>#{t("我的店铺")}</h1><p>#{t("当前等级暂未开放店铺配置与商品经营能力。")}</p></div></header>
+            <section class="st-panel"><div class="st-panel__body st-empty"><span class="material-icons-outlined">lock</span><strong>#{t("当前等级暂未开放店铺功能")}</strong><p>#{t("升级商户等级后，即可配置店铺、域名和商品。")}</p>#{if count($level) > 0}<a href="/user/business/index?purchase=1" class="st-button st-button--primary"><span class="material-icons-outlined">upgrade</span>#{t("查看升级方案")}</a>#{/if}</div></section>
+            #{/if}
+        #{/if}
+    </main>
+</div>
+#{ready(\App\Util\Helper::themeUrl('Assets/Js/Page/Business.js'))}
+#{include file="../Common/Footer.html"}

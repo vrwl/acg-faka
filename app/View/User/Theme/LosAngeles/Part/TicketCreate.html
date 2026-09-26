@@ -1,0 +1,140 @@
+#{*
+  洛杉矶 · 创建工单（两端共用）
+  user/ticket.create.js 的契约：三段式表单 + 右侧摘要。
+  类名 / id / data 属性均为控制器写死（select2 挂 #ticket-commodity、#ticket-order，
+  富文本挂 #ticket-content-editor，凭证上传挂 .uc-ticket-proof__*），只能换皮。
+*}
+<div class="uc-ticket-page uc-ticket-create-page la-tcreate">
+    <div class="uc-ticket-create-layout la-tcreate__layout">
+        <form class="la-card uc-ticket-form la-tcreate__form" autocomplete="off" data-acg-prevent>
+
+            <section class="uc-ticket-form__section la-tcreate__sec">
+                <div class="uc-ticket-form__heading la-tcreate__head">
+                    <span class="uc-ticket-step la-tcreate__step">1</span>
+                    <div><strong>#{t("这是什么类型的问题")}</strong></div>
+                </div>
+                <div class="uc-ticket-type-grid la-tcreate__types" role="radiogroup" aria-label="#{t('工单类型')}">
+                    <button type="button" class="la-tcreate__type uc-ticket-type is-active" data-ticket-type="0" role="radio" aria-checked="true">
+                        <span class="uc-ticket-type__icon">#{\App\View\User\Theme\LosAngeles\Icons::svg('search')}</span>
+                        <span class="uc-ticket-type__copy"><strong>#{t("售前咨询")}</strong><small>#{t("还没下单，想先问清楚")}</small></span>
+                        <span class="uc-ticket-choice"></span>
+                    </button>
+                    <button type="button" class="la-tcreate__type uc-ticket-type" data-ticket-type="1" role="radio" aria-checked="false">
+                        <span class="uc-ticket-type__icon">#{\App\View\User\Theme\LosAngeles\Icons::svg('receipt')}</span>
+                        <span class="uc-ticket-type__copy"><strong>#{t("售后支持")}</strong><small>#{t("已经下单，需要处理")}</small></span>
+                        <span class="uc-ticket-choice"></span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="uc-ticket-form__section la-tcreate__sec">
+                <div class="uc-ticket-form__heading la-tcreate__head">
+                    <span class="uc-ticket-step la-tcreate__step">2</span>
+                    <div>
+                        <strong class="uc-ticket-relation-title">#{t("关联的商品")}</strong>
+                        <small class="uc-ticket-relation-sub">#{t("选中商品能让客服更快定位问题")}</small>
+                    </div>
+                </div>
+
+                <div class="uc-ticket-relation uc-ticket-relation--commodity">
+                    <label class="uc-ticket-field-label la-label" for="ticket-commodity">#{t("商品")} <em class="la-faint">#{t("选填")}</em></label>
+                    <select id="ticket-commodity" name="commodity_id" aria-label="#{t('选择商品')}"></select>
+                    <p class="uc-ticket-field-help la-faint">#{t("输入关键词可搜索你看过或买过的商品")}</p>
+                </div>
+
+                <div class="uc-ticket-relation uc-ticket-relation--order" hidden>
+                    <div class="uc-ticket-mode-switch la-segment" role="tablist" aria-label="#{t('订单来源')}">
+                        <button type="button" class="la-segment__btn is-active" data-order-mode="account" role="tab" aria-selected="true">#{t("我的订单")}</button>
+                        <button type="button" class="la-segment__btn" data-order-mode="manual" role="tab" aria-selected="false">#{t("手动填单号")}</button>
+                    </div>
+
+                    <div class="uc-ticket-order-panel" data-order-panel="account">
+                        <label class="uc-ticket-field-label la-label" for="ticket-order">#{t("订单")} <b>*</b></label>
+                        <select id="ticket-order" name="order_id" aria-label="#{t('选择订单')}"></select>
+                        <div class="uc-ticket-order-picked la-note" hidden></div>
+                        <p class="uc-ticket-field-help la-faint">#{t("只能选到当前账号下的订单")}</p>
+                    </div>
+
+                    <div class="uc-ticket-order-panel" data-order-panel="manual" hidden>
+                        <label class="uc-ticket-float-field la-field">
+                            <span class="la-label">#{t("订单号")} <b>*</b></span>
+                            <input class="la-input" type="text" name="trade_no" maxlength="32" placeholder="#{t('18 位订单号')}" inputmode="numeric">
+                        </label>
+                        <p class="uc-ticket-field-help la-faint">#{t("游客下单或换了账号时，用订单号关联")}</p>
+                    </div>
+
+                    <div class="uc-ticket-proof la-tcreate__proof">
+                        <div class="uc-ticket-field-label la-label">#{t("付款凭证")} <b>*</b><em class="la-faint">#{t("截图更容易被快速处理")}</em></div>
+                        <input type="hidden" name="proof_upload_id">
+                        <input type="hidden" name="proof_path">
+                        <button type="button" class="uc-ticket-proof__drop la-drop">
+                            <span class="uc-ticket-proof__icon">#{\App\View\User\Theme\LosAngeles\Icons::svg('image','la-i--lg')}</span>
+                            <span class="uc-ticket-proof__copy"><strong>#{t("点击上传凭证")}</strong><small>#{t("支持 jpg / png，单张不超过 5MB")}</small></span>
+                            <span class="uc-ticket-proof__action la-btn la-btn--line la-btn--sm">#{t("选择图片")}</span>
+                        </button>
+                        <div class="uc-ticket-proof__preview la-drop__preview" hidden>
+                            <img src="" alt="#{t('付款凭证')}">
+                            <div><strong>#{t("已上传")}</strong><small class="uc-ticket-proof__name"></small></div>
+                            <button type="button" class="uc-ticket-proof__remove la-btn la-btn--ghost la-btn--sm" aria-label="#{t('移除凭证')}">#{\App\View\User\Theme\LosAngeles\Icons::svg('close')}</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="uc-ticket-form__section la-tcreate__sec">
+                <div class="uc-ticket-form__heading la-tcreate__head">
+                    <span class="uc-ticket-step la-tcreate__step">3</span>
+                    <div><strong>#{t("描述你的问题")}</strong><small>#{t("越具体，处理越快")}</small></div>
+                </div>
+
+                <div class="uc-ticket-priority-block">
+                    <span class="uc-ticket-field-label la-label">#{t("优先级")} <b>*</b></span>
+                    <div class="uc-ticket-priorities la-tcreate__prio" role="radiogroup" aria-label="#{t('优先级')}">
+                        <button type="button" class="la-prio" data-priority="0" role="radio" aria-checked="false">
+                            <span class="uc-ticket-priority-dot uc-ticket-priority-dot--low la-prio__dot"></span>
+                            <span><strong>#{t("一般")}</strong><small>#{t("不着急")}</small></span>
+                        </button>
+                        <button type="button" class="la-prio is-active" data-priority="1" role="radio" aria-checked="true">
+                            <span class="uc-ticket-priority-dot uc-ticket-priority-dot--medium la-prio__dot"></span>
+                            <span><strong>#{t("普通")}</strong><small>#{t("正常处理")}</small></span>
+                        </button>
+                        <button type="button" class="la-prio" data-priority="2" role="radio" aria-checked="false">
+                            <span class="uc-ticket-priority-dot uc-ticket-priority-dot--high la-prio__dot"></span>
+                            <span><strong>#{t("紧急")}</strong><small>#{t("影响使用")}</small></span>
+                        </button>
+                    </div>
+                </div>
+
+                <label class="uc-ticket-float-field la-field">
+                    <span class="la-label">#{t("标题")} <b>*</b></span>
+                    <input class="la-input" type="text" name="title" maxlength="100" placeholder="#{t('一句话说清问题')}">
+                    <small class="uc-ticket-char-count la-faint"><i>0</i>/100</small>
+                </label>
+
+                <div class="uc-ticket-editor-field la-field">
+                    <div class="uc-ticket-field-label la-label">#{t("详细描述")} <b>*</b><em class="la-faint">#{t("可以粘贴截图")}</em></div>
+                    <div id="ticket-content-editor"></div>
+                </div>
+            </section>
+        </form>
+
+        <aside class="uc-ticket-create-aside la-tcreate__aside">
+            <section class="la-card uc-ticket-summary la-tcreate__summary">
+                <div class="uc-ticket-summary__head">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('sparkle')}
+                    <strong>#{t("提交前确认")}</strong>
+                </div>
+                <dl class="la-sumlist">
+                    <div class="uc-ticket-summary__type"><dt>#{t("类型")}</dt><dd><span class="material-icons-outlined la-sr"></span><strong>#{t("售前咨询")}</strong></dd></div>
+                    <div><dt>#{t("优先级")}</dt><dd data-summary="priority">#{t("普通")}</dd></div>
+                    <div><dt>#{t("关联")}</dt><dd data-summary="relation">#{t("未选择")}</dd></div>
+                    <div><dt>#{t("凭证")}</dt><dd data-summary="proof">#{t("未上传")}</dd></div>
+                </dl>
+                <button type="button" class="la-btn la-btn--brand la-btn--lg la-btn--block uc-ticket-submit">
+                    #{\App\View\User\Theme\LosAngeles\Icons::svg('check')}<span>#{t("提交工单")}</span>
+                </button>
+                <a class="la-btn la-btn--ghost la-btn--block" href="/user/ticket/index">#{t("返回工单列表")}</a>
+            </section>
+        </aside>
+    </div>
+</div>
